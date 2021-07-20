@@ -48,6 +48,7 @@
     "typescript": "4.3.5"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^4.2.0",
     "argv": "0.0.2",
     "dotenv": "10.0.0",
     "ethers": "5.4.1",

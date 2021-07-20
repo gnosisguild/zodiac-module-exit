@@ -23,7 +23,11 @@ interface Executor {
 }
 
 contract SafeExit {
+    event SafeExitModuleSetup(address indexed initiator, address indexed safe);
+
     Executor public executor;
+    uint256 public circulatingSupply;
+    address public designatedToken;
 
     mapping(address => bool) public deniedTokens;
     modifier executorOnly() {
@@ -31,37 +35,92 @@ contract SafeExit {
         _;
     }
 
-    modifier onlyValidTokens(address[] calldata _tokens) {
-        for (uint16 i; i < _tokens.length; i++) {
+    /// @dev Iterates on deniedTokens list to check if one of the requested tokens is added
+    /// @param tokens Tokens requested to be claimed
+    modifier onlyValidTokens(address[] calldata tokens) {
+        for (uint8 i; i < tokens.length; i++) {
             require(
-                deniedTokens[_tokens[i]],
+                !deniedTokens[tokens[i]],
                 "onlyValidTokens: Invalid token has been sent"
             );
         }
         _;
     }
 
-    constructor() {
-        setUp();
+    constructor(
+        Executor _executor,
+        address _designatedToken,
+        uint256 _circulatingSupply
+    ) {
+        setUp(_executor, _designatedToken, _circulatingSupply);
     }
 
-    function setUp() public {}
+    function setUp(
+        Executor _executor,
+        address _designatedToken,
+        uint256 _circulatingSupply
+    ) public {
+        require(
+            address(executor) == address(0),
+            "Module is already initialized"
+        );
+        require(
+            _designatedToken != address(0),
+            "setUp: Designated token address can not be zero"
+        );
+        executor = _executor;
+        designatedToken = _designatedToken;
+        circulatingSupply = _circulatingSupply;
 
-    function exit(uint256 _amountToBurn, address[] calldata _tokens)
+        emit SafeExitModuleSetup(msg.sender, address(_executor));
+    }
+
+    function exit(uint256 _amountToBurn, address[] calldata tokens)
         public
-        onlyValidTokens(_tokens)
-    {}
+        onlyValidTokens(tokens)
+    {
+        // executor.execTransactionFromModule(to, value, data, operation);
+    }
 
-    function addToDenylist(address[] calldata _tokens) external executorOnly {}
+    function addToDenylist(address[] calldata tokens) external executorOnly {
+        for (uint8 i; i < tokens.length; i++) {
+            require(
+                !deniedTokens[tokens[i]],
+                "addToDenyList: Token already added to the list"
+            );
+            deniedTokens[tokens[i]] = true;
+        }
+    }
 
-    function removeFromDenylist(address[] calldata _tokens)
+    function removeFromDenylist(address[] calldata tokens)
         external
         executorOnly
-    {}
+    {
+        for (uint8 i; i < tokens.length; i++) {
+            require(
+                deniedTokens[tokens[i]],
+                "removeFromDenylist: Token not added to the list"
+            );
+            deniedTokens[tokens[i]] = false;
+        }
+    }
 
-    function setDesignatedToken(address _token) external executorOnly {}
+    function setDesignatedToken(address _token) external executorOnly {
+        require(
+            _token != address(0),
+            "setDesignatedToken: Token address can not be zero"
+        );
+        designatedToken = _token;
+    }
 
-    function setCirculatingSupply(address _address) external executorOnly {}
+    function setCirculatingSupply(uint256 _circulatingSupply)
+        external
+        executorOnly
+    {
+        circulatingSupply = _circulatingSupply;
+    }
 
-    function getCirculatingSupply() external {}
+    function getCirculatingSupply() external view returns (uint256) {
+        return circulatingSupply;
+    }
 }
