@@ -29,6 +29,7 @@ contract SafeExit {
     uint256 public circulatingSupply;
     address public designatedToken;
 
+    // Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
     modifier executorOnly() {
         require(msg.sender == address(executor), "Not authorized");
@@ -55,6 +56,11 @@ contract SafeExit {
         setUp(_executor, _designatedToken, _circulatingSupply);
     }
 
+    /// @dev Initialize function, will be triggered when a new proxy is deployed
+    /// @param _executor Address of the executor (e.g. a Safe)
+    /// @param _designatedToken Address of the ERC20 token that will define the share of users
+    /// @param _circulatingSupply Circulating Supply of designated token
+    /// @notice Designated token address can not be zero
     function setUp(
         Executor _executor,
         address _designatedToken,
@@ -82,6 +88,9 @@ contract SafeExit {
         // executor.execTransactionFromModule(to, value, data, operation);
     }
 
+    /// @dev Add a batch of token addresses to denied tokens list
+    /// @param tokens Batch of addresses to add into the denied token list
+    /// @notice Can not add duplicate token address or it will throw
     function addToDenylist(address[] calldata tokens) external executorOnly {
         for (uint8 i; i < tokens.length; i++) {
             require(
@@ -92,6 +101,9 @@ contract SafeExit {
         }
     }
 
+    /// @dev Remove a batch of token addresses from denied tokens list
+    /// @param tokens Batch of addresses to be removed from the denied token list
+    /// @notice If a non denied token address is passed, the function will throw
     function removeFromDenylist(address[] calldata tokens)
         external
         executorOnly
@@ -105,6 +117,9 @@ contract SafeExit {
         }
     }
 
+    /// @dev Change the designated token address variable
+    /// @param _token Address of new designated token
+    /// @notice Designated token address can not be zero
     function setDesignatedToken(address _token) external executorOnly {
         require(
             _token != address(0),
