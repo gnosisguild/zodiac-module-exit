@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.4;
 
 contract Enum {
     enum Operation {
@@ -25,14 +25,37 @@ interface Executor {
 contract SafeExit {
     event SafeExitModuleSetup(address indexed initiator, address indexed safe);
 
+    /// Designated token address can not be zero
+    error DesignatedTokenCannotBeZero();
+
+    /// Module is already initialized
+    error ModuleAlreadyInitialized();
+
+    /// Token `token` is denied
+    /// @param token balance available.
+    error InvalidToken(address token);
+
+    /// `unacceptedAddress` is not authorized to execute transaction. Transaction must be triggered by executor of contract
+    /// @param unacceptedAddress address that tried to execute the transaction
+    error NotAuthorized(address unacceptedAddress);
+
+    /// Token `deniedToken` can not be added twice in the list of denied tokens
+    /// @param deniedToken token that is already denied
+    error TokenAlreadyDenied(address deniedToken);
+
+    /// Token `token` is not added in the denied tokens list
+    /// @param token token that is not added
+    error TokenNotDenied(address token);
+
     Executor public executor;
     uint256 public circulatingSupply;
     address public designatedToken;
 
-    // Mapping of denied tokens defined by the executor
+    /// @notice Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
+
     modifier executorOnly() {
-        require(msg.sender == address(executor), "Not authorized");
+        if (msg.sender != address(executor)) revert NotAuthorized(msg.sender);
         _;
     }
 
@@ -40,10 +63,7 @@ contract SafeExit {
     /// @param tokens Tokens requested to be claimed
     modifier onlyValidTokens(address[] calldata tokens) {
         for (uint8 i; i < tokens.length; i++) {
-            require(
-                !deniedTokens[tokens[i]],
-                "onlyValidTokens: Invalid token has been sent"
-            );
+            if (deniedTokens[tokens[i]]) revert InvalidToken(tokens[i]);
         }
         _;
     }
@@ -66,14 +86,10 @@ contract SafeExit {
         address _designatedToken,
         uint256 _circulatingSupply
     ) public {
-        require(
-            address(executor) == address(0),
-            "Module is already initialized"
-        );
-        require(
-            _designatedToken != address(0),
-            "setUp: Designated token address can not be zero"
-        );
+        if (address(executor) != address(0)) revert ModuleAlreadyInitialized();
+        if (_designatedToken == address(0)) {
+            revert DesignatedTokenCannotBeZero();
+        }
         executor = _executor;
         designatedToken = _designatedToken;
         circulatingSupply = _circulatingSupply;
@@ -93,10 +109,9 @@ contract SafeExit {
     /// @notice Can not add duplicate token address or it will throw
     function addToDenylist(address[] calldata tokens) external executorOnly {
         for (uint8 i; i < tokens.length; i++) {
-            require(
-                !deniedTokens[tokens[i]],
-                "addToDenyList: Token already added to the list"
-            );
+            if (deniedTokens[tokens[i]]) {
+                revert TokenAlreadyDenied(tokens[i]);
+            }
             deniedTokens[tokens[i]] = true;
         }
     }
@@ -109,10 +124,9 @@ contract SafeExit {
         executorOnly
     {
         for (uint8 i; i < tokens.length; i++) {
-            require(
-                deniedTokens[tokens[i]],
-                "removeFromDenylist: Token not added to the list"
-            );
+            if (!deniedTokens[tokens[i]]) {
+                revert TokenNotDenied(tokens[i]);
+            }
             deniedTokens[tokens[i]] = false;
         }
     }
@@ -120,11 +134,10 @@ contract SafeExit {
     /// @dev Change the designated token address variable
     /// @param _token Address of new designated token
     /// @notice Designated token address can not be zero
-    function setDesignatedToken(address _token) external executorOnly {
-        require(
-            _token != address(0),
-            "setDesignatedToken: Token address can not be zero"
-        );
+    function setDesignatedToken(address _token) public {
+        if (_token == address(0)) {
+            revert DesignatedTokenCannotBeZero();
+        }
         designatedToken = _token;
     }
 
@@ -135,7 +148,7 @@ contract SafeExit {
         circulatingSupply = _circulatingSupply;
     }
 
-    function getCirculatingSupply() external view returns (uint256) {
+    function getCirculatingSupply() public view returns (uint256) {
         return circulatingSupply;
     }
 }

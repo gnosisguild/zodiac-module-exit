@@ -4,6 +4,7 @@ import hre, { deployments, waffle } from "hardhat";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
 const AddressOne = "0x0000000000000000000000000000000000000001";
+const AddressTwo = "0x0000000000000000000000000000000000000002";
 
 describe("SafeExit", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -32,14 +33,18 @@ describe("SafeExit", async () => {
       const module = await Module.deploy(user.address, token.address, 1000);
       await expect(
         module.setUp(user.address, token.address, 1000)
-      ).to.be.revertedWith("Module is already initialized");
+      ).to.be.revertedWith(
+        "reverted with custom error 'ModuleAlreadyInitialized()'"
+      );
     });
 
     it("throws if designated token address is zero", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       await expect(
         Module.deploy(AddressZero, AddressZero, 1000)
-      ).to.be.revertedWith("setUp: Designated token address can not be zero");
+      ).to.be.revertedWith(
+        "reverted with custom error 'DesignatedTokenCannotBeZero()'"
+      );
     });
 
     it("should emit event because of successful set up", async () => {
@@ -74,7 +79,7 @@ describe("SafeExit", async () => {
     it("throws if not authorized", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.addToDenylist([AddressOne])).to.be.revertedWith(
-        "Not authorized"
+        `reverted with custom error 'NotAuthorized("${user.address}")'`
       );
     });
 
@@ -86,7 +91,7 @@ describe("SafeExit", async () => {
       await executor.exec(module.address, 0, data);
 
       await expect(executor.exec(module.address, 0, data)).to.be.revertedWith(
-        "addToDenyList: Token already added to the list"
+        `reverted with custom error 'TokenAlreadyDenied("${AddressOne}")'`
       );
     });
   });
@@ -119,13 +124,15 @@ describe("SafeExit", async () => {
       );
       await expect(
         executor.exec(module.address, 0, removeTokenData)
-      ).to.be.revertedWith("removeFromDenylist: Token not added to the list");
+      ).to.be.revertedWith(
+        `reverted with custom error 'TokenNotDenied("${AddressOne}")'`
+      );
     });
 
     it("throws if not authorized", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.removeFromDenylist([AddressOne])).to.be.revertedWith(
-        "Not authorized"
+        `reverted with custom error 'NotAuthorized("${user.address}")'`
       );
     });
   });
@@ -134,11 +141,11 @@ describe("SafeExit", async () => {
     it("throws if token is in denylist", async () => {
       const { executor, module } = await setupTestWithTestExecutor();
       const data = module.interface.encodeFunctionData("addToDenylist", [
-        [AddressOne],
+        [AddressTwo],
       ]);
       await executor.exec(module.address, 0, data);
-      await expect(module.exit(1, [AddressOne])).to.be.revertedWith(
-        "onlyValidTokens: Invalid token has been sent"
+      await expect(module.exit(1, [AddressTwo, AddressOne])).to.be.revertedWith(
+        `reverted with custom error 'InvalidToken("${AddressTwo}")'`
       );
     });
   });
@@ -161,7 +168,7 @@ describe("SafeExit", async () => {
     it("throws if not authorized", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.setCirculatingSupply(NEW_BALANCE)).to.be.revertedWith(
-        "Not authorized"
+        `reverted with custom error 'NotAuthorized("${user.address}")'`
       );
     });
   });
@@ -191,7 +198,7 @@ describe("SafeExit", async () => {
         AddressZero,
       ]);
       await expect(executor.exec(module.address, 0, data)).to.be.revertedWith(
-        "setDesignatedToken: Token address can not be zero"
+        "reverted with custom error 'DesignatedTokenCannotBeZero()'"
       );
     });
   });
