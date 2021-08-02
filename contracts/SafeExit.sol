@@ -30,6 +30,7 @@ contract SafeExit {
     uint256 public circulatingSupply;
 
     event SafeExitModuleSetup(address indexed initiator, address indexed safe);
+    event ExitSuccessful(address leaver);
 
     /// @notice Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
@@ -81,55 +82,19 @@ contract SafeExit {
         emit SafeExitModuleSetup(msg.sender, address(_executor));
     }
 
+    /// @dev Execute the share of assets and the transfer of designated tokens
+    /// @param tokens Array of tokens that the leaver will recieve
+    /// @notice will throw if a token sent is added in the denied token list
     function exit(address[] calldata tokens) public onlyValidTokens(tokens) {
-        // 0x449b8acb - bytes4(keccak256("executeCheckout(address[],address)"))
-        bytes memory data = abi.encodeWithSelector(
-            0x449b8acb,
-            tokens,
-            msg.sender
-        );
-
-        bool success = executor.execTransactionFromModule(
-            address(this),
-            0,
-            data,
-            Enum.Operation.Call
-        );
-        require(success, "Error executing exit");
-    }
-
-    function transferToken(address token, address leaver) private {
-        uint256 ownerBalance = ERC20(token).balanceOf(address(executor));
-        uint256 leaverBalance = ERC20(designatedToken).balanceOf(leaver);
-
-        require(ownerBalance != 0, "Owner does not has enough balance");
-
-        uint256 amount = (leaverBalance * ownerBalance) / circulatingSupply;
-        // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
-        bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
-
-        bool success = executor.execTransactionFromModule(
-            token,
-            0,
-            data,
-            Enum.Operation.Call
-        );
-        require(success, "Error executing transfer");
-    }
-
-    function executeCheckout(address[] calldata tokens, address leaver)
-        public
-        executorOnly
-    {
         for (uint8 i = 0; i < tokens.length; i++) {
-            transferToken(tokens[i], leaver);
+            transferToken(tokens[i], msg.sender);
         }
-        uint256 leaverBalance = designatedToken.balanceOf(leaver);
+        uint256 leaverBalance = designatedToken.balanceOf(msg.sender);
 
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
-            leaver,
+            msg.sender,
             address(executor),
             leaverBalance
         );
@@ -139,7 +104,29 @@ contract SafeExit {
             data,
             Enum.Operation.Call
         );
-        require(success, "Error executing checkout");
+        require(success, "Error on exit execution");
+
+        emit ExitSuccessful(msg.sender);
+    }
+
+    /// @dev Execute a token transfer through the executor
+    /// @param token address of token to transfer
+    /// @param leaver address that will receive the transfer
+    function transferToken(address token, address leaver) private {
+        uint256 ownerBalance = ERC20(token).balanceOf(address(executor));
+        uint256 leaverBalance = ERC20(designatedToken).balanceOf(leaver);
+        uint256 supply = getCirculatingSupply();
+
+        uint256 amount = (leaverBalance * ownerBalance) / supply;
+        // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
+        bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
+        bool success = executor.execTransactionFromModule(
+            token,
+            0,
+            data,
+            Enum.Operation.Call
+        );
+        require(success, "Error on token transfer");
     }
 
     /// @dev Add a batch of token addresses to denied tokens list

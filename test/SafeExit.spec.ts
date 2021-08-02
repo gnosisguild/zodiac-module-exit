@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import { exec } from "child_process";
 import { BigNumber } from "ethers";
 import hre, { deployments, waffle } from "hardhat";
 
@@ -199,7 +198,7 @@ describe("SafeExit", async () => {
       ).to.be.revertedWith(`Invalid token`);
     });
 
-    it("should transfer multiple tokens ", async () => {
+    it("should transfer multiple tokens to user and transfer designated token to owner ", async () => {
       const {
         executor,
         module,
@@ -239,16 +238,21 @@ describe("SafeExit", async () => {
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
       expect(leaverBalance.toNumber()).to.be.greaterThan(1);
 
-      await safeExitInstanceSignedByUser.exit([
+      const exitTransaction = await safeExitInstanceSignedByUser.exit([
         randomTokenOne.address,
         randomTokenTwo.address,
       ]);
+
+      const receipt = await exitTransaction.wait();
+
       const newBalanceExec = await randomTokenOne.balanceOf(executor.address);
 
+      // 3/4 of the random token total supply
       const ThreeQuartersRandomTokenTotalSupply = RandomTokensBalance.mul(750)
         .div(1000)
         .toNumber();
 
+      // 1/4 of the random token total supply
       const OneQuarterRandomTokenTotalSupply = RandomTokensBalance.mul(250)
         .div(1000)
         .toNumber();
@@ -273,6 +277,27 @@ describe("SafeExit", async () => {
       );
       expect(newLeaverBalance.toNumber()).to.be.equal(0);
       expect(newOwnerBalance.toNumber()).to.be.equal(leaverBalance.toNumber());
+
+      expect(receipt.events[4].args[0]).to.be.equal(user.address);
+    });
+
+    it("throws because user haven't approve designated tokens", async () => {
+      const { executor, module, randomTokenOne, randomTokenTwo } =
+        await setupTestWithTestExecutor();
+      await executor.setModule(module.address);
+
+      const safeExitInstanceSignedByUser = await hre.ethers.getContractAt(
+        "SafeExit",
+        module.address,
+        user
+      );
+
+      await expect(
+        safeExitInstanceSignedByUser.exit([
+          randomTokenOne.address,
+          randomTokenTwo.address,
+        ])
+      ).to.be.revertedWith("Error on exit execution");
     });
   });
 
