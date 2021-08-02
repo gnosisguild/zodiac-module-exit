@@ -24,18 +24,51 @@ interface Executor {
     ) external returns (bool success);
 }
 
-contract SafeExit {
+contract SafeExitCustomError {
     Executor public executor;
     ERC20 public designatedToken;
     uint256 public circulatingSupply;
 
     event SafeExitModuleSetup(address indexed initiator, address indexed safe);
 
+    /// Designated token address can not be zero
+    error DesignatedTokenCannotBeZero();
+
+    /// Module is already initialized
+    error ModuleAlreadyInitialized();
+
+    /// Token `token` is denied
+    /// @param token balance available.
+    error InvalidToken(address token);
+
+    /// `unacceptedAddress` is not authorized to execute transaction. Transaction must be triggered by executor of contract
+    /// @param unacceptedAddress address that tried to execute the transaction
+    error NotAuthorized(address unacceptedAddress);
+
+    /// Token `deniedToken` can not be added twice in the list of denied tokens
+    /// @param deniedToken token that is already denied
+    error TokenAlreadyDenied(address deniedToken);
+
+    /// Token `token` is not added in the denied tokens list
+    /// @param token token that is not added
+    error TokenNotDenied(address token);
+
+    /// Owner does not have `expectedBalance` of token with address `token`
+    /// @param token address of token without enough balance
+    error NotEnoughBalance(address token);
+
+    /// Error on exit execution
+    error ExitError();
+
+    /// Error on token transfer
+    /// @param token token where transfer failed
+    error TransferError(address token);
+
     /// @notice Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
 
     modifier executorOnly() {
-        require(msg.sender == address(executor), "Not authorized");
+        if (msg.sender != address(executor)) revert NotAuthorized(msg.sender);
         _;
     }
 
@@ -43,7 +76,7 @@ contract SafeExit {
     /// @param tokens Tokens requested to be claimed
     modifier onlyValidTokens(address[] calldata tokens) {
         for (uint8 i; i < tokens.length; i++) {
-            require(!deniedTokens[tokens[i]], "Invalid token");
+            if (deniedTokens[tokens[i]]) revert InvalidToken(tokens[i]);
         }
         _;
     }
@@ -66,14 +99,10 @@ contract SafeExit {
         address _designatedToken,
         uint256 _circulatingSupply
     ) public {
-        require(
-            address(executor) == address(0),
-            "Module is already initialized"
-        );
-        require(
-            _designatedToken != address(0),
-            "Designated token can not be zero"
-        );
+        if (address(executor) != address(0)) revert ModuleAlreadyInitialized();
+        if (_designatedToken == address(0)) {
+            revert DesignatedTokenCannotBeZero();
+        }
         executor = _executor;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = _circulatingSupply;
@@ -95,14 +124,14 @@ contract SafeExit {
             data,
             Enum.Operation.Call
         );
-        require(success, "Error executing exit");
+        if (!success) revert ExitError();
     }
 
     function transferToken(address token, address leaver) private {
         uint256 ownerBalance = ERC20(token).balanceOf(address(executor));
         uint256 leaverBalance = ERC20(designatedToken).balanceOf(leaver);
 
-        require(ownerBalance != 0, "Owner does not has enough balance");
+        if (ownerBalance == 0) revert NotEnoughBalance(token);
 
         uint256 amount = (leaverBalance * ownerBalance) / circulatingSupply;
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
@@ -114,7 +143,7 @@ contract SafeExit {
             data,
             Enum.Operation.Call
         );
-        require(success, "Error executing transfer");
+        if (!success) revert TransferError(token);
     }
 
     function executeCheckout(address[] calldata tokens, address leaver)
@@ -139,7 +168,7 @@ contract SafeExit {
             data,
             Enum.Operation.Call
         );
-        require(success, "Error executing checkout");
+        if (!success) revert ExitError();
     }
 
     /// @dev Add a batch of token addresses to denied tokens list
@@ -147,7 +176,9 @@ contract SafeExit {
     /// @notice Can not add duplicate token address or it will throw
     function addToDenylist(address[] calldata tokens) external executorOnly {
         for (uint8 i; i < tokens.length; i++) {
-            require(!deniedTokens[tokens[i]], "Token already denied");
+            if (deniedTokens[tokens[i]]) {
+                revert TokenAlreadyDenied(tokens[i]);
+            }
             deniedTokens[tokens[i]] = true;
         }
     }
@@ -160,7 +191,9 @@ contract SafeExit {
         executorOnly
     {
         for (uint8 i; i < tokens.length; i++) {
-            require(deniedTokens[tokens[i]], "Token not denied");
+            if (!deniedTokens[tokens[i]]) {
+                revert TokenNotDenied(tokens[i]);
+            }
             deniedTokens[tokens[i]] = false;
         }
     }
@@ -169,7 +202,9 @@ contract SafeExit {
     /// @param _token Address of new designated token
     /// @notice Designated token address can not be zero
     function setDesignatedToken(address _token) public {
-        require(_token != address(0), "Designated token can not be zero");
+        if (_token == address(0)) {
+            revert DesignatedTokenCannotBeZero();
+        }
         designatedToken = ERC20(_token);
     }
 
