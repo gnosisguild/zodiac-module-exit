@@ -1,7 +1,7 @@
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { task, types } from "hardhat/config";
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
