@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.4;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Enum {
     enum Operation {
@@ -23,14 +25,16 @@ interface Executor {
 }
 
 contract SafeExit {
-    event SafeExitModuleSetup(address indexed initiator, address indexed safe);
-
     Executor public executor;
+    ERC20 public designatedToken;
     uint256 public circulatingSupply;
-    address public designatedToken;
 
-    // Mapping of denied tokens defined by the executor
+    event SafeExitModuleSetup(address indexed initiator, address indexed safe);
+    event ExitSuccessful(address leaver);
+
+    /// @notice Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
+
     modifier executorOnly() {
         require(msg.sender == address(executor), "Not authorized");
         _;
@@ -40,10 +44,7 @@ contract SafeExit {
     /// @param tokens Tokens requested to be claimed
     modifier onlyValidTokens(address[] calldata tokens) {
         for (uint8 i; i < tokens.length; i++) {
-            require(
-                !deniedTokens[tokens[i]],
-                "onlyValidTokens: Invalid token has been sent"
-            );
+            require(!deniedTokens[tokens[i]], "Invalid token");
         }
         _;
     }
@@ -72,20 +73,60 @@ contract SafeExit {
         );
         require(
             _designatedToken != address(0),
-            "setUp: Designated token address can not be zero"
+            "Designated token can not be zero"
         );
         executor = _executor;
-        designatedToken = _designatedToken;
+        designatedToken = ERC20(_designatedToken);
         circulatingSupply = _circulatingSupply;
 
         emit SafeExitModuleSetup(msg.sender, address(_executor));
     }
 
-    function exit(uint256 _amountToBurn, address[] calldata tokens)
-        public
-        onlyValidTokens(tokens)
-    {
-        // executor.execTransactionFromModule(to, value, data, operation);
+    /// @dev Execute the share of assets and the transfer of designated tokens
+    /// @param tokens Array of tokens that the leaver will recieve
+    /// @notice will throw if a token sent is added in the denied token list
+    function exit(address[] calldata tokens) public onlyValidTokens(tokens) {
+        for (uint8 i = 0; i < tokens.length; i++) {
+            transferToken(tokens[i], msg.sender);
+        }
+        uint256 leaverBalance = designatedToken.balanceOf(msg.sender);
+
+        // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
+        bytes memory data = abi.encodeWithSelector(
+            0x23b872dd,
+            msg.sender,
+            address(executor),
+            leaverBalance
+        );
+        bool success = executor.execTransactionFromModule(
+            address(designatedToken),
+            0,
+            data,
+            Enum.Operation.Call
+        );
+        require(success, "Error on exit execution");
+
+        emit ExitSuccessful(msg.sender);
+    }
+
+    /// @dev Execute a token transfer through the executor
+    /// @param token address of token to transfer
+    /// @param leaver address that will receive the transfer
+    function transferToken(address token, address leaver) private {
+        uint256 ownerBalance = ERC20(token).balanceOf(address(executor));
+        uint256 leaverBalance = ERC20(designatedToken).balanceOf(leaver);
+        uint256 supply = getCirculatingSupply();
+
+        uint256 amount = (leaverBalance * ownerBalance) / supply;
+        // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
+        bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
+        bool success = executor.execTransactionFromModule(
+            token,
+            0,
+            data,
+            Enum.Operation.Call
+        );
+        require(success, "Error on token transfer");
     }
 
     /// @dev Add a batch of token addresses to denied tokens list
@@ -93,10 +134,7 @@ contract SafeExit {
     /// @notice Can not add duplicate token address or it will throw
     function addToDenylist(address[] calldata tokens) external executorOnly {
         for (uint8 i; i < tokens.length; i++) {
-            require(
-                !deniedTokens[tokens[i]],
-                "addToDenyList: Token already added to the list"
-            );
+            require(!deniedTokens[tokens[i]], "Token already denied");
             deniedTokens[tokens[i]] = true;
         }
     }
@@ -109,10 +147,7 @@ contract SafeExit {
         executorOnly
     {
         for (uint8 i; i < tokens.length; i++) {
-            require(
-                deniedTokens[tokens[i]],
-                "removeFromDenylist: Token not added to the list"
-            );
+            require(deniedTokens[tokens[i]], "Token not denied");
             deniedTokens[tokens[i]] = false;
         }
     }
@@ -120,12 +155,9 @@ contract SafeExit {
     /// @dev Change the designated token address variable
     /// @param _token Address of new designated token
     /// @notice Designated token address can not be zero
-    function setDesignatedToken(address _token) external executorOnly {
-        require(
-            _token != address(0),
-            "setDesignatedToken: Token address can not be zero"
-        );
-        designatedToken = _token;
+    function setDesignatedToken(address _token) public {
+        require(_token != address(0), "Designated token can not be zero");
+        designatedToken = ERC20(_token);
     }
 
     function setCirculatingSupply(uint256 _circulatingSupply)
@@ -135,7 +167,7 @@ contract SafeExit {
         circulatingSupply = _circulatingSupply;
     }
 
-    function getCirculatingSupply() external view returns (uint256) {
+    function getCirculatingSupply() public view returns (uint256) {
         return circulatingSupply;
     }
 }

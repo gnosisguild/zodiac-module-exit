@@ -4,15 +4,6 @@ import "solidity-coverage";
 import "hardhat-deploy";
 import dotenv from "dotenv";
 import type { HttpNetworkUserConfig } from "hardhat/types";
-import yargs from "yargs";
-
-const argv = yargs
-  .option("network", {
-    type: "string",
-    default: "hardhat",
-  })
-  .help(false)
-  .version(false).argv;
 
 // Load environment variables.
 dotenv.config();
@@ -40,7 +31,7 @@ export default {
     sources: "contracts",
   },
   solidity: {
-    compilers: [{ version: "0.8.0" }, { version: "0.6.12" }],
+    version: "0.8.4",
   },
   networks: {
     mainnet: {
