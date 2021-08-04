@@ -16,13 +16,15 @@ Note: In this script, one (1) token is minted to the address passed as the user 
 
 This should return the address of the deployed token. For this guide we assume this to be `0x0000000000000000000000000000000000000100`
 
+Note 2: If you want to test the exit function (the how-to is described below) - You will need to give allowance of your designated tokens to the safe, you can do this calling the `approve` function of the token from etherscan (The token will be verified on deployment)
+
 ## Setting up the module
 
 The first step is to deploy the module. Every Safe will have their own module. The module is linked to a Safe (called executor in the contract). The Safe cannot be changed after deployment.
 
 ### Deploying the module
 
-Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0xFf7307B200406d6DCbF1D02E3137834b2998D643`.
+Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0x31Da8344F9aAD82229B8Ed99E5AdC727A85F94E1`.
 
 These setup tasks requires the following parameters:
 
@@ -55,7 +57,9 @@ In order to test the exit execution on rinkeby, you will need some ERC20 tokens.
 
 Request at least two tokens and send them to the Safe Address.
 
-To execute the exit, call the `exit(address[] tokens)` function with the account that received the designated tokens when you deployed it
+Reminder: You need to give allowance to the Safe, check **Prerequisites** section for more information.
+
+To execute the exit, call the `exit(address[] tokens)` function with the account that received the designated tokens when you deployed it and passing as arguments the tokens addresses that you sent to the Safe (So it can pay you back those tokens).
 
 ### Deploy a master copy
 

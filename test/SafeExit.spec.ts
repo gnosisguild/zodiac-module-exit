@@ -12,9 +12,9 @@ describe("SafeExit", async () => {
   const setUpToken = deployments.createFixture(async () => {
     const Token = await hre.ethers.getContractFactory("TestToken");
 
-    const designatedToken = await Token.deploy();
-    const randomTokenOne = await Token.deploy();
-    const randomTokenTwo = await Token.deploy();
+    const designatedToken = await Token.deploy(4);
+    const randomTokenOne = await Token.deploy(6);
+    const randomTokenTwo = await Token.deploy(12);
 
     await designatedToken.mint(user.address, DesignatedTokenBalance);
     return {
@@ -208,23 +208,11 @@ describe("SafeExit", async () => {
       } = await setupTestWithTestExecutor();
       await executor.setModule(module.address);
 
-      const safeExitInstanceSignedByUser = await hre.ethers.getContractAt(
-        "SafeExit",
-        module.address,
-        user
-      );
-
-      const testTokenInstanceSignerByUser = await hre.ethers.getContractAt(
-        "TestToken",
-        designatedToken.address,
-        user
-      );
-
       const leaverBalance = await designatedToken.balanceOf(user.address);
-      await testTokenInstanceSignerByUser.approve(
-        executor.address,
-        leaverBalance
-      );
+      await designatedToken
+        .connect(user)
+        .approve(executor.address, leaverBalance);
+
       const oldBalanceExec = await randomTokenOne.balanceOf(executor.address);
       const oldUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
         user.address
@@ -238,10 +226,9 @@ describe("SafeExit", async () => {
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
       expect(leaverBalance.toNumber()).to.be.greaterThanOrEqual(1);
 
-      const exitTransaction = await safeExitInstanceSignedByUser.exit([
-        randomTokenOne.address,
-        randomTokenTwo.address,
-      ]);
+      const exitTransaction = await module
+        .connect(user)
+        .exit([randomTokenOne.address, randomTokenTwo.address]);
 
       const receipt = await exitTransaction.wait();
 
@@ -286,17 +273,10 @@ describe("SafeExit", async () => {
         await setupTestWithTestExecutor();
       await executor.setModule(module.address);
 
-      const safeExitInstanceSignedByUser = await hre.ethers.getContractAt(
-        "SafeExit",
-        module.address,
-        user
-      );
-
       await expect(
-        safeExitInstanceSignedByUser.exit([
-          randomTokenOne.address,
-          randomTokenTwo.address,
-        ])
+        module
+          .connect(user)
+          .exit([randomTokenOne.address, randomTokenTwo.address])
       ).to.be.revertedWith("Error on exit execution");
     });
   });

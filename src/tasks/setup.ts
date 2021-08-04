@@ -115,7 +115,7 @@ task("deployDesignatedToken")
     console.log("Using the account:", caller.address);
 
     const Token = await hardhatRuntime.ethers.getContractFactory("TestToken");
-    const token = await Token.deploy();
+    const token = await Token.deploy(18);
 
     await token.deployTransaction.wait(3);
     console.log("Token deployed to:", token.address);
@@ -124,6 +124,10 @@ task("deployDesignatedToken")
     await token.mint(receiver, BigNumber.from(10).pow(18));
 
     console.log("Token minted to:", receiver);
+    await hardhatRuntime.run("verify:verify", {
+      address: token.address,
+      constructorArguments: [18],
+    });
   });
 
 export {};

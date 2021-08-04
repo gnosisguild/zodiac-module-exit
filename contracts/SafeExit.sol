@@ -114,7 +114,8 @@ contract SafeExit {
     /// @param leaver address that will receive the transfer
     function transferToken(address token, address leaver) private {
         uint256 ownerBalance = ERC20(token).balanceOf(address(executor));
-        uint256 leaverBalance = ERC20(designatedToken).balanceOf(leaver);
+        uint256 leaverBalance = designatedToken.balanceOf(leaver);
+
         uint256 supply = getCirculatingSupply();
 
         uint256 amount = (leaverBalance * ownerBalance) / supply;
