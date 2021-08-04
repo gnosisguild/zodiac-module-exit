@@ -3,8 +3,8 @@ import { BigNumber } from "ethers";
 import hre, { deployments, waffle } from "hardhat";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
-const DesignatedTokenBalance = BigNumber.from(1000000);
-const RandomTokensBalance = BigNumber.from(1000000000);
+const DesignatedTokenBalance = BigNumber.from(1);
+const RandomTokensBalance = BigNumber.from(100);
 
 describe("SafeExit", async () => {
   const [user] = waffle.provider.getWallets();
@@ -236,7 +236,7 @@ describe("SafeExit", async () => {
       expect(oldBalanceExec).to.be.equal(RandomTokensBalance);
       expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
-      expect(leaverBalance.toNumber()).to.be.greaterThan(1);
+      expect(leaverBalance.toNumber()).to.be.greaterThanOrEqual(1);
 
       const exitTransaction = await safeExitInstanceSignedByUser.exit([
         randomTokenOne.address,

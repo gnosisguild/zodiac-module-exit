@@ -6,17 +6,12 @@ import { BigNumber, Contract } from "ethers";
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
 task("setup", "deploy a SafeExit Module")
-  .addParam(
-    "org",
-    "Address of the organization (e.g. Safe)",
-    undefined,
-    types.string
-  )
+  .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
     "Circulating supply of the designated token",
-    "100",
+    "10",
     types.string
   )
   .setAction(async (taskArgs, hardhatRuntime) => {
@@ -24,7 +19,7 @@ task("setup", "deploy a SafeExit Module")
     console.log("Using the account:", caller.address);
     const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
     const module = await Module.deploy(
-      taskArgs.org,
+      taskArgs.dao,
       taskArgs.token,
       taskArgs.supply
     );
@@ -40,17 +35,12 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
     undefined,
     types.string
   )
-  .addParam(
-    "org",
-    "Address of the organization (e.g. Safe)",
-    undefined,
-    types.string
-  )
+  .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
     "Circulating supply of designated token",
-    "100",
+    "10",
     types.string
   )
   .setAction(async (taskArgs, hardhatRuntime) => {
@@ -68,7 +58,7 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
     const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
 
     const initParams = Module.interface.encodeFunctionData("setUp", [
-      taskArgs.org,
+      taskArgs.dao,
       taskArgs.token,
       taskArgs.supply,
     ]);
@@ -82,12 +72,7 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
 
 task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("module", "Address of the Safe Exit", undefined, types.string)
-  .addParam(
-    "org",
-    "Address of the organization (e.g. Safe)",
-    undefined,
-    types.string
-  )
+  .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
@@ -98,7 +83,7 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
   .setAction(async (taskArgs, hardhatRuntime) => {
     await hardhatRuntime.run("verify", {
       address: taskArgs.module,
-      constructorArgsParams: [taskArgs.org, taskArgs.token, taskArgs.supply],
+      constructorArgsParams: [taskArgs.dao, taskArgs.token, taskArgs.supply],
     });
   });
 
