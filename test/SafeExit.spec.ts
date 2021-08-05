@@ -30,15 +30,22 @@ describe("SafeExit", async () => {
     const { randomTokenOne, randomTokenTwo, ...token } = await setUpToken();
     const Executor = await hre.ethers.getContractFactory("TestExecutor");
     const executor = await Executor.deploy();
-
     await randomTokenOne.mint(executor.address, RandomTokensBalance);
     await randomTokenTwo.mint(executor.address, RandomTokensBalance);
+    const CirculatingSupply = await hre.ethers.getContractFactory(
+      "CirculatingSupply"
+    );
+    const circulatingSupply = await CirculatingSupply.deploy(
+      DesignatedTokenBalance.mul(4),
+      executor.address
+    );
 
     return {
       Executor,
       executor,
       randomTokenOne,
       randomTokenTwo,
+      circulatingSupply,
       ...token,
     };
   });
@@ -49,31 +56,31 @@ describe("SafeExit", async () => {
     const module = await Module.deploy(
       AddressZero,
       base.designatedToken.address,
-      DesignatedTokenBalance
+      base.circulatingSupply.address
     );
 
     await module.setUp(
       base.executor.address,
       base.designatedToken.address,
-      DesignatedTokenBalance.mul(4)
+      base.circulatingSupply.address
     );
     return { ...base, Module, module };
   });
 
   describe("setUp() ", () => {
     it("throws if module has already been initialized", async () => {
-      const { designatedToken } = await baseSetup();
+      const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         user.address,
         designatedToken.address,
-        DesignatedTokenBalance
+        circulatingSupply.address
       );
       await expect(
         module.setUp(
           user.address,
           designatedToken.address,
-          DesignatedTokenBalance
+          circulatingSupply.address
         )
       ).to.be.revertedWith("Module is already initialized");
     });
@@ -81,23 +88,24 @@ describe("SafeExit", async () => {
     it("throws if designated token address is zero", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       await expect(
-        Module.deploy(AddressZero, AddressZero, DesignatedTokenBalance)
+        Module.deploy(AddressZero, AddressZero, AddressZero)
       ).to.be.revertedWith("Designated token can not be zero");
     });
 
     it("should emit event because of successful set up", async () => {
-      const { designatedToken, executor } = await baseSetup();
+      const { designatedToken, executor, circulatingSupply } =
+        await baseSetup();
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         AddressZero,
         designatedToken.address,
-        DesignatedTokenBalance
+        circulatingSupply.address
       );
 
       const setupTx = await module.setUp(
         executor.address,
         designatedToken.address,
-        DesignatedTokenBalance
+        circulatingSupply.address
       );
       const transaction = await setupTx.wait();
 
@@ -284,22 +292,23 @@ describe("SafeExit", async () => {
   describe("setCirculatingSupply", () => {
     const NEW_BALANCE = BigNumber.from(10000000);
     it("should update circulating supply ", async () => {
-      const { executor, module } = await setupTestWithTestExecutor();
+      const { executor, module, circulatingSupply } =
+        await setupTestWithTestExecutor();
       const currentCirculatingSupply = await module.getCirculatingSupply();
       expect(DesignatedTokenBalance.mul(4)).to.be.equal(
         currentCirculatingSupply
       );
-      const data = module.interface.encodeFunctionData("setCirculatingSupply", [
+      const data = circulatingSupply.interface.encodeFunctionData("set", [
         NEW_BALANCE,
       ]);
-      await executor.exec(module.address, 0, data);
+      await executor.exec(circulatingSupply.address, 0, data);
       const newCirculatingSupply = await module.getCirculatingSupply();
       expect(NEW_BALANCE).to.be.equal(newCirculatingSupply);
     });
 
     it("throws if not authorized", async () => {
-      const { module } = await setupTestWithTestExecutor();
-      await expect(module.setCirculatingSupply(NEW_BALANCE)).to.be.revertedWith(
+      const { circulatingSupply } = await setupTestWithTestExecutor();
+      await expect(circulatingSupply.set(NEW_BALANCE)).to.be.revertedWith(
         `Not authorized`
       );
     });
