@@ -78,13 +78,6 @@ describe("SafeExit", async () => {
       ).to.be.revertedWith("Module is already initialized");
     });
 
-    it("throws if designated token address is zero", async () => {
-      const Module = await hre.ethers.getContractFactory("SafeExit");
-      await expect(
-        Module.deploy(AddressZero, AddressZero, DesignatedTokenBalance)
-      ).to.be.revertedWith("Designated token can not be zero");
-    });
-
     it("should emit event because of successful set up", async () => {
       const { designatedToken, executor } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("SafeExit");

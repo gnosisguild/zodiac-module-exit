@@ -62,10 +62,6 @@ contract SafeExit {
             address(executor) == address(0),
             "Module is already initialized"
         );
-        require(
-            _designatedToken != address(0),
-            "Designated token can not be zero"
-        );
         executor = _executor;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = _circulatingSupply;
