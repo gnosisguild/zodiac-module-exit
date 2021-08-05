@@ -48,11 +48,13 @@ describe("SafeExit", async () => {
     const Module = await hre.ethers.getContractFactory("SafeExit");
     const module = await Module.deploy(
       AddressZero,
+      AddressZero,
       base.designatedToken.address,
       DesignatedTokenBalance
     );
 
     await module.setUp(
+      base.executor.address,
       base.executor.address,
       base.designatedToken.address,
       DesignatedTokenBalance.mul(4)
@@ -66,11 +68,13 @@ describe("SafeExit", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         user.address,
+        user.address,
         designatedToken.address,
         DesignatedTokenBalance
       );
       await expect(
         module.setUp(
+          user.address,
           user.address,
           designatedToken.address,
           DesignatedTokenBalance
@@ -81,7 +85,12 @@ describe("SafeExit", async () => {
     it("throws if designated token address is zero", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       await expect(
-        Module.deploy(AddressZero, AddressZero, DesignatedTokenBalance)
+        Module.deploy(
+          AddressZero,
+          AddressZero,
+          AddressZero,
+          DesignatedTokenBalance
+        )
       ).to.be.revertedWith("Designated token can not be zero");
     });
 
@@ -90,11 +99,13 @@ describe("SafeExit", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         AddressZero,
+        AddressZero,
         designatedToken.address,
         DesignatedTokenBalance
       );
 
       const setupTx = await module.setUp(
+        executor.address,
         executor.address,
         designatedToken.address,
         DesignatedTokenBalance
@@ -335,4 +346,8 @@ describe("SafeExit", async () => {
       );
     });
   });
+
+  // describe("renounceOwnership", () => {
+  //   it("should renounce to ownership", async () => {});
+  // });
 });

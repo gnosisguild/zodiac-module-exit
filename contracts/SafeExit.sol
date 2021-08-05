@@ -2,41 +2,26 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./IModule.sol";
+import "./IModuleManager.sol";
 
-contract Enum {
-    enum Operation {
-        Call,
-        DelegateCall
-    }
-}
-
-interface Executor {
-    /// @dev Allows a Module to execute a transaction.
-    /// @param to Destination address of module transaction.
-    /// @param value Ether value of module transaction.
-    /// @param data Data payload of module transaction.
-    /// @param operation Operation type of module transaction.
-    function execTransactionFromModule(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation
-    ) external returns (bool success);
-}
-
-contract SafeExit {
-    Executor public executor;
+contract SafeExit is IModule {
     ERC20 public designatedToken;
     uint256 public circulatingSupply;
 
+    /// @inheritdoc IModule
+    address public override owner;
+    /// @inheritdoc IModule
+    address public override executor;
+
     event SafeExitModuleSetup(address indexed initiator, address indexed safe);
-    event ExitSuccessful(address leaver);
+    event ExitSuccessful(address indexed leaver);
 
     /// @notice Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
 
-    modifier executorOnly() {
-        require(msg.sender == address(executor), "Not authorized");
+    modifier ownerOnly() {
+        require(msg.sender == owner, "Not authorized: You must be the owner");
         _;
     }
 
@@ -50,36 +35,37 @@ contract SafeExit {
     }
 
     constructor(
-        Executor _executor,
+        address _owner,
+        address _executor,
         address _designatedToken,
         uint256 _circulatingSupply
     ) {
-        setUp(_executor, _designatedToken, _circulatingSupply);
+        setUp(_owner, _executor, _designatedToken, _circulatingSupply);
     }
 
     /// @dev Initialize function, will be triggered when a new proxy is deployed
-    /// @param _executor Address of the executor (e.g. a Safe)
+    /// @param _owner Address of the owner (e.g. a Safe)
+    /// @param _executor Address of the executor (e.g. a Safe or Delay Module)
     /// @param _designatedToken Address of the ERC20 token that will define the share of users
     /// @param _circulatingSupply Circulating Supply of designated token
     /// @notice Designated token address can not be zero
     function setUp(
-        Executor _executor,
+        address _owner,
+        address _executor,
         address _designatedToken,
         uint256 _circulatingSupply
     ) public {
-        require(
-            address(executor) == address(0),
-            "Module is already initialized"
-        );
+        require(executor == address(0), "Module is already initialized");
         require(
             _designatedToken != address(0),
             "Designated token can not be zero"
         );
+        owner = _owner;
         executor = _executor;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = _circulatingSupply;
 
-        emit SafeExitModuleSetup(msg.sender, address(_executor));
+        emit SafeExitModuleSetup(msg.sender, _executor);
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
@@ -98,7 +84,7 @@ contract SafeExit {
             address(executor),
             leaverBalance
         );
-        bool success = executor.execTransactionFromModule(
+        bool success = IModuleManager(executor).execTransactionFromModule(
             address(designatedToken),
             0,
             data,
@@ -121,7 +107,7 @@ contract SafeExit {
         uint256 amount = (leaverBalance * ownerBalance) / supply;
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
-        bool success = executor.execTransactionFromModule(
+        bool success = IModuleManager(executor).execTransactionFromModule(
             token,
             0,
             data,
@@ -133,7 +119,7 @@ contract SafeExit {
     /// @dev Add a batch of token addresses to denied tokens list
     /// @param tokens Batch of addresses to add into the denied token list
     /// @notice Can not add duplicate token address or it will throw
-    function addToDenylist(address[] calldata tokens) external executorOnly {
+    function addToDenylist(address[] calldata tokens) external ownerOnly {
         for (uint8 i; i < tokens.length; i++) {
             require(!deniedTokens[tokens[i]], "Token already denied");
             deniedTokens[tokens[i]] = true;
@@ -143,10 +129,7 @@ contract SafeExit {
     /// @dev Remove a batch of token addresses from denied tokens list
     /// @param tokens Batch of addresses to be removed from the denied token list
     /// @notice If a non denied token address is passed, the function will throw
-    function removeFromDenylist(address[] calldata tokens)
-        external
-        executorOnly
-    {
+    function removeFromDenylist(address[] calldata tokens) external ownerOnly {
         for (uint8 i; i < tokens.length; i++) {
             require(deniedTokens[tokens[i]], "Token not denied");
             deniedTokens[tokens[i]] = false;
@@ -163,12 +146,30 @@ contract SafeExit {
 
     function setCirculatingSupply(uint256 _circulatingSupply)
         external
-        executorOnly
+        ownerOnly
     {
         circulatingSupply = _circulatingSupply;
     }
 
     function getCirculatingSupply() public view returns (uint256) {
         return circulatingSupply;
+    }
+
+    /// @inheritdoc IModule
+    function renounceOwnership() external override ownerOnly {
+        emit OwnershipTransferred(owner, address(0));
+        owner = address(0);
+    }
+
+    /// @inheritdoc IModule
+    function setExecutor(address newExecutor) external override ownerOnly {
+        emit ExecutorSet(executor, newExecutor);
+        executor = newExecutor;
+    }
+
+    /// @inheritdoc IModule
+    function transferOwnership(address newOwner) external override ownerOnly {
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 }
