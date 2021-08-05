@@ -11,7 +11,7 @@ task("setup", "deploy a SafeExit Module")
   .addParam(
     "supply",
     "Circulating supply of the designated token",
-    "10",
+    BigNumber.from(10).pow(18).mul(10).toString(),
     types.string
   )
   .setAction(async (taskArgs, hardhatRuntime) => {
@@ -40,7 +40,7 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
   .addParam(
     "supply",
     "Circulating supply of designated token",
-    BigNumber.from(10).pow(18).mul(10),
+    BigNumber.from(10).pow(18).mul(10).toString(),
     types.string
   )
   .setAction(async (taskArgs, hardhatRuntime) => {
