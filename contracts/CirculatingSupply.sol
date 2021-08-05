@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.4;
 
-contract CirculatingSupply {
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract CirculatingSupply is Ownable {
     uint256 public circulatingSupply;
-    address public owner;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not authorized");
-        _;
-    }
-
-    constructor(uint256 _circulatingSupply, address _owner) {
+    constructor(uint256 _circulatingSupply) {
         circulatingSupply = _circulatingSupply;
-        owner = _owner;
     }
 
     function set(uint256 _circulatingSupply) public onlyOwner {
