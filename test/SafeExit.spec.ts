@@ -209,6 +209,25 @@ describe("SafeExit", async () => {
       ).to.be.revertedWith(`Invalid token`);
     });
 
+    it("throws because user is trying to burn more tokens than he owns", async () => {
+      const {
+        executor,
+        module,
+        randomTokenOne,
+        randomTokenTwo,
+        designatedToken,
+      } = await setupTestWithTestExecutor();
+      await executor.setModule(module.address);
+      await expect(
+        module
+          .connect(user)
+          .exit(DesignatedTokenBalance.mul(2), [
+            randomTokenOne.address,
+            randomTokenTwo.address,
+          ])
+      ).to.be.revertedWith("Amount to burn is greater than balance");
+    });
+
     it("user should receive 20% of safe assets because he is burning 1/5 of the circulating supply", async () => {
       const {
         executor,

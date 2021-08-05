@@ -77,6 +77,10 @@ contract SafeExit {
     /// @param tokens Array of tokens that the leaver will recieve
     /// @notice will throw if a token sent is added in the denied token list
     function exit(uint256 amountToBurn, address[] calldata tokens) public {
+        require(
+            designatedToken.balanceOf(msg.sender) >= amountToBurn,
+            "Amount to burn is greater than balance"
+        );
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
