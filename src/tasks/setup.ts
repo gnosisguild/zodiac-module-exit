@@ -40,7 +40,7 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
   .addParam(
     "supply",
     "Circulating supply of designated token",
-    "10",
+    BigNumber.from(10).pow(18).mul(10),
     types.string
   )
   .setAction(async (taskArgs, hardhatRuntime) => {

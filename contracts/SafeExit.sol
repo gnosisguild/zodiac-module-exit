@@ -70,6 +70,7 @@ contract SafeExit {
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
+    /// @param amountToBurn amount to be sent to the owner
     /// @param tokens Array of tokens that the leaver will recieve
     /// @notice will throw if a token sent is added in the denied token list
     function exit(uint256 amountToBurn, address[] calldata tokens) public {
