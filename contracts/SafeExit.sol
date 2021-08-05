@@ -40,15 +40,6 @@ contract SafeExit {
         _;
     }
 
-    /// @dev Iterates on deniedTokens list to check if one of the requested tokens is added
-    /// @param tokens Tokens requested to be claimed
-    modifier onlyValidTokens(address[] calldata tokens) {
-        for (uint8 i; i < tokens.length; i++) {
-            require(!deniedTokens[tokens[i]], "Invalid token");
-        }
-        _;
-    }
-
     constructor(
         Executor _executor,
         address _designatedToken,
@@ -71,10 +62,6 @@ contract SafeExit {
             address(executor) == address(0),
             "Module is already initialized"
         );
-        require(
-            _designatedToken != address(0),
-            "Designated token can not be zero"
-        );
         executor = _executor;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = _circulatingSupply;
@@ -85,26 +72,33 @@ contract SafeExit {
     /// @dev Execute the share of assets and the transfer of designated tokens
     /// @param tokens Array of tokens that the leaver will recieve
     /// @notice will throw if a token sent is added in the denied token list
-    function exit(address[] calldata tokens) public onlyValidTokens(tokens) {
-        for (uint8 i = 0; i < tokens.length; i++) {
-            transferToken(tokens[i], msg.sender);
-        }
-        uint256 leaverBalance = designatedToken.balanceOf(msg.sender);
-
+    function exit(uint256 amountToBurn, address[] calldata tokens) public {
+        require(
+            designatedToken.balanceOf(msg.sender) >= amountToBurn,
+            "Amount to burn is greater than balance"
+        );
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
             msg.sender,
             address(executor),
-            leaverBalance
+            amountToBurn
         );
-        bool success = executor.execTransactionFromModule(
-            address(designatedToken),
-            0,
-            data,
-            Enum.Operation.Call
+
+        require(
+            executor.execTransactionFromModule(
+                address(designatedToken),
+                0,
+                data,
+                Enum.Operation.Call
+            ),
+            "Error on exit execution"
         );
-        require(success, "Error on exit execution");
+
+        for (uint8 i = 0; i < tokens.length; i++) {
+            require(!deniedTokens[tokens[i]], "Invalid token");
+            transferToken(tokens[i], msg.sender, amountToBurn);
+        }
 
         emit ExitSuccessful(msg.sender);
     }
@@ -112,22 +106,25 @@ contract SafeExit {
     /// @dev Execute a token transfer through the executor
     /// @param token address of token to transfer
     /// @param leaver address that will receive the transfer
-    function transferToken(address token, address leaver) private {
+    function transferToken(
+        address token,
+        address leaver,
+        uint256 amountToBurn
+    ) private {
         uint256 ownerBalance = ERC20(token).balanceOf(address(executor));
-        uint256 leaverBalance = designatedToken.balanceOf(leaver);
-
         uint256 supply = getCirculatingSupply();
-
-        uint256 amount = (leaverBalance * ownerBalance) / supply;
+        uint256 amount = (amountToBurn * ownerBalance) / supply;
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
-        bool success = executor.execTransactionFromModule(
-            token,
-            0,
-            data,
-            Enum.Operation.Call
+        require(
+            executor.execTransactionFromModule(
+                token,
+                0,
+                data,
+                Enum.Operation.Call
+            ),
+            "Error on token transfer"
         );
-        require(success, "Error on token transfer");
     }
 
     /// @dev Add a batch of token addresses to denied tokens list
@@ -155,9 +152,8 @@ contract SafeExit {
 
     /// @dev Change the designated token address variable
     /// @param _token Address of new designated token
-    /// @notice Designated token address can not be zero
-    function setDesignatedToken(address _token) public {
-        require(_token != address(0), "Designated token can not be zero");
+    /// @notice Can only be modified by executor
+    function setDesignatedToken(address _token) public executorOnly {
         designatedToken = ERC20(_token);
     }
 
