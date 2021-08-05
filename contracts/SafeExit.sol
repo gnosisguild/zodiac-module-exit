@@ -81,7 +81,7 @@ contract SafeExit is IModule {
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
             msg.sender,
-            address(executor),
+            owner,
             leaverBalance
         );
         bool success = IModuleManager(executor).execTransactionFromModule(
@@ -99,7 +99,7 @@ contract SafeExit is IModule {
     /// @param token address of token to transfer
     /// @param leaver address that will receive the transfer
     function transferToken(address token, address leaver) private {
-        uint256 ownerBalance = ERC20(token).balanceOf(address(executor));
+        uint256 ownerBalance = ERC20(token).balanceOf(owner);
         uint256 leaverBalance = designatedToken.balanceOf(leaver);
 
         uint256 supply = getCirculatingSupply();

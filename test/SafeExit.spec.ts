@@ -347,7 +347,72 @@ describe("SafeExit", async () => {
     });
   });
 
-  // describe("renounceOwnership", () => {
-  //   it("should renounce to ownership", async () => {});
-  // });
+  describe("renounceOwnership", () => {
+    it("should renounce to ownership", async () => {
+      const { module, executor } = await setupTestWithTestExecutor();
+      const data = module.interface.encodeFunctionData("renounceOwnership", []);
+
+      const oldOwner = await module.owner();
+      expect(oldOwner).to.be.equal(executor.address);
+
+      await executor.exec(module.address, 0, data);
+
+      const newOwner = await module.owner();
+      expect(newOwner).to.be.equal(AddressZero);
+    });
+
+    it("throws because its not being called by owner", async () => {
+      const { module } = await setupTestWithTestExecutor();
+      await expect(module.renounceOwnership()).to.be.revertedWith(
+        "Not authorized: You must be the owner"
+      );
+    });
+  });
+
+  describe("setExecutor", () => {
+    it("should update executor", async () => {
+      const { module, executor } = await setupTestWithTestExecutor();
+      const data = module.interface.encodeFunctionData("setExecutor", [
+        user.address,
+      ]);
+
+      const oldExecutor = await module.executor();
+      expect(oldExecutor).to.be.equal(executor.address);
+
+      await executor.exec(module.address, 0, data);
+
+      const newExecutor = await module.executor();
+      expect(newExecutor).to.be.equal(user.address);
+    });
+    it("throws because its not being called by owner", async () => {
+      const { module } = await setupTestWithTestExecutor();
+      await expect(module.setExecutor(user.address)).to.be.revertedWith(
+        "Not authorized: You must be the owner"
+      );
+    });
+  });
+
+  describe("transferOwnership", () => {
+    it("should transfer ownership", async () => {
+      const { module, executor } = await setupTestWithTestExecutor();
+      const data = module.interface.encodeFunctionData("transferOwnership", [
+        user.address,
+      ]);
+
+      const oldOwner = await module.owner();
+      expect(oldOwner).to.be.equal(executor.address);
+
+      await executor.exec(module.address, 0, data);
+
+      const newOwner = await module.owner();
+      expect(newOwner).to.be.equal(user.address);
+    });
+
+    it("throws because its not being called by owner", async () => {
+      const { module } = await setupTestWithTestExecutor();
+      await expect(module.transferOwnership(user.address)).to.be.revertedWith(
+        "Not authorized: You must be the owner"
+      );
+    });
+  });
 });
