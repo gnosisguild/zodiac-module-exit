@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import hre, { deployments, waffle } from "hardhat";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
-const DesignatedTokenBalance = BigNumber.from(1);
+const DesignatedTokenBalance = BigNumber.from(2);
 const RandomTokensBalance = BigNumber.from(100);
 
 describe("SafeExit", async () => {
@@ -57,7 +57,7 @@ describe("SafeExit", async () => {
       base.executor.address,
       base.executor.address,
       base.designatedToken.address,
-      DesignatedTokenBalance.mul(4)
+      DesignatedTokenBalance.mul(5)
     );
     return { ...base, Module, module };
   });
@@ -80,18 +80,6 @@ describe("SafeExit", async () => {
           DesignatedTokenBalance
         )
       ).to.be.revertedWith("Module is already initialized");
-    });
-
-    it("throws if designated token address is zero", async () => {
-      const Module = await hre.ethers.getContractFactory("SafeExit");
-      await expect(
-        Module.deploy(
-          AddressZero,
-          AddressZero,
-          AddressZero,
-          DesignatedTokenBalance
-        )
-      ).to.be.revertedWith("Designated token can not be zero");
     });
 
     it("should emit event because of successful set up", async () => {
@@ -196,20 +184,50 @@ describe("SafeExit", async () => {
 
   describe("exit()", () => {
     it("throws if token is added in denied tokens list", async () => {
-      const { executor, module, randomTokenOne, randomTokenTwo } =
-        await setupTestWithTestExecutor();
+      const {
+        executor,
+        module,
+        randomTokenOne,
+        randomTokenTwo,
+        designatedToken,
+      } = await setupTestWithTestExecutor();
       const data = module.interface.encodeFunctionData("addToDenylist", [
         [randomTokenOne.address],
       ]);
       await executor.exec(module.address, 0, data);
       await executor.setModule(module.address);
+      await designatedToken
+        .connect(user)
+        .approve(executor.address, DesignatedTokenBalance);
 
       await expect(
-        module.exit([randomTokenOne.address, randomTokenTwo.address])
+        module.exit(DesignatedTokenBalance, [
+          randomTokenOne.address,
+          randomTokenTwo.address,
+        ])
       ).to.be.revertedWith(`Invalid token`);
     });
 
-    it("should transfer multiple tokens to user and transfer designated token to owner ", async () => {
+    it("throws because user is trying to burn more tokens than he owns", async () => {
+      const {
+        executor,
+        module,
+        randomTokenOne,
+        randomTokenTwo,
+        designatedToken,
+      } = await setupTestWithTestExecutor();
+      await executor.setModule(module.address);
+      await expect(
+        module
+          .connect(user)
+          .exit(DesignatedTokenBalance.mul(2), [
+            randomTokenOne.address,
+            randomTokenTwo.address,
+          ])
+      ).to.be.revertedWith("Amount to burn is greater than balance");
+    });
+
+    it("user should receive 20% of safe assets because he is burning 1/5 of the circulating supply", async () => {
       const {
         executor,
         module,
@@ -219,10 +237,9 @@ describe("SafeExit", async () => {
       } = await setupTestWithTestExecutor();
       await executor.setModule(module.address);
 
-      const leaverBalance = await designatedToken.balanceOf(user.address);
       await designatedToken
         .connect(user)
-        .approve(executor.address, leaverBalance);
+        .approve(executor.address, DesignatedTokenBalance);
 
       const oldBalanceExec = await randomTokenOne.balanceOf(executor.address);
       const oldUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
@@ -235,23 +252,25 @@ describe("SafeExit", async () => {
       expect(oldBalanceExec).to.be.equal(RandomTokensBalance);
       expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
-      expect(leaverBalance.toNumber()).to.be.greaterThanOrEqual(1);
 
       const exitTransaction = await module
         .connect(user)
-        .exit([randomTokenOne.address, randomTokenTwo.address]);
+        .exit(DesignatedTokenBalance, [
+          randomTokenOne.address,
+          randomTokenTwo.address,
+        ]);
 
       const receipt = await exitTransaction.wait();
 
       const newBalanceExec = await randomTokenOne.balanceOf(executor.address);
 
-      // 3/4 of the random token total supply
-      const ThreeQuartersRandomTokenTotalSupply = RandomTokensBalance.mul(750)
+      // 4/5 of the random token total supply
+      const FourFifthsRandomTokenTotalSupply = RandomTokensBalance.mul(800)
         .div(1000)
         .toNumber();
 
-      // 1/4 of the random token total supply
-      const OneQuarterRandomTokenTotalSupply = RandomTokensBalance.mul(250)
+      // 1/5 of the random token total supply
+      const OneFifthRandomTokenTotalSupply = RandomTokensBalance.mul(200)
         .div(1000)
         .toNumber();
 
@@ -265,16 +284,92 @@ describe("SafeExit", async () => {
       const newOwnerBalance = await designatedToken.balanceOf(executor.address);
 
       expect(newBalanceExec.toNumber()).to.be.equal(
-        ThreeQuartersRandomTokenTotalSupply
+        FourFifthsRandomTokenTotalSupply
       );
       expect(newUserBalanceInRandomTokenOne.toNumber()).to.be.equal(
-        OneQuarterRandomTokenTotalSupply
+        OneFifthRandomTokenTotalSupply
       );
       expect(newUserBalanceInRandomTokenTwo.toNumber()).to.be.equal(
-        OneQuarterRandomTokenTotalSupply
+        OneFifthRandomTokenTotalSupply
       );
       expect(newLeaverBalance.toNumber()).to.be.equal(0);
-      expect(newOwnerBalance.toNumber()).to.be.equal(leaverBalance.toNumber());
+      expect(newOwnerBalance.toNumber()).to.be.equal(
+        DesignatedTokenBalance.toNumber()
+      );
+
+      expect(receipt.events[4].args[0]).to.be.equal(user.address);
+    });
+
+    it("user should receive 10% of safe assets because he is burning 1/10 of the circulating supply", async () => {
+      const {
+        executor,
+        module,
+        randomTokenOne,
+        randomTokenTwo,
+        designatedToken,
+      } = await setupTestWithTestExecutor();
+      await executor.setModule(module.address);
+
+      await designatedToken
+        .connect(user)
+        .approve(executor.address, DesignatedTokenBalance);
+
+      const oldBalanceExec = await randomTokenOne.balanceOf(executor.address);
+      const oldUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
+        user.address
+      );
+      const oldUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
+        user.address
+      );
+
+      expect(oldBalanceExec).to.be.equal(RandomTokensBalance);
+      expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
+      expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
+      const exitTransaction = await module
+        .connect(user)
+        .exit(DesignatedTokenBalance.div(2), [
+          randomTokenOne.address,
+          randomTokenTwo.address,
+        ]);
+
+      const receipt = await exitTransaction.wait();
+
+      const newBalanceExec = await randomTokenOne.balanceOf(executor.address);
+
+      // 9/10 of the random token total supply
+      const NineTenthsRandomTokenTotalSupply = RandomTokensBalance.mul(900)
+        .div(1000)
+        .toNumber();
+
+      // 1/10 of the random token total supply
+      const OneTenthRandomTokenTotalSupply = RandomTokensBalance.mul(100)
+        .div(1000)
+        .toNumber();
+
+      const newUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
+        user.address
+      );
+      const newUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
+        user.address
+      );
+      const newLeaverBalance = await designatedToken.balanceOf(user.address);
+      const newOwnerBalance = await designatedToken.balanceOf(executor.address);
+
+      expect(newBalanceExec.toNumber()).to.be.equal(
+        NineTenthsRandomTokenTotalSupply
+      );
+      expect(newUserBalanceInRandomTokenOne.toNumber()).to.be.equal(
+        OneTenthRandomTokenTotalSupply
+      );
+      expect(newUserBalanceInRandomTokenTwo.toNumber()).to.be.equal(
+        OneTenthRandomTokenTotalSupply
+      );
+      expect(newLeaverBalance.toNumber()).to.be.equal(
+        DesignatedTokenBalance.div(2)
+      );
+      expect(newOwnerBalance.toNumber()).to.be.equal(
+        DesignatedTokenBalance.div(2)
+      );
 
       expect(receipt.events[4].args[0]).to.be.equal(user.address);
     });
@@ -287,7 +382,10 @@ describe("SafeExit", async () => {
       await expect(
         module
           .connect(user)
-          .exit([randomTokenOne.address, randomTokenTwo.address])
+          .exit(DesignatedTokenBalance, [
+            randomTokenOne.address,
+            randomTokenTwo.address,
+          ])
       ).to.be.revertedWith("Error on exit execution");
     });
   });
@@ -297,7 +395,7 @@ describe("SafeExit", async () => {
     it("should update circulating supply ", async () => {
       const { executor, module } = await setupTestWithTestExecutor();
       const currentCirculatingSupply = await module.getCirculatingSupply();
-      expect(DesignatedTokenBalance.mul(4)).to.be.equal(
+      expect(DesignatedTokenBalance.mul(5)).to.be.equal(
         currentCirculatingSupply
       );
       const data = module.interface.encodeFunctionData("setCirculatingSupply", [
@@ -336,13 +434,10 @@ describe("SafeExit", async () => {
       expect(newTokenAddress).to.be.equal(randomTokenOne.address);
     });
 
-    it("throws if address is zero", async () => {
-      const { module, executor } = await setupTestWithTestExecutor();
-      const data = module.interface.encodeFunctionData("setDesignatedToken", [
-        AddressZero,
-      ]);
-      await expect(executor.exec(module.address, 0, data)).to.be.revertedWith(
-        "Designated token can not be zero"
+    it("throws if executor is msg.sender is not the executor", async () => {
+      const { module } = await setupTestWithTestExecutor();
+      await expect(module.setDesignatedToken(AddressZero)).to.be.revertedWith(
+        "Not authorized"
       );
     });
   });
