@@ -6,10 +6,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./IModule.sol";
 import "./IModuleManager.sol";
+import "./CirculatingSupply.sol";
 
 contract SafeExit is IModule {
     ERC20 public designatedToken;
-    uint256 public circulatingSupply;
+    CirculatingSupply public circulatingSupply;
 
     /// @inheritdoc IModule
     address public override owner;
@@ -31,7 +32,7 @@ contract SafeExit is IModule {
         address _owner,
         address _executor,
         address _designatedToken,
-        uint256 _circulatingSupply
+        address _circulatingSupply
     ) {
         setUp(_owner, _executor, _designatedToken, _circulatingSupply);
     }
@@ -46,18 +47,19 @@ contract SafeExit is IModule {
         address _owner,
         address _executor,
         address _designatedToken,
-        uint256 _circulatingSupply
+        address _circulatingSupply
     ) public {
         require(executor == address(0), "Module is already initialized");
         owner = _owner;
         executor = _executor;
         designatedToken = ERC20(_designatedToken);
-        circulatingSupply = _circulatingSupply;
+        circulatingSupply = CirculatingSupply(_circulatingSupply);
 
         emit SafeExitModuleSetup(msg.sender, _executor);
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
+    /// @param amountToBurn amount to be sent to the owner
     /// @param tokens Array of tokens that the leaver will recieve
     /// @notice will throw if a token sent is added in the denied token list
     function exit(uint256 amountToBurn, address[] calldata tokens) public {
@@ -142,15 +144,8 @@ contract SafeExit is IModule {
         designatedToken = ERC20(_token);
     }
 
-    function setCirculatingSupply(uint256 _circulatingSupply)
-        external
-        onlyOwner
-    {
-        circulatingSupply = _circulatingSupply;
-    }
-
     function getCirculatingSupply() public view returns (uint256) {
-        return circulatingSupply;
+        return circulatingSupply.get();
     }
 
     /// @inheritdoc IModule

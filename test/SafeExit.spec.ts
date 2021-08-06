@@ -3,16 +3,17 @@ import { BigNumber } from "ethers";
 import hre, { deployments, waffle } from "hardhat";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
-const DesignatedTokenBalance = BigNumber.from(2);
-const RandomTokensBalance = BigNumber.from(100);
+const DesignatedTokenBalance = BigNumber.from(10).pow(18).mul(5); // Equal to 5
+const RandomTokenOneBalance = BigNumber.from(10).pow(6).mul(10); //  Equal to 100
+const RandomTokenTwoBalance = BigNumber.from(10).pow(12).mul(10); // Equal to 100
 
 describe("SafeExit", async () => {
-  const [user] = waffle.provider.getWallets();
+  const [user, anotherUser] = waffle.provider.getWallets();
 
   const setUpToken = deployments.createFixture(async () => {
     const Token = await hre.ethers.getContractFactory("TestToken");
 
-    const designatedToken = await Token.deploy(4);
+    const designatedToken = await Token.deploy(18);
     const randomTokenOne = await Token.deploy(6);
     const randomTokenTwo = await Token.deploy(12);
 
@@ -30,15 +31,21 @@ describe("SafeExit", async () => {
     const { randomTokenOne, randomTokenTwo, ...token } = await setUpToken();
     const Executor = await hre.ethers.getContractFactory("TestExecutor");
     const executor = await Executor.deploy();
-
-    await randomTokenOne.mint(executor.address, RandomTokensBalance);
-    await randomTokenTwo.mint(executor.address, RandomTokensBalance);
+    await randomTokenOne.mint(executor.address, RandomTokenOneBalance);
+    await randomTokenTwo.mint(executor.address, RandomTokenTwoBalance);
+    const CirculatingSupply = await hre.ethers.getContractFactory(
+      "CirculatingSupply"
+    );
+    const circulatingSupply = await CirculatingSupply.deploy(
+      DesignatedTokenBalance.mul(5)
+    );
 
     return {
       Executor,
       executor,
       randomTokenOne,
       randomTokenTwo,
+      circulatingSupply,
       ...token,
     };
   });
@@ -50,53 +57,54 @@ describe("SafeExit", async () => {
       AddressZero,
       AddressZero,
       base.designatedToken.address,
-      DesignatedTokenBalance
+      base.circulatingSupply.address
     );
 
     await module.setUp(
       base.executor.address,
       base.executor.address,
       base.designatedToken.address,
-      DesignatedTokenBalance.mul(5)
+      base.circulatingSupply.address
     );
     return { ...base, Module, module };
   });
 
   describe("setUp() ", () => {
     it("throws if module has already been initialized", async () => {
-      const { designatedToken } = await baseSetup();
+      const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         user.address,
         user.address,
         designatedToken.address,
-        DesignatedTokenBalance
+        circulatingSupply.address
       );
       await expect(
         module.setUp(
           user.address,
           user.address,
           designatedToken.address,
-          DesignatedTokenBalance
+          circulatingSupply.address
         )
       ).to.be.revertedWith("Module is already initialized");
     });
 
     it("should emit event because of successful set up", async () => {
-      const { designatedToken, executor } = await baseSetup();
+      const { designatedToken, executor, circulatingSupply } =
+        await baseSetup();
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         AddressZero,
         AddressZero,
         designatedToken.address,
-        DesignatedTokenBalance
+        circulatingSupply.address
       );
 
       const setupTx = await module.setUp(
         executor.address,
         executor.address,
         designatedToken.address,
-        DesignatedTokenBalance
+        circulatingSupply.address
       );
       const transaction = await setupTx.wait();
 
@@ -209,13 +217,8 @@ describe("SafeExit", async () => {
     });
 
     it("throws because user is trying to burn more tokens than he owns", async () => {
-      const {
-        executor,
-        module,
-        randomTokenOne,
-        randomTokenTwo,
-        designatedToken,
-      } = await setupTestWithTestExecutor();
+      const { executor, module, randomTokenOne, randomTokenTwo } =
+        await setupTestWithTestExecutor();
       await executor.setModule(module.address);
       await expect(
         module
@@ -249,7 +252,7 @@ describe("SafeExit", async () => {
         user.address
       );
 
-      expect(oldBalanceExec).to.be.equal(RandomTokensBalance);
+      expect(oldBalanceExec).to.be.equal(RandomTokenOneBalance);
       expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
 
@@ -264,38 +267,30 @@ describe("SafeExit", async () => {
 
       const newBalanceExec = await randomTokenOne.balanceOf(executor.address);
 
-      // 4/5 of the random token total supply
-      const FourFifthsRandomTokenTotalSupply = RandomTokensBalance.mul(800)
-        .div(1000)
-        .toNumber();
-
-      // 1/5 of the random token total supply
-      const OneFifthRandomTokenTotalSupply = RandomTokensBalance.mul(200)
-        .div(1000)
-        .toNumber();
-
       const newUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
         user.address
       );
       const newUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
         user.address
       );
+
       const newLeaverBalance = await designatedToken.balanceOf(user.address);
       const newOwnerBalance = await designatedToken.balanceOf(executor.address);
 
-      expect(newBalanceExec.toNumber()).to.be.equal(
-        FourFifthsRandomTokenTotalSupply
+      // 4/5 of the random token total supply
+      expect(newBalanceExec).to.be.equal(
+        RandomTokenOneBalance.mul(800).div(1000)
       );
-      expect(newUserBalanceInRandomTokenOne.toNumber()).to.be.equal(
-        OneFifthRandomTokenTotalSupply
+      // 1/5 of the random token total supply
+      expect(newUserBalanceInRandomTokenOne).to.be.equal(
+        RandomTokenOneBalance.mul(200).div(1000)
       );
-      expect(newUserBalanceInRandomTokenTwo.toNumber()).to.be.equal(
-        OneFifthRandomTokenTotalSupply
+      // 1/5 of the random token total supply
+      expect(newUserBalanceInRandomTokenTwo).to.be.equal(
+        RandomTokenTwoBalance.mul(200).div(1000)
       );
       expect(newLeaverBalance.toNumber()).to.be.equal(0);
-      expect(newOwnerBalance.toNumber()).to.be.equal(
-        DesignatedTokenBalance.toNumber()
-      );
+      expect(newOwnerBalance).to.be.equal(DesignatedTokenBalance);
 
       expect(receipt.events[4].args[0]).to.be.equal(user.address);
     });
@@ -322,7 +317,7 @@ describe("SafeExit", async () => {
         user.address
       );
 
-      expect(oldBalanceExec).to.be.equal(RandomTokensBalance);
+      expect(oldBalanceExec).to.be.equal(RandomTokenOneBalance);
       expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
       const exitTransaction = await module
@@ -336,16 +331,6 @@ describe("SafeExit", async () => {
 
       const newBalanceExec = await randomTokenOne.balanceOf(executor.address);
 
-      // 9/10 of the random token total supply
-      const NineTenthsRandomTokenTotalSupply = RandomTokensBalance.mul(900)
-        .div(1000)
-        .toNumber();
-
-      // 1/10 of the random token total supply
-      const OneTenthRandomTokenTotalSupply = RandomTokensBalance.mul(100)
-        .div(1000)
-        .toNumber();
-
       const newUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
         user.address
       );
@@ -355,21 +340,23 @@ describe("SafeExit", async () => {
       const newLeaverBalance = await designatedToken.balanceOf(user.address);
       const newOwnerBalance = await designatedToken.balanceOf(executor.address);
 
-      expect(newBalanceExec.toNumber()).to.be.equal(
-        NineTenthsRandomTokenTotalSupply
+      // 9/10 of the random token total supply
+      expect(newBalanceExec).to.be.equal(
+        RandomTokenOneBalance.mul(900).div(1000)
       );
-      expect(newUserBalanceInRandomTokenOne.toNumber()).to.be.equal(
-        OneTenthRandomTokenTotalSupply
+
+      // 1/10 of the random token total supply
+      expect(newUserBalanceInRandomTokenOne).to.be.equal(
+        RandomTokenOneBalance.mul(100).div(1000)
       );
-      expect(newUserBalanceInRandomTokenTwo.toNumber()).to.be.equal(
-        OneTenthRandomTokenTotalSupply
+
+      // 1/10 of the random token total supply
+      expect(newUserBalanceInRandomTokenTwo).to.be.equal(
+        RandomTokenTwoBalance.mul(100).div(1000)
       );
-      expect(newLeaverBalance.toNumber()).to.be.equal(
-        DesignatedTokenBalance.div(2)
-      );
-      expect(newOwnerBalance.toNumber()).to.be.equal(
-        DesignatedTokenBalance.div(2)
-      );
+
+      expect(newLeaverBalance).to.be.equal(DesignatedTokenBalance.div(2));
+      expect(newOwnerBalance).to.be.equal(DesignatedTokenBalance.div(2));
 
       expect(receipt.events[4].args[0]).to.be.equal(user.address);
     });
@@ -393,24 +380,21 @@ describe("SafeExit", async () => {
   describe("setCirculatingSupply", () => {
     const NEW_BALANCE = BigNumber.from(10000000);
     it("should update circulating supply ", async () => {
-      const { executor, module } = await setupTestWithTestExecutor();
+      const { module, circulatingSupply } = await setupTestWithTestExecutor();
       const currentCirculatingSupply = await module.getCirculatingSupply();
       expect(DesignatedTokenBalance.mul(5)).to.be.equal(
         currentCirculatingSupply
       );
-      const data = module.interface.encodeFunctionData("setCirculatingSupply", [
-        NEW_BALANCE,
-      ]);
-      await executor.exec(module.address, 0, data);
+      await circulatingSupply.connect(user).set(NEW_BALANCE);
       const newCirculatingSupply = await module.getCirculatingSupply();
       expect(NEW_BALANCE).to.be.equal(newCirculatingSupply);
     });
 
     it("throws if not authorized", async () => {
-      const { module } = await setupTestWithTestExecutor();
-      await expect(module.setCirculatingSupply(NEW_BALANCE)).to.be.revertedWith(
-        `Not authorized`
-      );
+      const { circulatingSupply } = await setupTestWithTestExecutor();
+      await expect(
+        circulatingSupply.connect(anotherUser).set(NEW_BALANCE)
+      ).to.be.revertedWith(`caller is not the owner`);
     });
   });
 

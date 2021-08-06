@@ -22,15 +22,15 @@ Note 2: If you want to test the exit function (the how-to is described below) - 
 
 The first step is to deploy the module. Every Safe will have their own module. The module is linked to a Safe (called executor in the contract). The Safe cannot be changed after deployment.
 
-### Deploying the module
+## Deploying the module
 
-Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0x31Da8344F9aAD82229B8Ed99E5AdC727A85F94E1`.
+Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0xa1B9d0722043B9426b78F9835DfDAdF5BbEaafE4`.
 
 These setup tasks requires the following parameters:
 
 - `dao` (the address of the Safe)
 - `token` (the address of the designated token)
-- `supply` (circulating supply of designated token, if not provided 10 will be set)
+- `supply` (circulating supply of designated token, if not provided 10e18 will be set)
 
 An example for this on rinkeby would be:
 
@@ -47,11 +47,11 @@ Once the module is deployed you should verify the source code (Note: If you used
 An example for this on Rinkeby would be:
 `yarn hardhat --network rinkeby verifyEtherscan --module 0x9797979797979797979797979797979797979797 --dao <safe_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
 
-### Enabling the module
+## Enabling the module
 
 To allow the SafeExit module to actually work it is required to enable it on the Safe that it is connected to. For this it is possible to use the Transaction Builder on https://rinkeby.gnosis-safe.io. For this you can follow our tutorial on [adding a module](https://help.gnosis-safe.io/en/articles/4934427-add-a-module).
 
-### Executing the exit
+## Executing the exit
 
 In order to test the exit execution on rinkeby, you will need some ERC20 tokens. If you don't have any to test, you can get some at: https://app.compound.finance/ with the following steps: (**Make sure you are on rinkeby**) - Connect wallet, click on any token in the supply markets list, a modal will appear, select the tab "Withdraw" and click on "Faucet"; this will trigger a transaction that will send you some tokens to your account (the one you selected).
 
@@ -59,8 +59,11 @@ Request at least two tokens and send them to the Safe Address.
 
 Reminder: You need to give allowance to the Safe, check **Prerequisites** section for more information.
 
-To execute the exit, call the `exit(address[] tokens)` function with the account that received the designated tokens when you deployed it and passing as arguments the tokens addresses that you sent to the Safe (So it can pay you back those tokens).
+To execute the exit, call the `exit(uint256 amountToBurn, address[] tokens)` function with the account that received the designated tokens when you deployed it and passing as arguments the tokens addresses that you sent to the Safe (So it can pay you back those tokens). Example of arguments:
 
-### Deploy a master copy
+- Amount to burn: `1000000000000000`
+- Tokens: `["0xa0533da0743a5517736beb1309ec0bdaa3e960b9", "0x14796a730446112eb5cbc234db9f116ea0e9bbdb"]`
+
+## Deploy a master copy
 
 If the contract gets an update, you can deploy a new version of a Master Copy using the hardhat task `deployMasterCopy`. An example of the command would be: `yarn hardhat --network rinkeby deployMasterCopy`
