@@ -3,6 +3,8 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+import "./CirculatingSupply.sol";
+
 contract Enum {
     enum Operation {
         Call,
@@ -27,7 +29,7 @@ interface Executor {
 contract SafeExit {
     Executor public executor;
     ERC20 public designatedToken;
-    uint256 public circulatingSupply;
+    CirculatingSupply public circulatingSupply;
 
     event SafeExitModuleSetup(address indexed initiator, address indexed safe);
     event ExitSuccessful(address leaver);
@@ -43,7 +45,7 @@ contract SafeExit {
     constructor(
         Executor _executor,
         address _designatedToken,
-        uint256 _circulatingSupply
+        address _circulatingSupply
     ) {
         setUp(_executor, _designatedToken, _circulatingSupply);
     }
@@ -56,7 +58,7 @@ contract SafeExit {
     function setUp(
         Executor _executor,
         address _designatedToken,
-        uint256 _circulatingSupply
+        address _circulatingSupply
     ) public {
         require(
             address(executor) == address(0),
@@ -64,7 +66,7 @@ contract SafeExit {
         );
         executor = _executor;
         designatedToken = ERC20(_designatedToken);
-        circulatingSupply = _circulatingSupply;
+        circulatingSupply = CirculatingSupply(_circulatingSupply);
 
         emit SafeExitModuleSetup(msg.sender, address(_executor));
     }
@@ -158,14 +160,7 @@ contract SafeExit {
         designatedToken = ERC20(_token);
     }
 
-    function setCirculatingSupply(uint256 _circulatingSupply)
-        external
-        executorOnly
-    {
-        circulatingSupply = _circulatingSupply;
-    }
-
     function getCirculatingSupply() public view returns (uint256) {
-        return circulatingSupply;
+        return circulatingSupply.get();
     }
 }
