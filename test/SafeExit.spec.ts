@@ -65,7 +65,6 @@ describe("SafeExit", async () => {
       base.circulatingSupply.address
     );
 
-    await module.transferOwnership(base.executor.address);
     return { ...base, Module, module };
   });
 
