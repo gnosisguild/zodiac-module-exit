@@ -43,13 +43,13 @@ contract SafeExit is Module {
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
-    /// @param amountToBurn amount to be sent to the owner
+    /// @param amountToRedeem amount to be sent to the owner
     /// @param tokens Array of tokens that the leaver will recieve
     /// @notice will throw if a token sent is added in the denied token list
-    function exit(uint256 amountToBurn, address[] calldata tokens) public {
+    function exit(uint256 amountToRedeem, address[] calldata tokens) public {
         require(
-            designatedToken.balanceOf(msg.sender) >= amountToBurn,
-            "Amount to burn is greater than balance"
+            designatedToken.balanceOf(msg.sender) >= amountToRedeem,
+            "Amount to redeem is greater than balance"
         );
         address owner = owner();
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
@@ -57,7 +57,7 @@ contract SafeExit is Module {
             0x23b872dd,
             msg.sender,
             owner,
-            amountToBurn
+            amountToRedeem
         );
 
         require(
@@ -67,7 +67,7 @@ contract SafeExit is Module {
 
         for (uint8 i = 0; i < tokens.length; i++) {
             require(!deniedTokens[tokens[i]], "Invalid token");
-            transferToken(tokens[i], msg.sender, amountToBurn);
+            transferToken(tokens[i], msg.sender, amountToRedeem);
         }
 
         emit ExitSuccessful(msg.sender);
@@ -79,12 +79,12 @@ contract SafeExit is Module {
     function transferToken(
         address token,
         address leaver,
-        uint256 amountToBurn
+        uint256 amountToRedeem
     ) private {
         address owner = owner();
         uint256 ownerBalance = ERC20(token).balanceOf(owner);
         uint256 supply = getCirculatingSupply();
-        uint256 amount = (amountToBurn * ownerBalance) / supply;
+        uint256 amount = (amountToRedeem * ownerBalance) / supply;
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
         require(

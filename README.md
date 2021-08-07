@@ -3,7 +3,7 @@
 [![SafeExit](https://github.com/gnosis/SafeExit/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/SafeExit/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/gnosis/SafeExit/badge.svg?branch=master)](https://coveralls.io/github/gnosis/SafeExit?branch=master)
 
-This module allows any holders of a designated ERC20, at any time, to burn their designated ERC20 tokens in exchange for a proportional share of the Safe’s ERC20 compatible assets. The designed token is defined at the deployment of the module and can be modified by the owner at any time.
+This module allows any holders of a designated ERC20, at any time, to redeem their designated ERC20 tokens in exchange for a proportional share of the Safe’s ERC20 compatible assets. The designed token is defined at the deployment of the module and can be modified by the owner at any time.
 
 This module is intended to be used with the [Gnosis Safe](https://github.com/gnosis/safe-contracts).
 

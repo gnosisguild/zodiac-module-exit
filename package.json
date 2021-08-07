@@ -1,7 +1,7 @@
 {
   "name": "@gnosis/safe-exit",
   "version": "1.0.0",
-  "description": "",
+  "description": "A module that allows users to redeem their designated tokens for a proportional share assets held in an account.",
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
@@ -17,7 +17,7 @@
     "type": "git"
   },
   "author": "",
-  "license": "MIT",
+  "license": "LGPL-3.0+",
   "devDependencies": {
     "@gnosis/zodiac": "github:gnosis/zodiac#master",
     "@nomiclabs/hardhat-ethers": "2.0.2",

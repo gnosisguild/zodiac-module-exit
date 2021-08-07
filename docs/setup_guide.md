@@ -61,9 +61,9 @@ Request at least two tokens and send them to the Safe Address.
 
 Reminder: You need to give allowance to the Safe, check **Prerequisites** section for more information.
 
-To execute the exit, call the `exit(uint256 amountToBurn, address[] tokens)` function with the account that received the designated tokens when you deployed it and passing as arguments the tokens addresses that you sent to the Safe (So it can pay you back those tokens). Example of arguments:
+To execute the exit, call the `exit(uint256 amountToRedeem, address[] tokens)` function with the account that received the designated tokens when you deployed it and passing as arguments the tokens addresses that you sent to the Safe (So it can pay you back those tokens). Example of arguments:
 
-- Amount to burn: `1000000000000000`
+- Amount to redeem: `1000000000000000`
 - Tokens: `["0xa0533da0743a5517736beb1309ec0bdaa3e960b9", "0x14796a730446112eb5cbc234db9f116ea0e9bbdb"]`
 
 ## Deploy a master copy
