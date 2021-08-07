@@ -55,17 +55,17 @@ describe("SafeExit", async () => {
     const Module = await hre.ethers.getContractFactory("SafeExit");
     const module = await Module.deploy(
       AddressZero,
-      AddressZero,
       base.designatedToken.address,
       base.circulatingSupply.address
     );
 
     await module.setUp(
       base.executor.address,
-      base.executor.address,
       base.designatedToken.address,
       base.circulatingSupply.address
     );
+
+    await module.transferOwnership(base.executor.address);
     return { ...base, Module, module };
   });
 
@@ -75,13 +75,11 @@ describe("SafeExit", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         user.address,
-        user.address,
         designatedToken.address,
         circulatingSupply.address
       );
       await expect(
         module.setUp(
-          user.address,
           user.address,
           designatedToken.address,
           circulatingSupply.address
@@ -95,13 +93,11 @@ describe("SafeExit", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         AddressZero,
-        AddressZero,
         designatedToken.address,
         circulatingSupply.address
       );
 
       const setupTx = await module.setUp(
-        executor.address,
         executor.address,
         designatedToken.address,
         circulatingSupply.address
@@ -130,7 +126,7 @@ describe("SafeExit", async () => {
       const { module, randomTokenTwo } = await setupTestWithTestExecutor();
       await expect(
         module.addToDenylist([randomTokenTwo.address])
-      ).to.be.revertedWith(`Not authorized`);
+      ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
 
     it("throws if token is already in list", async () => {
@@ -186,7 +182,7 @@ describe("SafeExit", async () => {
       const { module, randomTokenOne } = await setupTestWithTestExecutor();
       await expect(
         module.removeFromDenylist([randomTokenOne.address])
-      ).to.be.revertedWith(`Not authorized`);
+      ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
   });
 
@@ -421,7 +417,7 @@ describe("SafeExit", async () => {
     it("throws if executor is msg.sender is not the executor", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.setDesignatedToken(AddressZero)).to.be.revertedWith(
-        "Not authorized"
+        "Ownable: caller is not the owner"
       );
     });
   });
@@ -443,7 +439,7 @@ describe("SafeExit", async () => {
     it("throws because its not being called by owner", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.renounceOwnership()).to.be.revertedWith(
-        "Not authorized: You must be the owner"
+        "Ownable: caller is not the owner"
       );
     });
   });
@@ -466,7 +462,7 @@ describe("SafeExit", async () => {
     it("throws because its not being called by owner", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.setExecutor(user.address)).to.be.revertedWith(
-        "Not authorized: You must be the owner"
+        "Ownable: caller is not the owner"
       );
     });
   });
@@ -490,7 +486,7 @@ describe("SafeExit", async () => {
     it("throws because its not being called by owner", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.transferOwnership(user.address)).to.be.revertedWith(
-        "Not authorized: You must be the owner"
+        "Ownable: caller is not the owner"
       );
     });
   });

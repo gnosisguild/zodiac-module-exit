@@ -3,19 +3,13 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@gnosis/zodiac/contracts/core/Module.sol";
 
-import "./IModule.sol";
-import "./IModuleManager.sol";
 import "./CirculatingSupply.sol";
 
-contract SafeExit is IModule {
+contract SafeExit is Module {
     ERC20 public designatedToken;
     CirculatingSupply public circulatingSupply;
-
-    /// @inheritdoc IModule
-    address public override owner;
-    /// @inheritdoc IModule
-    address public override executor;
 
     event SafeExitModuleSetup(address indexed initiator, address indexed safe);
     event ExitSuccessful(address indexed leaver);
@@ -23,34 +17,25 @@ contract SafeExit is IModule {
     /// @notice Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not authorized: You must be the owner");
-        _;
-    }
-
     constructor(
-        address _owner,
         address _executor,
         address _designatedToken,
         address _circulatingSupply
     ) {
-        setUp(_owner, _executor, _designatedToken, _circulatingSupply);
+        setUp(_executor, _designatedToken, _circulatingSupply);
     }
 
     /// @dev Initialize function, will be triggered when a new proxy is deployed
-    /// @param _owner Address of the owner (e.g. a Safe)
     /// @param _executor Address of the executor (e.g. a Safe or Delay Module)
     /// @param _designatedToken Address of the ERC20 token that will define the share of users
     /// @param _circulatingSupply Circulating Supply of designated token
     /// @notice Designated token address can not be zero
     function setUp(
-        address _owner,
         address _executor,
         address _designatedToken,
         address _circulatingSupply
     ) public {
         require(executor == address(0), "Module is already initialized");
-        owner = _owner;
         executor = _executor;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
@@ -67,6 +52,7 @@ contract SafeExit is IModule {
             designatedToken.balanceOf(msg.sender) >= amountToBurn,
             "Amount to burn is greater than balance"
         );
+        address owner = owner();
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
@@ -76,12 +62,7 @@ contract SafeExit is IModule {
         );
 
         require(
-            IModuleManager(executor).execTransactionFromModule(
-                address(designatedToken),
-                0,
-                data,
-                Enum.Operation.Call
-            ),
+            exec(address(designatedToken), 0, data, Enum.Operation.Call),
             "Error on exit execution"
         );
 
@@ -101,18 +82,14 @@ contract SafeExit is IModule {
         address leaver,
         uint256 amountToBurn
     ) private {
+        address owner = owner();
         uint256 ownerBalance = ERC20(token).balanceOf(owner);
         uint256 supply = getCirculatingSupply();
         uint256 amount = (amountToBurn * ownerBalance) / supply;
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
         require(
-            IModuleManager(executor).execTransactionFromModule(
-                token,
-                0,
-                data,
-                Enum.Operation.Call
-            ),
+            exec(token, 0, data, Enum.Operation.Call),
             "Error on token transfer"
         );
     }
@@ -146,23 +123,5 @@ contract SafeExit is IModule {
 
     function getCirculatingSupply() public view returns (uint256) {
         return circulatingSupply.get();
-    }
-
-    /// @inheritdoc IModule
-    function renounceOwnership() external override onlyOwner {
-        emit OwnershipTransferred(owner, address(0));
-        owner = address(0);
-    }
-
-    /// @inheritdoc IModule
-    function setExecutor(address newExecutor) external override onlyOwner {
-        emit ExecutorSet(executor, newExecutor);
-        executor = newExecutor;
-    }
-
-    /// @inheritdoc IModule
-    function transferOwnership(address newOwner) external override onlyOwner {
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
     }
 }

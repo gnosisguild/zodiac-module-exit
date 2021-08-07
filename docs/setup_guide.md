@@ -16,15 +16,15 @@ Note: In this script, one (1) token is minted to the address passed as the user 
 
 This should return the address of the deployed token. For this guide we assume this to be `0x0000000000000000000000000000000000000100`
 
-Note 2: If you want to test the exit function (the how-to is described below) - You will need to give allowance of your designated tokens to the safe, you can do this calling the `approve` function of the token from etherscan (The token will be verified on deployment)
+Note 2: If you want to test the exit function (the how-to is described below) - You will need to give allowance of your designated tokens to the safe, you can do this calling the `approve` function of the token from etherscan (The token will be verified on deployment) and passing 1000000000000000000 as the amount and the safe address the spender
 
 ## Setting up the module
 
-The first step is to deploy the module. Every Safe will have their own module. The module is linked to a Safe (called executor in the contract). The Safe cannot be changed after deployment.
+The first step is to deploy the module. Every Safe will have their own module. The module is linked to a Safe (called executor in the contract). The Safe can only be changed by the owner of the module.
 
 ## Deploying the module
 
-Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0xa1B9d0722043B9426b78F9835DfDAdF5BbEaafE4`.
+Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0x9eCf1bDEfED95442486eb3fA3F102d23f2701E6b`.
 
 These setup tasks requires the following parameters:
 
@@ -44,8 +44,10 @@ This should return the address of the deployed Exit module. For this guide we as
 
 Once the module is deployed you should verify the source code (Note: If you used the factory deployment the contract should be already verified). If you use a network that is Etherscan compatible and you configure the `ETHERSCAN_API_KEY` in your environment you can use the provided hardhat task to do this.
 
+Please note that this supply argument must be the address of the deployed Circulating Supply contract that was deployed on the setup scripts. Check the setup script logs in order to get the address
+
 An example for this on Rinkeby would be:
-`yarn hardhat --network rinkeby verifyEtherscan --module 0x9797979797979797979797979797979797979797 --dao <safe_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
+`yarn hardhat --network rinkeby verifyEtherscan --module 0x9797979797979797979797979797979797979797 --dao <safe_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply_contract_address>`
 
 ## Enabling the module
 
