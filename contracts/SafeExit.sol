@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@gnosis/zodiac/contracts/core/Module.sol";
 
 import "./CirculatingSupply.sol";
@@ -116,7 +115,7 @@ contract SafeExit is Module {
 
     /// @dev Change the designated token address variable
     /// @param _token Address of new designated token
-    /// @notice Can only be modified by executor
+    /// @notice Can only be modified by owner
     function setDesignatedToken(address _token) public onlyOwner {
         designatedToken = ERC20(_token);
     }
