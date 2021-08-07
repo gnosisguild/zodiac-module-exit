@@ -64,6 +64,8 @@ describe("SafeExit", async () => {
       base.designatedToken.address,
       base.circulatingSupply.address
     );
+
+    await module.transferOwnership(base.executor.address);
     return { ...base, Module, module };
   });
 
@@ -124,7 +126,7 @@ describe("SafeExit", async () => {
       const { module, randomTokenTwo } = await setupTestWithTestExecutor();
       await expect(
         module.addToDenylist([randomTokenTwo.address])
-      ).to.be.revertedWith(`Not authorized`);
+      ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
 
     it("throws if token is already in list", async () => {
@@ -180,7 +182,7 @@ describe("SafeExit", async () => {
       const { module, randomTokenOne } = await setupTestWithTestExecutor();
       await expect(
         module.removeFromDenylist([randomTokenOne.address])
-      ).to.be.revertedWith(`Not authorized`);
+      ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
   });
 
@@ -210,7 +212,7 @@ describe("SafeExit", async () => {
       ).to.be.revertedWith(`Invalid token`);
     });
 
-    it("throws because user is trying to burn more tokens than he owns", async () => {
+    it("throws because user is trying to redeem more tokens than he owns", async () => {
       const { executor, module, randomTokenOne, randomTokenTwo } =
         await setupTestWithTestExecutor();
       await executor.setModule(module.address);
@@ -221,10 +223,10 @@ describe("SafeExit", async () => {
             randomTokenOne.address,
             randomTokenTwo.address,
           ])
-      ).to.be.revertedWith("Amount to burn is greater than balance");
+      ).to.be.revertedWith("Amount to redeem is greater than balance");
     });
 
-    it("user should receive 20% of safe assets because he is burning 1/5 of the circulating supply", async () => {
+    it("user should receive 20% of safe assets because he is redeeming 1/5 of the circulating supply", async () => {
       const {
         executor,
         module,
@@ -289,7 +291,7 @@ describe("SafeExit", async () => {
       expect(receipt.events[4].args[0]).to.be.equal(user.address);
     });
 
-    it("user should receive 10% of safe assets because he is burning 1/10 of the circulating supply", async () => {
+    it("user should receive 10% of safe assets because he is redeeming 1/10 of the circulating supply", async () => {
       const {
         executor,
         module,
@@ -415,7 +417,76 @@ describe("SafeExit", async () => {
     it("throws if executor is msg.sender is not the executor", async () => {
       const { module } = await setupTestWithTestExecutor();
       await expect(module.setDesignatedToken(AddressZero)).to.be.revertedWith(
-        "Not authorized"
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
+  describe("renounceOwnership", () => {
+    it("should renounce to ownership", async () => {
+      const { module, executor } = await setupTestWithTestExecutor();
+      const data = module.interface.encodeFunctionData("renounceOwnership", []);
+
+      const oldOwner = await module.owner();
+      expect(oldOwner).to.be.equal(executor.address);
+
+      await executor.exec(module.address, 0, data);
+
+      const newOwner = await module.owner();
+      expect(newOwner).to.be.equal(AddressZero);
+    });
+
+    it("throws because its not being called by owner", async () => {
+      const { module } = await setupTestWithTestExecutor();
+      await expect(module.renounceOwnership()).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
+  describe("setExecutor", () => {
+    it("should update executor", async () => {
+      const { module, executor } = await setupTestWithTestExecutor();
+      const data = module.interface.encodeFunctionData("setExecutor", [
+        user.address,
+      ]);
+
+      const oldExecutor = await module.executor();
+      expect(oldExecutor).to.be.equal(executor.address);
+
+      await executor.exec(module.address, 0, data);
+
+      const newExecutor = await module.executor();
+      expect(newExecutor).to.be.equal(user.address);
+    });
+    it("throws because its not being called by owner", async () => {
+      const { module } = await setupTestWithTestExecutor();
+      await expect(module.setExecutor(user.address)).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
+  describe("transferOwnership", () => {
+    it("should transfer ownership", async () => {
+      const { module, executor } = await setupTestWithTestExecutor();
+      const data = module.interface.encodeFunctionData("transferOwnership", [
+        user.address,
+      ]);
+
+      const oldOwner = await module.owner();
+      expect(oldOwner).to.be.equal(executor.address);
+
+      await executor.exec(module.address, 0, data);
+
+      const newOwner = await module.owner();
+      expect(newOwner).to.be.equal(user.address);
+    });
+
+    it("throws because its not being called by owner", async () => {
+      const { module } = await setupTestWithTestExecutor();
+      await expect(module.transferOwnership(user.address)).to.be.revertedWith(
+        "Ownable: caller is not the owner"
       );
     });
   });

@@ -17,13 +17,21 @@ task("setup", "deploy a SafeExit Module")
   .setAction(async (taskArgs, hardhatRuntime) => {
     const [caller] = await hardhatRuntime.ethers.getSigners();
     console.log("Using the account:", caller.address);
+
+    const Supply = await hardhatRuntime.ethers.getContractFactory(
+      "CirculatingSupply"
+    );
     const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
+
+    const supply = await Supply.deploy(taskArgs.supply);
     const module = await Module.deploy(
       taskArgs.dao,
       taskArgs.token,
-      taskArgs.supply
+      supply.address
     );
 
+    await module.transferOwnership(taskArgs.dao);
+    console.log("Circulating Supply contract deployed to:", supply.address);
     console.log("Module deployed to:", module.address);
   });
 
@@ -54,19 +62,28 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
       ) public returns (address proxy)`,
     ];
 
+    const Supply = await hardhatRuntime.ethers.getContractFactory(
+      "CirculatingSupply"
+    );
+
+    const supply = await Supply.deploy(taskArgs.supply);
     const Factory = new Contract(taskArgs.factory, FactoryAbi, caller);
     const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
 
     const initParams = Module.interface.encodeFunctionData("setUp", [
       taskArgs.dao,
       taskArgs.token,
-      taskArgs.supply,
+      supply.address,
     ]);
 
     const receipt = await Factory.deployModule(
       taskArgs.mastercopy,
       initParams
     ).then((tx: any) => tx.wait(3));
+    const moduleAddress = receipt.logs[1].address;
+    const newModule = Module.attach(moduleAddress);
+    await newModule.transferOwnership(taskArgs.dao);
+    console.log("Circulating Supply contract deployed to:", supply.address);
     console.log("Module deployed to:", receipt.logs[1].address);
   });
 
@@ -76,7 +93,7 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
-    "Circulating supply of designated token",
+    "Address of circulating supply contract",
     undefined,
     types.string
   )
@@ -92,14 +109,16 @@ task("deployMasterCopy", "deploy a master copy of Safe Exit").setAction(
     const [caller] = await hardhatRuntime.ethers.getSigners();
     console.log("Using the account:", caller.address);
     const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
-    const module = await Module.deploy(AddressOne, AddressOne, 0);
+    const module = await Module.deploy(AddressOne, AddressOne, AddressOne);
     await module.deployTransaction.wait(3);
 
     console.log("Module deployed to:", module.address);
     await hardhatRuntime.run("verify:verify", {
       address: module.address,
-      constructorArguments: [AddressOne, AddressOne, 0],
+      constructorArguments: [AddressOne, AddressOne, AddressOne],
     });
+
+    await module.transferOwnership(AddressOne);
   }
 );
 
