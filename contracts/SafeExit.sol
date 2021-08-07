@@ -39,6 +39,8 @@ contract SafeExit is Module {
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
 
+        if (_executor != address(0)) transferOwnership(_executor);
+
         emit SafeExitModuleSetup(msg.sender, _executor);
     }
 

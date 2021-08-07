@@ -30,7 +30,6 @@ task("setup", "deploy a SafeExit Module")
       supply.address
     );
 
-    await module.transferOwnership(taskArgs.dao);
     console.log("Circulating Supply contract deployed to:", supply.address);
     console.log("Module deployed to:", module.address);
   });
@@ -80,9 +79,6 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
       taskArgs.mastercopy,
       initParams
     ).then((tx: any) => tx.wait(3));
-    const moduleAddress = receipt.logs[1].address;
-    const newModule = Module.attach(moduleAddress);
-    await newModule.transferOwnership(taskArgs.dao);
     console.log("Circulating Supply contract deployed to:", supply.address);
     console.log("Module deployed to:", receipt.logs[1].address);
   });
@@ -117,8 +113,6 @@ task("deployMasterCopy", "deploy a master copy of Safe Exit").setAction(
       address: module.address,
       constructorArguments: [AddressOne, AddressOne, AddressOne],
     });
-
-    await module.transferOwnership(AddressOne);
   }
 );
 
