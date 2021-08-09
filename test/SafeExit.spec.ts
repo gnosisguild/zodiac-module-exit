@@ -55,11 +55,13 @@ describe("SafeExit", async () => {
     const Module = await hre.ethers.getContractFactory("SafeExit");
     const module = await Module.deploy(
       AddressZero,
+      AddressZero,
       base.designatedToken.address,
       base.circulatingSupply.address
     );
 
     await module.setUp(
+      base.executor.address,
       base.executor.address,
       base.designatedToken.address,
       base.circulatingSupply.address
@@ -74,11 +76,13 @@ describe("SafeExit", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         user.address,
+        user.address,
         designatedToken.address,
         circulatingSupply.address
       );
       await expect(
         module.setUp(
+          user.address,
           user.address,
           designatedToken.address,
           circulatingSupply.address
@@ -92,11 +96,13 @@ describe("SafeExit", async () => {
       const Module = await hre.ethers.getContractFactory("SafeExit");
       const module = await Module.deploy(
         AddressZero,
+        AddressZero,
         designatedToken.address,
         circulatingSupply.address
       );
 
       const setupTx = await module.setUp(
+        executor.address,
         executor.address,
         designatedToken.address,
         circulatingSupply.address

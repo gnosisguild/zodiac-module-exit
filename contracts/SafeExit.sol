@@ -17,19 +17,22 @@ contract SafeExit is Module {
     mapping(address => bool) public deniedTokens;
 
     constructor(
+        address _owner,
         address _executor,
         address _designatedToken,
         address _circulatingSupply
     ) {
-        setUp(_executor, _designatedToken, _circulatingSupply);
+        setUp(_owner, _executor, _designatedToken, _circulatingSupply);
     }
 
     /// @dev Initialize function, will be triggered when a new proxy is deployed
+    /// @param _owner Address of the owner
     /// @param _executor Address of the executor (e.g. a Safe or Delay Module)
     /// @param _designatedToken Address of the ERC20 token that will define the share of users
     /// @param _circulatingSupply Circulating Supply of designated token
     /// @notice Designated token address can not be zero
     function setUp(
+        address _owner,
         address _executor,
         address _designatedToken,
         address _circulatingSupply
@@ -39,7 +42,7 @@ contract SafeExit is Module {
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
 
-        if (_executor != address(0)) transferOwnership(_executor);
+        if (_executor != address(0)) transferOwnership(_owner);
 
         emit SafeExitModuleSetup(msg.sender, _executor);
     }
