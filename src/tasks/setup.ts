@@ -6,7 +6,13 @@ import { BigNumber, Contract } from "ethers";
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
 task("setup", "deploy a SafeExit Module")
-  .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
+  .addParam("owner", "Address of the owner", undefined, types.string)
+  .addParam(
+    "executor",
+    "Address of the executor (e.g. Safe)",
+    undefined,
+    types.string
+  )
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
@@ -25,12 +31,12 @@ task("setup", "deploy a SafeExit Module")
 
     const supply = await Supply.deploy(taskArgs.supply);
     const module = await Module.deploy(
-      taskArgs.dao,
+      taskArgs.owner,
+      taskArgs.executor,
       taskArgs.token,
       supply.address
     );
 
-    await module.transferOwnership(taskArgs.dao);
     console.log("Circulating Supply contract deployed to:", supply.address);
     console.log("Module deployed to:", module.address);
   });
@@ -43,7 +49,13 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
     undefined,
     types.string
   )
-  .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
+  .addParam("owner", "Address of the owner", undefined, types.string)
+  .addParam(
+    "executor",
+    "Address of the executor (e.g. Safe)",
+    undefined,
+    types.string
+  )
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
@@ -71,7 +83,8 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
     const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
 
     const initParams = Module.interface.encodeFunctionData("setUp", [
-      taskArgs.dao,
+      taskArgs.owner,
+      taskArgs.executor,
       taskArgs.token,
       supply.address,
     ]);
@@ -80,16 +93,19 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
       taskArgs.mastercopy,
       initParams
     ).then((tx: any) => tx.wait(3));
-    const moduleAddress = receipt.logs[1].address;
-    const newModule = Module.attach(moduleAddress);
-    await newModule.transferOwnership(taskArgs.dao);
     console.log("Circulating Supply contract deployed to:", supply.address);
     console.log("Module deployed to:", receipt.logs[1].address);
   });
 
 task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("module", "Address of the Safe Exit", undefined, types.string)
-  .addParam("dao", "Address of the DAO (e.g. Safe)", undefined, types.string)
+  .addParam("owner", "Address of the owner", undefined, types.string)
+  .addParam(
+    "executor",
+    "Address of the executor (e.g. Safe)",
+    undefined,
+    types.string
+  )
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
@@ -100,7 +116,12 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
   .setAction(async (taskArgs, hardhatRuntime) => {
     await hardhatRuntime.run("verify", {
       address: taskArgs.module,
-      constructorArgsParams: [taskArgs.dao, taskArgs.token, taskArgs.supply],
+      constructorArgsParams: [
+        taskArgs.owner,
+        taskArgs.executor,
+        taskArgs.token,
+        taskArgs.supply,
+      ],
     });
   });
 
@@ -109,16 +130,19 @@ task("deployMasterCopy", "deploy a master copy of Safe Exit").setAction(
     const [caller] = await hardhatRuntime.ethers.getSigners();
     console.log("Using the account:", caller.address);
     const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
-    const module = await Module.deploy(AddressOne, AddressOne, AddressOne);
+    const module = await Module.deploy(
+      AddressOne,
+      AddressOne,
+      AddressOne,
+      AddressOne
+    );
     await module.deployTransaction.wait(3);
 
     console.log("Module deployed to:", module.address);
     await hardhatRuntime.run("verify:verify", {
       address: module.address,
-      constructorArguments: [AddressOne, AddressOne, AddressOne],
+      constructorArguments: [AddressOne, AddressOne, AddressOne, AddressOne],
     });
-
-    await module.transferOwnership(AddressOne);
   }
 );
 

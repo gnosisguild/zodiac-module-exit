@@ -52,7 +52,7 @@
     "@openzeppelin/contracts": "^4.2.0",
     "argv": "0.0.2",
     "dotenv": "10.0.0",
-    "ethers": "5.4.1",
+    "ethers": "5.4.4",
     "yargs": "16.1.1"
   }
 }

@@ -22,23 +22,27 @@ Note 2: If you want to test the exit function (the how-to is described below) - 
 
 The first step is to deploy the module. Every Safe will have their own module. The module is linked to a Safe (called executor in the contract). The Safe can only be changed by the owner of the module.
 
+- The owner is the address that can call setter functions (would usually be the safe)
+- The executor is the address that the module uses to execute transactions (it calls the `execTransactionFromModule` function)
+
 ## Deploying the module
 
-Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0x9eCf1bDEfED95442486eb3fA3F102d23f2701E6b`.
+Hardhat tasks can be used to deploy a Safe Exit instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0x3c1EDB810E3D1fF860F1894d40F946f2ca588AAD`.
 
 These setup tasks requires the following parameters:
 
-- `dao` (the address of the Safe)
+- `owner` (the address of the owner)
+- `executor` (the address of the executor - e.g. Safe)
 - `token` (the address of the designated token)
 - `supply` (circulating supply of designated token, if not provided 10e18 will be set)
 
 An example for this on rinkeby would be:
 
-`yarn hardhat --network rinkeby setup --dao <safe_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
+`yarn hardhat --network rinkeby setup --owner <owner_address> --executor <executor_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
 
 or
 
-`yarn hardhat --network rinkeby factorySetup --factory <factory_address> --mastercopy <masterCopy_address> --dao <safe_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
+`yarn hardhat --network rinkeby factorySetup --factory <factory_address> --mastercopy <masterCopy_address> --owner <owner_address> --executor <executor_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
 
 This should return the address of the deployed Exit module. For this guide we assume this to be `0x9797979797979797979797979797979797979797`
 
@@ -47,7 +51,7 @@ Once the module is deployed you should verify the source code (Note: If you used
 Please note that this supply argument must be the address of the deployed Circulating Supply contract that was deployed on the setup scripts. Check the setup script logs in order to get the address
 
 An example for this on Rinkeby would be:
-`yarn hardhat --network rinkeby verifyEtherscan --module 0x9797979797979797979797979797979797979797 --dao <safe_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply_contract_address>`
+`yarn hardhat --network rinkeby verifyEtherscan --module 0x9797979797979797979797979797979797979797 --owner <owner_address> --executor <executor_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply_contract_address>`
 
 ## Enabling the module
 
