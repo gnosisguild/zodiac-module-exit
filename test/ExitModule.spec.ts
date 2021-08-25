@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
+import { AbiCoder } from "ethers/lib/utils";
 import hre, { deployments, waffle } from "hardhat";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
@@ -7,7 +8,8 @@ const DesignatedTokenBalance = BigNumber.from(10).pow(18).mul(5); // Equal to 5
 const RandomTokenOneBalance = BigNumber.from(10).pow(6).mul(10); //  Equal to 100
 const RandomTokenTwoBalance = BigNumber.from(10).pow(12).mul(10); // Equal to 100
 
-describe("SafeExit", async () => {
+describe("Exit", async () => {
+  let initializeParams: string;
   const [user, anotherUser] = waffle.provider.getWallets();
 
   const setUpToken = deployments.createFixture(async () => {
@@ -40,6 +42,16 @@ describe("SafeExit", async () => {
       DesignatedTokenBalance.mul(5)
     );
 
+    initializeParams = new AbiCoder().encode(
+      ["address", "address", "address", "address"],
+      [
+        executor.address,
+        executor.address,
+        token.designatedToken.address,
+        circulatingSupply.address,
+      ]
+    );
+
     return {
       Executor,
       executor,
@@ -52,7 +64,7 @@ describe("SafeExit", async () => {
 
   const setupTestWithTestExecutor = deployments.createFixture(async () => {
     const base = await baseSetup();
-    const Module = await hre.ethers.getContractFactory("SafeExit");
+    const Module = await hre.ethers.getContractFactory("Exit");
     const module = await Module.deploy(
       AddressZero,
       AddressZero,
@@ -60,12 +72,7 @@ describe("SafeExit", async () => {
       base.circulatingSupply.address
     );
 
-    await module.setUp(
-      base.executor.address,
-      base.executor.address,
-      base.designatedToken.address,
-      base.circulatingSupply.address
-    );
+    await module.setUp(initializeParams);
 
     return { ...base, Module, module };
   });
@@ -73,7 +80,7 @@ describe("SafeExit", async () => {
   describe("setUp() ", () => {
     it("throws if module has already been initialized", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
-      const Module = await hre.ethers.getContractFactory("SafeExit");
+      const Module = await hre.ethers.getContractFactory("Exit");
       const module = await Module.deploy(
         user.address,
         user.address,
@@ -81,19 +88,13 @@ describe("SafeExit", async () => {
         circulatingSupply.address
       );
       await expect(
-        module.setUp(
-          user.address,
-          user.address,
-          designatedToken.address,
-          circulatingSupply.address
-        )
+        module.setUp(initializeParams)
       ).to.be.revertedWith("Module is already initialized");
     });
 
     it("should emit event because of successful set up", async () => {
-      const { designatedToken, executor, circulatingSupply } =
-        await baseSetup();
-      const Module = await hre.ethers.getContractFactory("SafeExit");
+      const { designatedToken, executor, circulatingSupply } = await baseSetup();
+      const Module = await hre.ethers.getContractFactory("Exit");
       const module = await Module.deploy(
         AddressZero,
         AddressZero,
@@ -101,15 +102,10 @@ describe("SafeExit", async () => {
         circulatingSupply.address
       );
 
-      const setupTx = await module.setUp(
-        executor.address,
-        executor.address,
-        designatedToken.address,
-        circulatingSupply.address
-      );
+      const setupTx = await module.setUp(initializeParams);
       const transaction = await setupTx.wait();
 
-      const [initiator, safe] = transaction.events[0].args;
+      const [initiator, safe] = transaction.events[2].args;
 
       expect(safe).to.be.equal(executor.address);
       expect(initiator).to.be.equal(user.address);
