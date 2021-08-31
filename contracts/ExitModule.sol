@@ -45,15 +45,14 @@ contract Exit is Module {
             address _circulatingSupply
         ) = abi.decode(initParams, (address, address, address, address));
         require(!initialized, "Module is already initialized");
-        executor = _executor;
+        initialized = true;
+        require(_executor != address(0), "Executor can not be zero address");
+        avatar = _executor;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
 
-        if (_owner != address(0)) {
-            __Ownable_init();
-            transferOwnership(_owner);
-            initialized = true;
-        }
+        __Ownable_init();
+        transferOwnership(_owner);
 
         emit SafeExitModuleSetup(msg.sender, _executor);
     }

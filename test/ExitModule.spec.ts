@@ -66,13 +66,11 @@ describe("Exit", async () => {
     const base = await baseSetup();
     const Module = await hre.ethers.getContractFactory("Exit");
     const module = await Module.deploy(
-      AddressZero,
-      AddressZero,
+      base.executor.address,
+      base.executor.address,
       base.designatedToken.address,
       base.circulatingSupply.address
     );
-
-    await module.setUp(initializeParams);
 
     return { ...base, Module, module };
   });
@@ -87,28 +85,40 @@ describe("Exit", async () => {
         designatedToken.address,
         circulatingSupply.address
       );
+      await expect(module.setUp(initializeParams)).to.be.revertedWith(
+        "Module is already initialized"
+      );
+    });
+
+    it("throws if executor is zero address", async () => {
+      const { designatedToken, circulatingSupply } = await baseSetup();
+      const Module = await hre.ethers.getContractFactory("Exit");
       await expect(
-        module.setUp(initializeParams)
-      ).to.be.revertedWith("Module is already initialized");
+        Module.deploy(
+          user.address,
+          AddressZero,
+          designatedToken.address,
+          circulatingSupply.address
+        )
+      ).to.be.revertedWith("Executor can not be zero address");
     });
 
     it("should emit event because of successful set up", async () => {
-      const { designatedToken, executor, circulatingSupply } = await baseSetup();
+      const { designatedToken, executor, circulatingSupply } =
+        await baseSetup();
       const Module = await hre.ethers.getContractFactory("Exit");
       const module = await Module.deploy(
-        AddressZero,
-        AddressZero,
+        executor.address,
+        executor.address,
         designatedToken.address,
         circulatingSupply.address
       );
 
-      const setupTx = await module.setUp(initializeParams);
-      const transaction = await setupTx.wait();
+      await module.deployed();
 
-      const [initiator, safe] = transaction.events[2].args;
-
-      expect(safe).to.be.equal(executor.address);
-      expect(initiator).to.be.equal(user.address);
+      await expect(module.deployTransaction)
+        .to.emit(module, "SafeExitModuleSetup")
+        .withArgs(user.address, executor.address);
     });
   });
 
@@ -445,24 +455,24 @@ describe("Exit", async () => {
     });
   });
 
-  describe("setExecutor", () => {
+  describe("setAvatar", () => {
     it("should update executor", async () => {
       const { module, executor } = await setupTestWithTestExecutor();
-      const data = module.interface.encodeFunctionData("setExecutor", [
+      const data = module.interface.encodeFunctionData("setAvatar", [
         user.address,
       ]);
 
-      const oldExecutor = await module.executor();
+      const oldExecutor = await module.avatar();
       expect(oldExecutor).to.be.equal(executor.address);
 
       await executor.exec(module.address, 0, data);
 
-      const newExecutor = await module.executor();
+      const newExecutor = await module.avatar();
       expect(newExecutor).to.be.equal(user.address);
     });
     it("throws because its not being called by owner", async () => {
       const { module } = await setupTestWithTestExecutor();
-      await expect(module.setExecutor(user.address)).to.be.revertedWith(
+      await expect(module.setAvatar(user.address)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
     });
