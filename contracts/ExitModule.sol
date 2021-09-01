@@ -13,24 +13,24 @@ contract Exit is Module {
     event SafeExitModuleSetup(address indexed initiator, address indexed safe);
     event ExitSuccessful(address indexed leaver);
 
-    /// @notice Mapping of denied tokens defined by the executor
+    /// @notice Mapping of denied tokens defined by the avatar
     mapping(address => bool) public deniedTokens;
 
     /// @dev Initialize function, will be triggered when a new proxy is deployed
     /// @param _owner Address of the owner
-    /// @param _executor Address of the executor (e.g. a Safe or Delay Module)
+    /// @param _avatar Address of the avatar (e.g. a Safe or Delay Module)
     /// @param _designatedToken Address of the ERC20 token that will define the share of users
     /// @param _circulatingSupply Circulating Supply of designated token
     /// @notice Designated token address can not be zero
     constructor(
         address _owner,
-        address _executor,
+        address _avatar,
         address _designatedToken,
         address _circulatingSupply
     ) {
         bytes memory initParams = abi.encode(
             _owner,
-            _executor,
+            _avatar,
             _designatedToken,
             _circulatingSupply
         );
@@ -40,21 +40,21 @@ contract Exit is Module {
     function setUp(bytes memory initParams) public override {
         (
             address _owner,
-            address _executor,
+            address _avatar,
             address _designatedToken,
             address _circulatingSupply
         ) = abi.decode(initParams, (address, address, address, address));
         require(!initialized, "Module is already initialized");
         initialized = true;
-        require(_executor != address(0), "Executor can not be zero address");
-        avatar = _executor;
+        require(_avatar != address(0), "Avatar can not be zero address");
+        avatar = _avatar;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
 
         __Ownable_init();
         transferOwnership(_owner);
 
-        emit SafeExitModuleSetup(msg.sender, _executor);
+        emit SafeExitModuleSetup(msg.sender, _avatar);
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
@@ -88,7 +88,7 @@ contract Exit is Module {
         emit ExitSuccessful(msg.sender);
     }
 
-    /// @dev Execute a token transfer through the executor
+    /// @dev Execute a token transfer through the avatar
     /// @param token address of token to transfer
     /// @param leaver address that will receive the transfer
     function transferToken(
