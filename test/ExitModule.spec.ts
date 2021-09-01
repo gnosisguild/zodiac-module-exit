@@ -76,20 +76,6 @@ describe("Exit", async () => {
   });
 
   describe("setUp() ", () => {
-    it("throws if module has already been initialized", async () => {
-      const { designatedToken, circulatingSupply } = await baseSetup();
-      const Module = await hre.ethers.getContractFactory("Exit");
-      const module = await Module.deploy(
-        user.address,
-        user.address,
-        designatedToken.address,
-        circulatingSupply.address
-      );
-      await expect(module.setUp(initializeParams)).to.be.revertedWith(
-        "Module is already initialized"
-      );
-    });
-
     it("throws if executor is zero address", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("Exit");
@@ -117,7 +103,7 @@ describe("Exit", async () => {
       await module.deployed();
 
       await expect(module.deployTransaction)
-        .to.emit(module, "SafeExitModuleSetup")
+        .to.emit(module, "ExitModuleSetup")
         .withArgs(user.address, executor.address);
     });
   });
