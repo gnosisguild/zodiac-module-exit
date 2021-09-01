@@ -9,8 +9,8 @@ const AddressOne = "0x0000000000000000000000000000000000000001";
 task("setup", "deploy a Exit Module")
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
-    "executor",
-    "Address of the executor (e.g. Safe)",
+    "avatar",
+    "Address of the avatar (e.g. Safe)",
     undefined,
     types.string
   )
@@ -33,7 +33,7 @@ task("setup", "deploy a Exit Module")
     const supply = await Supply.deploy(taskArgs.supply);
     const module = await Module.deploy(
       taskArgs.owner,
-      taskArgs.executor,
+      taskArgs.avatar,
       taskArgs.token,
       supply.address
     );
@@ -52,8 +52,8 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
   )
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
-    "executor",
-    "Address of the executor (e.g. Safe)",
+    "avatar",
+    "Address of the avatar (e.g. Safe)",
     undefined,
     types.string
   )
@@ -84,7 +84,7 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
 
     const encodedData = new AbiCoder().encode(
       ["address", "address", "address", "address"],
-      [taskArgs.owner, taskArgs.executor, taskArgs.token, supply.address]
+      [taskArgs.owner, taskArgs.avatar, taskArgs.token, supply.address]
     );
 
     const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
@@ -105,8 +105,8 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("module", "Address of the Safe Exit", undefined, types.string)
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
-    "executor",
-    "Address of the executor (e.g. Safe)",
+    "avatar",
+    "Address of the avatar (e.g. Safe)",
     undefined,
     types.string
   )
@@ -122,7 +122,7 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
       address: taskArgs.module,
       constructorArgsParams: [
         taskArgs.owner,
-        taskArgs.executor,
+        taskArgs.avatar,
         taskArgs.token,
         taskArgs.supply,
       ],
