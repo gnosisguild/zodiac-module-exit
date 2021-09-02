@@ -2,14 +2,15 @@ import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { task, types } from "hardhat/config";
 import { BigNumber, Contract } from "ethers";
+import { AbiCoder } from "ethers/lib/utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
-task("setup", "deploy a SafeExit Module")
+task("setup", "deploy a Exit Module")
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
-    "executor",
-    "Address of the executor (e.g. Safe)",
+    "avatar",
+    "Address of the avatar (e.g. Safe)",
     undefined,
     types.string
   )
@@ -27,12 +28,12 @@ task("setup", "deploy a SafeExit Module")
     const Supply = await hardhatRuntime.ethers.getContractFactory(
       "CirculatingSupply"
     );
-    const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
+    const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
 
     const supply = await Supply.deploy(taskArgs.supply);
     const module = await Module.deploy(
       taskArgs.owner,
-      taskArgs.executor,
+      taskArgs.avatar,
       taskArgs.token,
       supply.address
     );
@@ -51,8 +52,8 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
   )
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
-    "executor",
-    "Address of the executor (e.g. Safe)",
+    "avatar",
+    "Address of the avatar (e.g. Safe)",
     undefined,
     types.string
   )
@@ -80,13 +81,16 @@ task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
 
     const supply = await Supply.deploy(taskArgs.supply);
     const Factory = new Contract(taskArgs.factory, FactoryAbi, caller);
-    const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
+
+    const encodedData = new AbiCoder().encode(
+      ["address", "address", "address", "address"],
+      [taskArgs.owner, taskArgs.avatar, taskArgs.token, supply.address]
+    );
+
+    const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
 
     const initParams = Module.interface.encodeFunctionData("setUp", [
-      taskArgs.owner,
-      taskArgs.executor,
-      taskArgs.token,
-      supply.address,
+      encodedData,
     ]);
 
     const receipt = await Factory.deployModule(
@@ -101,8 +105,8 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("module", "Address of the Safe Exit", undefined, types.string)
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
-    "executor",
-    "Address of the executor (e.g. Safe)",
+    "avatar",
+    "Address of the avatar (e.g. Safe)",
     undefined,
     types.string
   )
@@ -118,7 +122,7 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
       address: taskArgs.module,
       constructorArgsParams: [
         taskArgs.owner,
-        taskArgs.executor,
+        taskArgs.avatar,
         taskArgs.token,
         taskArgs.supply,
       ],
@@ -129,7 +133,7 @@ task("deployMasterCopy", "deploy a master copy of Safe Exit").setAction(
   async (_, hardhatRuntime) => {
     const [caller] = await hardhatRuntime.ethers.getSigners();
     console.log("Using the account:", caller.address);
-    const Module = await hardhatRuntime.ethers.getContractFactory("SafeExit");
+    const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
     const module = await Module.deploy(
       AddressOne,
       AddressOne,
