@@ -129,27 +129,6 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
     });
   });
 
-task("deployMasterCopy", "deploy a master copy of Safe Exit").setAction(
-  async (_, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
-    const module = await Module.deploy(
-      AddressOne,
-      AddressOne,
-      AddressOne,
-      AddressOne
-    );
-    await module.deployTransaction.wait(3);
-
-    console.log("Module deployed to:", module.address);
-    await hardhatRuntime.run("verify:verify", {
-      address: module.address,
-      constructorArguments: [AddressOne, AddressOne, AddressOne, AddressOne],
-    });
-  }
-);
-
 task("deployDesignatedToken")
   .addParam(
     "user",

@@ -70,6 +70,6 @@ To execute the exit, call the `exit(uint256 amountToRedeem, address[] tokens)` f
 - Amount to redeem: `1000000000000000`
 - Tokens: `["0xa0533da0743a5517736beb1309ec0bdaa3e960b9", "0x14796a730446112eb5cbc234db9f116ea0e9bbdb"]`
 
-## Deploy a master copy
+### Deploy a master copy
 
-If the contract gets an update, you can deploy a new version of a Master Copy using the hardhat task `deployMasterCopy`. An example of the command would be: `yarn hardhat --network rinkeby deployMasterCopy`
+The master copy contracts can be deployed through `yarn deploy` command. Note that this only should be done if the Exit Module contract gets an update and the ones referred on the (zodiac repository)[https://github.com/gnosis/zodiac/blob/master/src/factory/constants.ts] should be used.
