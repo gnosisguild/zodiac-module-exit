@@ -76,6 +76,7 @@ describe("Exit", async () => {
   });
 
   describe("setUp() ", () => {
+
     it("throws if module has already been initialized", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("Exit");
@@ -117,8 +118,10 @@ describe("Exit", async () => {
       await module.deployed();
 
       await expect(module.deployTransaction)
+      chore/executor-to-avatar
         .to.emit(module, "SafeExitModuleSetup")
         .withArgs(user.address, avatar.address);
+
     });
   });
 

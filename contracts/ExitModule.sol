@@ -10,7 +10,7 @@ contract Exit is Module {
     ERC20 public designatedToken;
     CirculatingSupply public circulatingSupply;
 
-    event SafeExitModuleSetup(address indexed initiator, address indexed safe);
+    event ExitModuleSetup(address indexed initiator, address indexed safe);
     event ExitSuccessful(address indexed leaver);
 
     /// @notice Mapping of denied tokens defined by the avatar
