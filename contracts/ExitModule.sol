@@ -6,7 +6,7 @@ import "@gnosis/zodiac/contracts/core/Module.sol";
 
 import "./CirculatingSupply.sol";
 
-contract SafeExit is Module {
+contract Exit is Module {
     ERC20 public designatedToken;
     CirculatingSupply public circulatingSupply;
 
@@ -16,33 +16,43 @@ contract SafeExit is Module {
     /// @notice Mapping of denied tokens defined by the executor
     mapping(address => bool) public deniedTokens;
 
-    constructor(
-        address _owner,
-        address _executor,
-        address _designatedToken,
-        address _circulatingSupply
-    ) {
-        setUp(_owner, _executor, _designatedToken, _circulatingSupply);
-    }
-
     /// @dev Initialize function, will be triggered when a new proxy is deployed
     /// @param _owner Address of the owner
     /// @param _executor Address of the executor (e.g. a Safe or Delay Module)
     /// @param _designatedToken Address of the ERC20 token that will define the share of users
     /// @param _circulatingSupply Circulating Supply of designated token
     /// @notice Designated token address can not be zero
-    function setUp(
+    constructor(
         address _owner,
         address _executor,
         address _designatedToken,
         address _circulatingSupply
-    ) public {
-        require(executor == address(0), "Module is already initialized");
-        executor = _executor;
+    ) {
+        bytes memory initParams = abi.encode(
+            _owner,
+            _executor,
+            _designatedToken,
+            _circulatingSupply
+        );
+        setUp(initParams);
+    }
+
+    function setUp(bytes memory initParams) public override {
+        (
+            address _owner,
+            address _executor,
+            address _designatedToken,
+            address _circulatingSupply
+        ) = abi.decode(initParams, (address, address, address, address));
+        require(!initialized, "Module is already initialized");
+        initialized = true;
+        require(_executor != address(0), "Executor can not be zero address");
+        avatar = _executor;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
 
-        if (_executor != address(0)) transferOwnership(_owner);
+        __Ownable_init();
+        transferOwnership(_owner);
 
         emit SafeExitModuleSetup(msg.sender, _executor);
     }
