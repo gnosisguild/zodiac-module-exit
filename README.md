@@ -1,7 +1,7 @@
-# Safe Exit
+# Exit Module
 
-[![SafeExit](https://github.com/gnosis/SafeExit/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/SafeExit/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/gnosis/SafeExit/badge.svg?branch=master)](https://coveralls.io/github/gnosis/SafeExit?branch=master)
+[![Build Status](https://github.com/gnosis/zodiac-module-exit/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/zodiac-module-exit/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/gnosis/zodiac-module-exit/badge.svg?branch=master)](https://coveralls.io/github/gnosis/zodiac-module-exit?branch=master)
 
 This module allows any holders of a designated ERC20, at any time, to redeem their designated ERC20 tokens in exchange for a proportional share of the Safe’s ERC20 compatible assets. The designed token is defined at the deployment of the module and can be modified by the owner at any time.
 
@@ -10,7 +10,7 @@ This module is intended to be used with the [Gnosis Safe](https://github.com/gno
 ### Features
 
 - Provides a mechanism by which users can always voluntarily choose to leave an organization, taking a relative share of the assets.
-- The module has an owner and an executor, the executor is the entity that will trigger the exit transaction and the owner can modify the attributes of the module, including the executor and ther owner itself.
+- The module has an owner and an avatar, the avatar is the entity that will trigger the exit transaction and the owner can modify the attributes of the module, including the avatar and the owner itself.
 - The `designated token` can only be modified by the owner (E.g. Safe)
 
 ### Flow

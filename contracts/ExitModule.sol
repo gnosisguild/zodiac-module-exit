@@ -10,7 +10,7 @@ contract Exit is Module {
     ERC20 public designatedToken;
     CirculatingSupply public circulatingSupply;
 
-    event SafeExitModuleSetup(address indexed initiator, address indexed safe);
+    event ExitModuleSetup(address indexed initiator, address indexed avatar);
     event ExitSuccessful(address indexed leaver);
 
     /// @notice Mapping of denied tokens defined by the avatar
@@ -54,7 +54,7 @@ contract Exit is Module {
         __Ownable_init();
         transferOwnership(_owner);
 
-        emit SafeExitModuleSetup(msg.sender, _avatar);
+        emit ExitModuleSetup(msg.sender, _avatar);
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
