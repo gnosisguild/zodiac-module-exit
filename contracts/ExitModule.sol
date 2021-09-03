@@ -54,7 +54,7 @@ contract Exit is Module {
         __Ownable_init();
         transferOwnership(_owner);
 
-        emit SafeExitModuleSetup(msg.sender, _avatar);
+        emit ExitModuleSetup(msg.sender, _avatar);
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
