@@ -31,10 +31,10 @@ describe("Exit", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const { randomTokenOne, randomTokenTwo, ...token } = await setUpToken();
-    const Executor = await hre.ethers.getContractFactory("TestExecutor");
-    const executor = await Executor.deploy();
-    await randomTokenOne.mint(executor.address, RandomTokenOneBalance);
-    await randomTokenTwo.mint(executor.address, RandomTokenTwoBalance);
+    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+    const avatar = await Avatar.deploy();
+    await randomTokenOne.mint(avatar.address, RandomTokenOneBalance);
+    await randomTokenTwo.mint(avatar.address, RandomTokenTwoBalance);
     const CirculatingSupply = await hre.ethers.getContractFactory(
       "CirculatingSupply"
     );
@@ -45,16 +45,16 @@ describe("Exit", async () => {
     initializeParams = new AbiCoder().encode(
       ["address", "address", "address", "address"],
       [
-        executor.address,
-        executor.address,
+        avatar.address,
+        avatar.address,
         token.designatedToken.address,
         circulatingSupply.address,
       ]
     );
 
     return {
-      Executor,
-      executor,
+      Avatar,
+      avatar,
       randomTokenOne,
       randomTokenTwo,
       circulatingSupply,
@@ -62,12 +62,12 @@ describe("Exit", async () => {
     };
   });
 
-  const setupTestWithTestExecutor = deployments.createFixture(async () => {
+  const setupTestWithTestAvatar = deployments.createFixture(async () => {
     const base = await baseSetup();
     const Module = await hre.ethers.getContractFactory("Exit");
     const module = await Module.deploy(
-      base.executor.address,
-      base.executor.address,
+      base.avatar.address,
+      base.avatar.address,
       base.designatedToken.address,
       base.circulatingSupply.address
     );
@@ -90,7 +90,7 @@ describe("Exit", async () => {
       );
     });
 
-    it("throws if executor is zero address", async () => {
+    it("throws if avatar is zero address", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("Exit");
       await expect(
@@ -100,16 +100,16 @@ describe("Exit", async () => {
           designatedToken.address,
           circulatingSupply.address
         )
-      ).to.be.revertedWith("Executor can not be zero address");
+      ).to.be.revertedWith("Avatar can not be zero address");
     });
 
     it("should emit event because of successful set up", async () => {
-      const { designatedToken, executor, circulatingSupply } =
+      const { designatedToken, avatar, circulatingSupply } =
         await baseSetup();
       const Module = await hre.ethers.getContractFactory("Exit");
       const module = await Module.deploy(
-        executor.address,
-        executor.address,
+        avatar.address,
+        avatar.address,
         designatedToken.address,
         circulatingSupply.address
       );
@@ -118,37 +118,37 @@ describe("Exit", async () => {
 
       await expect(module.deployTransaction)
         .to.emit(module, "SafeExitModuleSetup")
-        .withArgs(user.address, executor.address);
+        .withArgs(user.address, avatar.address);
     });
   });
 
   describe("addToDenylist()", () => {
     it("should add address to denied list", async () => {
-      const { module, executor, randomTokenOne } =
-        await setupTestWithTestExecutor();
+      const { module, avatar, randomTokenOne } =
+        await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenylist", [
         [randomTokenOne.address],
       ]);
-      await executor.exec(module.address, 0, data);
+      await avatar.exec(module.address, 0, data);
       const moduleIsAdded = await module.deniedTokens(randomTokenOne.address);
       expect(moduleIsAdded).to.be.true;
     });
     it("throws if not authorized", async () => {
-      const { module, randomTokenTwo } = await setupTestWithTestExecutor();
+      const { module, randomTokenTwo } = await setupTestWithTestAvatar();
       await expect(
         module.addToDenylist([randomTokenTwo.address])
       ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
 
     it("throws if token is already in list", async () => {
-      const { module, executor, randomTokenTwo } =
-        await setupTestWithTestExecutor();
+      const { module, avatar, randomTokenTwo } =
+        await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenylist", [
         [randomTokenTwo.address],
       ]);
-      await executor.exec(module.address, 0, data);
+      await avatar.exec(module.address, 0, data);
 
-      await expect(executor.exec(module.address, 0, data)).to.be.revertedWith(
+      await expect(avatar.exec(module.address, 0, data)).to.be.revertedWith(
         `Token already denied`
       );
     });
@@ -156,13 +156,13 @@ describe("Exit", async () => {
 
   describe("removeFromDenylist()", () => {
     it("should remove address from denied list", async () => {
-      const { module, executor, randomTokenOne } =
-        await setupTestWithTestExecutor();
+      const { module, avatar, randomTokenOne } =
+        await setupTestWithTestAvatar();
       const addTokenData = module.interface.encodeFunctionData(
         "addToDenylist",
         [[randomTokenOne.address]]
       );
-      await executor.exec(module.address, 0, addTokenData);
+      await avatar.exec(module.address, 0, addTokenData);
       const moduleIsAdded = await module.deniedTokens(randomTokenOne.address);
       expect(moduleIsAdded).to.be.true;
       const removeTokenData = module.interface.encodeFunctionData(
@@ -170,7 +170,7 @@ describe("Exit", async () => {
         [[randomTokenOne.address]]
       );
 
-      await executor.exec(module.address, 0, removeTokenData);
+      await avatar.exec(module.address, 0, removeTokenData);
       const moduleIsNotAdded = await module.deniedTokens(
         randomTokenOne.address
       );
@@ -178,19 +178,19 @@ describe("Exit", async () => {
     });
 
     it("throws if token is not added in list", async () => {
-      const { module, executor, randomTokenTwo } =
-        await setupTestWithTestExecutor();
+      const { module, avatar, randomTokenTwo } =
+        await setupTestWithTestAvatar();
       const removeTokenData = module.interface.encodeFunctionData(
         "removeFromDenylist",
         [[randomTokenTwo.address]]
       );
       await expect(
-        executor.exec(module.address, 0, removeTokenData)
+        avatar.exec(module.address, 0, removeTokenData)
       ).to.be.revertedWith(`Token not denied`);
     });
 
     it("throws if not authorized", async () => {
-      const { module, randomTokenOne } = await setupTestWithTestExecutor();
+      const { module, randomTokenOne } = await setupTestWithTestAvatar();
       await expect(
         module.removeFromDenylist([randomTokenOne.address])
       ).to.be.revertedWith(`Ownable: caller is not the owner`);
@@ -200,20 +200,20 @@ describe("Exit", async () => {
   describe("exit()", () => {
     it("throws if token is added in denied tokens list", async () => {
       const {
-        executor,
+        avatar,
         module,
         randomTokenOne,
         randomTokenTwo,
         designatedToken,
-      } = await setupTestWithTestExecutor();
+      } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenylist", [
         [randomTokenOne.address],
       ]);
-      await executor.exec(module.address, 0, data);
-      await executor.setModule(module.address);
+      await avatar.exec(module.address, 0, data);
+      await avatar.setModule(module.address);
       await designatedToken
         .connect(user)
-        .approve(executor.address, DesignatedTokenBalance);
+        .approve(avatar.address, DesignatedTokenBalance);
 
       await expect(
         module.exit(DesignatedTokenBalance, [
@@ -224,9 +224,9 @@ describe("Exit", async () => {
     });
 
     it("throws because user is trying to redeem more tokens than he owns", async () => {
-      const { executor, module, randomTokenOne, randomTokenTwo } =
-        await setupTestWithTestExecutor();
-      await executor.setModule(module.address);
+      const { avatar, module, randomTokenOne, randomTokenTwo } =
+        await setupTestWithTestAvatar();
+      await avatar.setModule(module.address);
       await expect(
         module
           .connect(user)
@@ -239,19 +239,19 @@ describe("Exit", async () => {
 
     it("user should receive 20% of safe assets because he is redeeming 1/5 of the circulating supply", async () => {
       const {
-        executor,
+        avatar,
         module,
         randomTokenOne,
         randomTokenTwo,
         designatedToken,
-      } = await setupTestWithTestExecutor();
-      await executor.setModule(module.address);
+      } = await setupTestWithTestAvatar();
+      await avatar.setModule(module.address);
 
       await designatedToken
         .connect(user)
-        .approve(executor.address, DesignatedTokenBalance);
+        .approve(avatar.address, DesignatedTokenBalance);
 
-      const oldBalanceExec = await randomTokenOne.balanceOf(executor.address);
+      const oldBalanceExec = await randomTokenOne.balanceOf(avatar.address);
       const oldUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
         user.address
       );
@@ -272,7 +272,7 @@ describe("Exit", async () => {
 
       const receipt = await exitTransaction.wait();
 
-      const newBalanceExec = await randomTokenOne.balanceOf(executor.address);
+      const newBalanceExec = await randomTokenOne.balanceOf(avatar.address);
 
       const newUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
         user.address
@@ -282,7 +282,7 @@ describe("Exit", async () => {
       );
 
       const newLeaverBalance = await designatedToken.balanceOf(user.address);
-      const newOwnerBalance = await designatedToken.balanceOf(executor.address);
+      const newOwnerBalance = await designatedToken.balanceOf(avatar.address);
 
       // 4/5 of the random token total supply
       expect(newBalanceExec).to.be.equal(
@@ -304,19 +304,19 @@ describe("Exit", async () => {
 
     it("user should receive 10% of safe assets because he is redeeming 1/10 of the circulating supply", async () => {
       const {
-        executor,
+        avatar,
         module,
         randomTokenOne,
         randomTokenTwo,
         designatedToken,
-      } = await setupTestWithTestExecutor();
-      await executor.setModule(module.address);
+      } = await setupTestWithTestAvatar();
+      await avatar.setModule(module.address);
 
       await designatedToken
         .connect(user)
-        .approve(executor.address, DesignatedTokenBalance);
+        .approve(avatar.address, DesignatedTokenBalance);
 
-      const oldBalanceExec = await randomTokenOne.balanceOf(executor.address);
+      const oldBalanceExec = await randomTokenOne.balanceOf(avatar.address);
       const oldUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
         user.address
       );
@@ -336,7 +336,7 @@ describe("Exit", async () => {
 
       const receipt = await exitTransaction.wait();
 
-      const newBalanceExec = await randomTokenOne.balanceOf(executor.address);
+      const newBalanceExec = await randomTokenOne.balanceOf(avatar.address);
 
       const newUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
         user.address
@@ -345,7 +345,7 @@ describe("Exit", async () => {
         user.address
       );
       const newLeaverBalance = await designatedToken.balanceOf(user.address);
-      const newOwnerBalance = await designatedToken.balanceOf(executor.address);
+      const newOwnerBalance = await designatedToken.balanceOf(avatar.address);
 
       // 9/10 of the random token total supply
       expect(newBalanceExec).to.be.equal(
@@ -369,9 +369,9 @@ describe("Exit", async () => {
     });
 
     it("throws because user haven't approve designated tokens", async () => {
-      const { executor, module, randomTokenOne, randomTokenTwo } =
-        await setupTestWithTestExecutor();
-      await executor.setModule(module.address);
+      const { avatar, module, randomTokenOne, randomTokenTwo } =
+        await setupTestWithTestAvatar();
+      await avatar.setModule(module.address);
 
       await expect(
         module
@@ -387,7 +387,7 @@ describe("Exit", async () => {
   describe("setCirculatingSupply", () => {
     const NEW_BALANCE = BigNumber.from(10000000);
     it("should update circulating supply ", async () => {
-      const { module, circulatingSupply } = await setupTestWithTestExecutor();
+      const { module, circulatingSupply } = await setupTestWithTestAvatar();
       const currentCirculatingSupply = await module.getCirculatingSupply();
       expect(DesignatedTokenBalance.mul(5)).to.be.equal(
         currentCirculatingSupply
@@ -398,7 +398,7 @@ describe("Exit", async () => {
     });
 
     it("throws if not authorized", async () => {
-      const { circulatingSupply } = await setupTestWithTestExecutor();
+      const { circulatingSupply } = await setupTestWithTestAvatar();
       await expect(
         circulatingSupply.connect(anotherUser).set(NEW_BALANCE)
       ).to.be.revertedWith(`caller is not the owner`);
@@ -407,7 +407,7 @@ describe("Exit", async () => {
 
   describe("getCirculatingSupply", () => {
     it("should return circulating supply ", async () => {
-      const { module } = await setupTestWithTestExecutor();
+      const { module } = await setupTestWithTestAvatar();
       const circulatingSupply = await module.getCirculatingSupply();
       expect(circulatingSupply).to.be.instanceOf(BigNumber);
     });
@@ -415,18 +415,18 @@ describe("Exit", async () => {
 
   describe("setDesignedToken()", () => {
     it("should set designated token", async () => {
-      const { module, executor, randomTokenOne } =
-        await setupTestWithTestExecutor();
+      const { module, avatar, randomTokenOne } =
+        await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("setDesignatedToken", [
         randomTokenOne.address,
       ]);
-      await executor.exec(module.address, 0, data);
+      await avatar.exec(module.address, 0, data);
       const newTokenAddress = await module.designatedToken();
       expect(newTokenAddress).to.be.equal(randomTokenOne.address);
     });
 
-    it("throws if executor is msg.sender is not the executor", async () => {
-      const { module } = await setupTestWithTestExecutor();
+    it("throws if avatar is msg.sender is not the avatar", async () => {
+      const { module } = await setupTestWithTestAvatar();
       await expect(module.setDesignatedToken(AddressZero)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
@@ -435,20 +435,20 @@ describe("Exit", async () => {
 
   describe("renounceOwnership", () => {
     it("should renounce to ownership", async () => {
-      const { module, executor } = await setupTestWithTestExecutor();
+      const { module, avatar } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("renounceOwnership", []);
 
       const oldOwner = await module.owner();
-      expect(oldOwner).to.be.equal(executor.address);
+      expect(oldOwner).to.be.equal(avatar.address);
 
-      await executor.exec(module.address, 0, data);
+      await avatar.exec(module.address, 0, data);
 
       const newOwner = await module.owner();
       expect(newOwner).to.be.equal(AddressZero);
     });
 
     it("throws because its not being called by owner", async () => {
-      const { module } = await setupTestWithTestExecutor();
+      const { module } = await setupTestWithTestAvatar();
       await expect(module.renounceOwnership()).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
@@ -456,22 +456,22 @@ describe("Exit", async () => {
   });
 
   describe("setAvatar", () => {
-    it("should update executor", async () => {
-      const { module, executor } = await setupTestWithTestExecutor();
+    it("should update avatar", async () => {
+      const { module, avatar } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("setAvatar", [
         user.address,
       ]);
 
-      const oldExecutor = await module.avatar();
-      expect(oldExecutor).to.be.equal(executor.address);
+      const oldAvatar = await module.avatar();
+      expect(oldAvatar).to.be.equal(avatar.address);
 
-      await executor.exec(module.address, 0, data);
+      await avatar.exec(module.address, 0, data);
 
-      const newExecutor = await module.avatar();
-      expect(newExecutor).to.be.equal(user.address);
+      const newAvatar = await module.avatar();
+      expect(newAvatar).to.be.equal(user.address);
     });
     it("throws because its not being called by owner", async () => {
-      const { module } = await setupTestWithTestExecutor();
+      const { module } = await setupTestWithTestAvatar();
       await expect(module.setAvatar(user.address)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
@@ -480,22 +480,22 @@ describe("Exit", async () => {
 
   describe("transferOwnership", () => {
     it("should transfer ownership", async () => {
-      const { module, executor } = await setupTestWithTestExecutor();
+      const { module, avatar } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("transferOwnership", [
         user.address,
       ]);
 
       const oldOwner = await module.owner();
-      expect(oldOwner).to.be.equal(executor.address);
+      expect(oldOwner).to.be.equal(avatar.address);
 
-      await executor.exec(module.address, 0, data);
+      await avatar.exec(module.address, 0, data);
 
       const newOwner = await module.owner();
       expect(newOwner).to.be.equal(user.address);
     });
 
     it("throws because its not being called by owner", async () => {
-      const { module } = await setupTestWithTestExecutor();
+      const { module } = await setupTestWithTestAvatar();
       await expect(module.transferOwnership(user.address)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
