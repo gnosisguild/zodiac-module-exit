@@ -7,7 +7,8 @@ contract CirculatingSupply is Ownable {
     uint256 public circulatingSupply;
 
     constructor(uint256 _circulatingSupply) {
-        circulatingSupply = _circulatingSupply;
+        bytes memory initParams = abi.encode(_circulatingSupply);
+        setUp(initParams);
     }
 
     function set(uint256 _circulatingSupply) public onlyOwner {
@@ -16,5 +17,12 @@ contract CirculatingSupply is Ownable {
 
     function get() public view returns (uint256) {
         return circulatingSupply;
+    }
+
+    function setUp(bytes memory initializeParams) public {
+        require(!initialized, "Contract is already initialized");
+        initialized = true;
+        uint256 _circulatingSupply = abi.decode(initializeParams, (uint256));
+        circulatingSupply = _circulatingSupply;
     }
 }
