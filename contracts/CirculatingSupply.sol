@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract CirculatingSupply is Ownable {
     uint256 public circulatingSupply;
+    bool public initialized;
 
     constructor(uint256 _circulatingSupply) {
         bytes memory initParams = abi.encode(_circulatingSupply);
