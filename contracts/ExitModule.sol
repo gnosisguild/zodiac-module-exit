@@ -19,6 +19,7 @@ contract Exit is Module {
     /// @dev Initialize function, will be triggered when a new proxy is deployed
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Safe or Delay Module)
+    /// param _target Address that this module will pass transactions to
     /// @param _designatedToken Address of the ERC20 token that will define the share of users
     /// @param _circulatingSupply Circulating Supply of designated token
     /// @notice Designated token address can not be zero

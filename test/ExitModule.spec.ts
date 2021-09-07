@@ -33,6 +33,7 @@ describe("Exit", async () => {
     const { randomTokenOne, randomTokenTwo, ...token } = await setUpToken();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
+    await user.sendTransaction({ to: avatar.address, value: 100 });
     await randomTokenOne.mint(avatar.address, RandomTokenOneBalance);
     await randomTokenTwo.mint(avatar.address, RandomTokenTwoBalance);
     const CirculatingSupply = await hre.ethers.getContractFactory(
@@ -277,6 +278,12 @@ describe("Exit", async () => {
         user.address
       );
 
+      expect(
+        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
+      ).to.be.equal(100);
+      expect(await waffle.provider.getBalance(avatar.address)).to.be.equal(
+        BigNumber.from(100)
+      );
       expect(oldBalanceExec).to.be.equal(RandomTokenOneBalance);
       expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
@@ -314,6 +321,11 @@ describe("Exit", async () => {
       expect(newUserBalanceInRandomTokenTwo).to.be.equal(
         RandomTokenTwoBalance.mul(200).div(1000)
       );
+      // 1/5 of the ETH balance
+      expect(
+        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
+      ).to.be.equal(80);
+
       expect(newLeaverBalance.toNumber()).to.be.equal(0);
       expect(newOwnerBalance).to.be.equal(DesignatedTokenBalance);
 
@@ -341,7 +353,13 @@ describe("Exit", async () => {
       const oldUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
         user.address
       );
+      expect(
+        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
+      ).to.be.equal(100);
 
+      expect(
+        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
+      ).to.be.equal(100);
       expect(oldBalanceExec).to.be.equal(RandomTokenOneBalance);
       expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
       expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
@@ -379,6 +397,11 @@ describe("Exit", async () => {
       expect(newUserBalanceInRandomTokenTwo).to.be.equal(
         RandomTokenTwoBalance.mul(100).div(1000)
       );
+
+      // 1/10 of ETH balance
+      expect(
+        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
+      ).to.be.equal(90);
 
       expect(newLeaverBalance).to.be.equal(DesignatedTokenBalance.div(2));
       expect(newOwnerBalance).to.be.equal(DesignatedTokenBalance.div(2));
