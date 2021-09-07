@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@gnosis/zodiac/contracts/core/Module.sol";
+import "@gnosis.pm/zodiac/contracts/core/Module.sol";
 
 import "./CirculatingSupply.sol";
 
@@ -19,18 +19,21 @@ contract Exit is Module {
     /// @dev Initialize function, will be triggered when a new proxy is deployed
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Safe or Delay Module)
+    /// param _target Address that this module will pass transactions to
     /// @param _designatedToken Address of the ERC20 token that will define the share of users
     /// @param _circulatingSupply Circulating Supply of designated token
     /// @notice Designated token address can not be zero
     constructor(
         address _owner,
         address _avatar,
+        address _target,
         address _designatedToken,
         address _circulatingSupply
     ) {
         bytes memory initParams = abi.encode(
             _owner,
             _avatar,
+            _target,
             _designatedToken,
             _circulatingSupply
         );
@@ -41,13 +44,19 @@ contract Exit is Module {
         (
             address _owner,
             address _avatar,
+            address _target,
             address _designatedToken,
             address _circulatingSupply
-        ) = abi.decode(initParams, (address, address, address, address));
+        ) = abi.decode(
+            initParams,
+            (address, address, address, address, address)
+        );
         require(!initialized, "Module is already initialized");
         initialized = true;
         require(_avatar != address(0), "Avatar can not be zero address");
         avatar = _avatar;
+        require(_target != address(0), "Target can not be zero address");
+        target = _target;
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
 
@@ -58,20 +67,19 @@ contract Exit is Module {
     }
 
     /// @dev Execute the share of assets and the transfer of designated tokens
-    /// @param amountToRedeem amount to be sent to the owner
+    /// @param amountToRedeem Amount to be sent to the avatar
     /// @param tokens Array of tokens that the leaver will recieve
-    /// @notice will throw if a token sent is added in the denied token list
+    /// @notice Will throw if a token sent is added in the denied token list
     function exit(uint256 amountToRedeem, address[] calldata tokens) public {
         require(
             designatedToken.balanceOf(msg.sender) >= amountToRedeem,
             "Amount to redeem is greater than balance"
         );
-        address owner = owner();
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
             msg.sender,
-            owner,
+            avatar,
             amountToRedeem
         );
 
@@ -79,6 +87,8 @@ contract Exit is Module {
             exec(address(designatedToken), 0, data, Enum.Operation.Call),
             "Error on exit execution"
         );
+
+        transferNativeAsset(msg.sender, amountToRedeem);
 
         for (uint8 i = 0; i < tokens.length; i++) {
             require(!deniedTokens[tokens[i]], "Invalid token");
@@ -96,10 +106,9 @@ contract Exit is Module {
         address leaver,
         uint256 amountToRedeem
     ) private {
-        address owner = owner();
-        uint256 ownerBalance = ERC20(token).balanceOf(owner);
+        uint256 avatarBalance = ERC20(token).balanceOf(avatar);
         uint256 supply = getCirculatingSupply();
-        uint256 amount = (amountToRedeem * ownerBalance) / supply;
+        uint256 amount = (amountToRedeem * avatarBalance) / supply;
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
         require(
@@ -108,9 +117,24 @@ contract Exit is Module {
         );
     }
 
+    /// @dev Execute a token transfer through the avatar
+    /// @param leaver address that will receive the transfer
+    function transferNativeAsset(address leaver, uint256 amountToRedeem)
+        private
+    {
+        uint256 supply = getCirculatingSupply();
+        uint256 amount = (amountToRedeem * avatar.balance) / supply;
+        // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
+        require(
+            exec(leaver, amount, bytes("0x"), Enum.Operation.Call),
+            "Error on native asset transfer"
+        );
+    }
+
     /// @dev Add a batch of token addresses to denied tokens list
     /// @param tokens Batch of addresses to add into the denied token list
     /// @notice Can not add duplicate token address or it will throw
+    /// @notice Can only be modified by owner
     function addToDenylist(address[] calldata tokens) external onlyOwner {
         for (uint8 i; i < tokens.length; i++) {
             require(!deniedTokens[tokens[i]], "Token already denied");
@@ -120,7 +144,8 @@ contract Exit is Module {
 
     /// @dev Remove a batch of token addresses from denied tokens list
     /// @param tokens Batch of addresses to be removed from the denied token list
-    /// @notice If a non denied token address is passed, the function will throw
+    /// @notice If a non-denied token address is passed, the function will throw
+    /// @notice Can only be modified by owner
     function removeFromDenylist(address[] calldata tokens) external onlyOwner {
         for (uint8 i; i < tokens.length; i++) {
             require(deniedTokens[tokens[i]], "Token not denied");
