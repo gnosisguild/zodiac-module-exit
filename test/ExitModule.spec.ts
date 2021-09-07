@@ -33,6 +33,7 @@ describe("Exit", async () => {
     const { randomTokenOne, randomTokenTwo, ...token } = await setUpToken();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
+    token.designatedToken.mint(anotherUser.address, DesignatedTokenBalance);
     await user.sendTransaction({ to: avatar.address, value: 100 });
     await randomTokenOne.mint(avatar.address, RandomTokenOneBalance);
     await randomTokenTwo.mint(avatar.address, RandomTokenTwoBalance);
@@ -40,9 +41,9 @@ describe("Exit", async () => {
       "CirculatingSupply"
     );
     const circulatingSupply = await CirculatingSupply.deploy(
-      DesignatedTokenBalance.mul(5)
+      token.designatedToken.address,
+      [avatar.address]
     );
-
     initializeParams = new AbiCoder().encode(
       ["address", "address", "address", "address", "address"],
       [
@@ -229,6 +230,7 @@ describe("Exit", async () => {
         [randomTokenOne.address],
       ]);
       await avatar.exec(module.address, 0, data);
+
       await avatar.setModule(module.address);
       await designatedToken
         .connect(user)

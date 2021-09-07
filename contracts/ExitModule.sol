@@ -75,6 +75,16 @@ contract Exit is Module {
             designatedToken.balanceOf(msg.sender) >= amountToRedeem,
             "Amount to redeem is greater than balance"
         );
+
+        if (avatar.balance > 0) {
+            transferNativeAsset(msg.sender, amountToRedeem);
+        }
+
+        for (uint8 i = 0; i < tokens.length; i++) {
+            require(!deniedTokens[tokens[i]], "Invalid token");
+            transferToken(tokens[i], msg.sender, amountToRedeem);
+        }
+
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
@@ -87,14 +97,6 @@ contract Exit is Module {
             exec(address(designatedToken), 0, data, Enum.Operation.Call),
             "Error on exit execution"
         );
-
-        transferNativeAsset(msg.sender, amountToRedeem);
-
-        for (uint8 i = 0; i < tokens.length; i++) {
-            require(!deniedTokens[tokens[i]], "Invalid token");
-            transferToken(tokens[i], msg.sender, amountToRedeem);
-        }
-
         emit ExitSuccessful(msg.sender);
     }
 
@@ -124,7 +126,6 @@ contract Exit is Module {
     {
         uint256 supply = getCirculatingSupply();
         uint256 amount = (amountToRedeem * avatar.balance) / supply;
-        // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         require(
             exec(leaver, amount, bytes("0x"), Enum.Operation.Call),
             "Error on native asset transfer"
