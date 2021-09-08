@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@gnosis.pm/zodiac/contracts/core/Module.sol";
@@ -75,6 +75,9 @@ contract Exit is Module {
             designatedToken.balanceOf(msg.sender) >= amountToRedeem,
             "Amount to redeem is greater than balance"
         );
+
+        uint256 supply = getCirculatingSupply();
+
         // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
         bytes memory data = abi.encodeWithSelector(
             0x23b872dd,
@@ -88,11 +91,13 @@ contract Exit is Module {
             "Error on exit execution"
         );
 
-        transferNativeAsset(msg.sender, amountToRedeem);
+        if (avatar.balance > 0) {
+            transferNativeAsset(msg.sender, amountToRedeem, supply);
+        }
 
         for (uint8 i = 0; i < tokens.length; i++) {
             require(!deniedTokens[tokens[i]], "Invalid token");
-            transferToken(tokens[i], msg.sender, amountToRedeem);
+            transferToken(tokens[i], msg.sender, amountToRedeem, supply);
         }
 
         emit ExitSuccessful(msg.sender);
@@ -104,10 +109,10 @@ contract Exit is Module {
     function transferToken(
         address token,
         address leaver,
-        uint256 amountToRedeem
+        uint256 amountToRedeem,
+        uint256 supply
     ) private {
         uint256 avatarBalance = ERC20(token).balanceOf(avatar);
-        uint256 supply = getCirculatingSupply();
         uint256 amount = (amountToRedeem * avatarBalance) / supply;
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         bytes memory data = abi.encodeWithSelector(0xa9059cbb, leaver, amount);
@@ -119,12 +124,12 @@ contract Exit is Module {
 
     /// @dev Execute a token transfer through the avatar
     /// @param leaver address that will receive the transfer
-    function transferNativeAsset(address leaver, uint256 amountToRedeem)
-        private
-    {
-        uint256 supply = getCirculatingSupply();
+    function transferNativeAsset(
+        address leaver,
+        uint256 amountToRedeem,
+        uint256 supply
+    ) private {
         uint256 amount = (amountToRedeem * avatar.balance) / supply;
-        // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         require(
             exec(leaver, amount, bytes("0x"), Enum.Operation.Call),
             "Error on native asset transfer"
