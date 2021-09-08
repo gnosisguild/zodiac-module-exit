@@ -25,18 +25,6 @@ contract CirculatingSupply is OwnableUpgradeable {
         setUp(initParams);
     }
 
-    function get() public view returns (uint256 circulatingSupply) {
-        circulatingSupply = ERC20(token).totalSupply();
-        if (exclusions[SENTINEL_EXCLUSIONS] != address(0)) {
-            address exclusion = exclusions[SENTINEL_EXCLUSIONS];
-            while (exclusion != address(0)) {
-                circulatingSupply -= ERC20(token).balanceOf(exclusion);
-                exclusion = exclusions[exclusion];
-            }
-        }
-        return circulatingSupply;
-    }
-
     function setUp(bytes memory initializeParams) public {
         require(!initialized, "Contract is already initialized");
         initialized = true;
@@ -48,6 +36,18 @@ contract CirculatingSupply is OwnableUpgradeable {
         for (uint256 i = 0; i < _exclusions.length; i++) {
             excludeAddress(_exclusions[i]);
         }
+    }
+
+    function get() public view returns (uint256 circulatingSupply) {
+        circulatingSupply = ERC20(token).totalSupply();
+        if (exclusions[SENTINEL_EXCLUSIONS] != address(0)) {
+            address exclusion = exclusions[SENTINEL_EXCLUSIONS];
+            while (exclusion != address(0)) {
+                circulatingSupply -= ERC20(token).balanceOf(exclusion);
+                exclusion = exclusions[exclusion];
+            }
+        }
+        return circulatingSupply;
     }
 
     /// @dev Sets the token to calculate circulating supply of
@@ -72,7 +72,7 @@ contract CirculatingSupply is OwnableUpgradeable {
         );
         require(
             exclusions[prevExclusion] == exclusion,
-            "exclusion already disabled"
+            "Exclusion already disabled"
         );
         exclusions[prevExclusion] = exclusions[exclusion];
         exclusions[exclusion] = address(0);
@@ -93,7 +93,7 @@ contract CirculatingSupply is OwnableUpgradeable {
         );
         require(
             exclusions[exclusion] == address(0),
-            "exclusion already enabled"
+            "Exclusion already enabled"
         );
         exclusions[exclusion] = exclusions[SENTINEL_EXCLUSIONS];
         exclusions[SENTINEL_EXCLUSIONS] = exclusion;
