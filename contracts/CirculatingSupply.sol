@@ -32,6 +32,7 @@ contract CirculatingSupply is OwnableUpgradeable {
             .decode(initializeParams, (address, address, address[]));
         __Ownable_init();
         transferOwnership(_owner);
+        setupExclusions();
         token = _token;
         for (uint256 i = 0; i < _exclusions.length; i++) {
             excludeAddress(_exclusions[i]);
@@ -40,9 +41,9 @@ contract CirculatingSupply is OwnableUpgradeable {
 
     function get() public view returns (uint256 circulatingSupply) {
         circulatingSupply = ERC20(token).totalSupply();
-        if (exclusions[SENTINEL_EXCLUSIONS] != address(0)) {
+        if (exclusions[SENTINEL_EXCLUSIONS] != SENTINEL_EXCLUSIONS) {
             address exclusion = exclusions[SENTINEL_EXCLUSIONS];
-            while (exclusion != address(0)) {
+            while (exclusion != SENTINEL_EXCLUSIONS) {
                 circulatingSupply -= ERC20(token).balanceOf(exclusion);
                 exclusion = exclusions[exclusion];
             }
@@ -56,6 +57,14 @@ contract CirculatingSupply is OwnableUpgradeable {
     function setToken(address _token) public onlyOwner {
         token = _token;
         emit TokenSet(_token);
+    }
+
+    function setupExclusions() internal {
+        require(
+            exclusions[SENTINEL_EXCLUSIONS] == address(0),
+            "setUpModules has already been called"
+        );
+        exclusions[SENTINEL_EXCLUSIONS] = SENTINEL_EXCLUSIONS;
     }
 
     /// @dev Removes an excluded address
