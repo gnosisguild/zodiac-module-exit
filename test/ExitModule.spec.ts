@@ -5,8 +5,8 @@ import hre, { deployments, waffle } from "hardhat";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
 const DesignatedTokenBalance = BigNumber.from(10).pow(18).mul(5); // Equal to 5
-const RandomTokenOneBalance = BigNumber.from(10).pow(6).mul(10); //  Equal to 100
-const RandomTokenTwoBalance = BigNumber.from(10).pow(12).mul(10); // Equal to 100
+const TokenOneBalance = BigNumber.from(10).pow(6).mul(10); //  Equal to 100
+const TokenTwoBalance = BigNumber.from(10).pow(12).mul(10); // Equal to 100
 
 describe("Exit", async () => {
   let initializeParams: string;
@@ -16,13 +16,13 @@ describe("Exit", async () => {
     const Token = await hre.ethers.getContractFactory("TestToken");
 
     const designatedToken = await Token.deploy(18);
-    const randomTokenOne = await Token.deploy(6);
-    const randomTokenTwo = await Token.deploy(12);
+    const tokenOne = await Token.deploy(6);
+    const tokenTwo = await Token.deploy(12);
 
     await designatedToken.mint(user.address, DesignatedTokenBalance);
     return {
-      randomTokenOne,
-      randomTokenTwo,
+      tokenOne,
+      tokenTwo,
       Token,
       designatedToken,
     };
@@ -30,13 +30,16 @@ describe("Exit", async () => {
 
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
-    const { randomTokenOne, randomTokenTwo, ...token } = await setUpToken();
+    const { tokenOne, tokenTwo, ...token } = await setUpToken();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
-    token.designatedToken.mint(anotherUser.address, DesignatedTokenBalance);
+    token.designatedToken.mint(
+      anotherUser.address,
+      DesignatedTokenBalance.mul(4)
+    );
     await user.sendTransaction({ to: avatar.address, value: 100 });
-    await randomTokenOne.mint(avatar.address, RandomTokenOneBalance);
-    await randomTokenTwo.mint(avatar.address, RandomTokenTwoBalance);
+    await tokenOne.mint(avatar.address, TokenOneBalance);
+    await tokenTwo.mint(avatar.address, TokenTwoBalance);
     const CirculatingSupply = await hre.ethers.getContractFactory(
       "CirculatingSupply"
     );
@@ -58,8 +61,8 @@ describe("Exit", async () => {
     return {
       Avatar,
       avatar,
-      randomTokenOne,
-      randomTokenTwo,
+      tokenOne,
+      tokenTwo,
       circulatingSupply,
       ...token,
     };
@@ -144,27 +147,25 @@ describe("Exit", async () => {
 
   describe("addToDenylist()", () => {
     it("should add address to denied list", async () => {
-      const { module, avatar, randomTokenOne } =
-        await setupTestWithTestAvatar();
+      const { module, avatar, tokenOne } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenylist", [
-        [randomTokenOne.address],
+        [tokenOne.address],
       ]);
       await avatar.exec(module.address, 0, data);
-      const moduleIsAdded = await module.deniedTokens(randomTokenOne.address);
+      const moduleIsAdded = await module.deniedTokens(tokenOne.address);
       expect(moduleIsAdded).to.be.true;
     });
     it("throws if not authorized", async () => {
-      const { module, randomTokenTwo } = await setupTestWithTestAvatar();
-      await expect(
-        module.addToDenylist([randomTokenTwo.address])
-      ).to.be.revertedWith(`Ownable: caller is not the owner`);
+      const { module, tokenTwo } = await setupTestWithTestAvatar();
+      await expect(module.addToDenylist([tokenTwo.address])).to.be.revertedWith(
+        `Ownable: caller is not the owner`
+      );
     });
 
     it("throws if token is already in list", async () => {
-      const { module, avatar, randomTokenTwo } =
-        await setupTestWithTestAvatar();
+      const { module, avatar, tokenTwo } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenylist", [
-        [randomTokenTwo.address],
+        [tokenTwo.address],
       ]);
       await avatar.exec(module.address, 0, data);
 
@@ -176,33 +177,29 @@ describe("Exit", async () => {
 
   describe("removeFromDenylist()", () => {
     it("should remove address from denied list", async () => {
-      const { module, avatar, randomTokenOne } =
-        await setupTestWithTestAvatar();
+      const { module, avatar, tokenOne } = await setupTestWithTestAvatar();
       const addTokenData = module.interface.encodeFunctionData(
         "addToDenylist",
-        [[randomTokenOne.address]]
+        [[tokenOne.address]]
       );
       await avatar.exec(module.address, 0, addTokenData);
-      const moduleIsAdded = await module.deniedTokens(randomTokenOne.address);
+      const moduleIsAdded = await module.deniedTokens(tokenOne.address);
       expect(moduleIsAdded).to.be.true;
       const removeTokenData = module.interface.encodeFunctionData(
         "removeFromDenylist",
-        [[randomTokenOne.address]]
+        [[tokenOne.address]]
       );
 
       await avatar.exec(module.address, 0, removeTokenData);
-      const moduleIsNotAdded = await module.deniedTokens(
-        randomTokenOne.address
-      );
+      const moduleIsNotAdded = await module.deniedTokens(tokenOne.address);
       expect(moduleIsNotAdded).to.be.false;
     });
 
     it("throws if token is not added in list", async () => {
-      const { module, avatar, randomTokenTwo } =
-        await setupTestWithTestAvatar();
+      const { module, avatar, tokenTwo } = await setupTestWithTestAvatar();
       const removeTokenData = module.interface.encodeFunctionData(
         "removeFromDenylist",
-        [[randomTokenTwo.address]]
+        [[tokenTwo.address]]
       );
       await expect(
         avatar.exec(module.address, 0, removeTokenData)
@@ -210,24 +207,19 @@ describe("Exit", async () => {
     });
 
     it("throws if not authorized", async () => {
-      const { module, randomTokenOne } = await setupTestWithTestAvatar();
+      const { module, tokenOne } = await setupTestWithTestAvatar();
       await expect(
-        module.removeFromDenylist([randomTokenOne.address])
+        module.removeFromDenylist([tokenOne.address])
       ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
   });
 
   describe("exit()", () => {
     it("throws if token is added in denied tokens list", async () => {
-      const {
-        avatar,
-        module,
-        randomTokenOne,
-        randomTokenTwo,
-        designatedToken,
-      } = await setupTestWithTestAvatar();
+      const { avatar, module, tokenOne, tokenTwo, designatedToken } =
+        await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenylist", [
-        [randomTokenOne.address],
+        [tokenOne.address],
       ]);
       await avatar.exec(module.address, 0, data);
 
@@ -238,213 +230,172 @@ describe("Exit", async () => {
 
       await expect(
         module.exit(DesignatedTokenBalance, [
-          randomTokenOne.address,
-          randomTokenTwo.address,
+          tokenOne.address,
+          tokenTwo.address,
         ])
       ).to.be.revertedWith(`Invalid token`);
     });
 
     it("throws because user is trying to redeem more tokens than he owns", async () => {
-      const { avatar, module, randomTokenOne, randomTokenTwo } =
+      const { avatar, module, tokenOne, tokenTwo } =
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
       await expect(
         module
           .connect(user)
           .exit(DesignatedTokenBalance.mul(2), [
-            randomTokenOne.address,
-            randomTokenTwo.address,
+            tokenOne.address,
+            tokenTwo.address,
           ])
       ).to.be.revertedWith("Amount to redeem is greater than balance");
     });
 
-    it("user should receive 20% of safe assets because he is redeeming 1/5 of the circulating supply", async () => {
-      const {
-        avatar,
-        module,
-        randomTokenOne,
-        randomTokenTwo,
-        designatedToken,
-      } = await setupTestWithTestAvatar();
+    it("redeeming 20% of circulating supply returns 20% of the avatar's assets", async () => {
+      const { avatar, module, tokenOne, tokenTwo, designatedToken } =
+        await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
 
-      await designatedToken
-        .connect(user)
-        .approve(avatar.address, DesignatedTokenBalance);
+      await designatedToken.approve(avatar.address, DesignatedTokenBalance);
 
-      const oldBalanceExec = await randomTokenOne.balanceOf(avatar.address);
-      const oldUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
-        user.address
+      const previousAvatarETHBalance = parseInt(
+        (await waffle.provider.getBalance(avatar.address))._hex
       );
-      const oldUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
-        user.address
+      const previousAvatarTokenOneBalance = parseInt(
+        (await tokenOne.balanceOf(avatar.address))._hex
       );
+      const previousAvatarTokenTwoBalance = parseInt(
+        (await tokenTwo.balanceOf(avatar.address))._hex
+      );
+
+      const previousUserETHBalance = BigNumber.from(
+        await waffle.provider.getBalance(user.address)
+      );
+      const previousUserTokenOneBalance = parseInt(
+        (await tokenOne.balanceOf(user.address))._hex
+      );
+      const previousUserTokenTwoBalance = parseInt(
+        (await tokenTwo.balanceOf(user.address))._hex
+      );
+
+      await expect(
+        await module.exit(DesignatedTokenBalance, [
+          tokenOne.address,
+          tokenTwo.address,
+        ])
+      )
+        .to.emit(module, "ExitSuccessful")
+        .withArgs(user.address);
 
       expect(
         parseInt((await waffle.provider.getBalance(avatar.address))._hex)
-      ).to.be.equal(100);
-      expect(await waffle.provider.getBalance(avatar.address)).to.be.equal(
-        BigNumber.from(100)
-      );
-      expect(oldBalanceExec).to.be.equal(RandomTokenOneBalance);
-      expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
-      expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
+      ).to.be.equal(previousAvatarETHBalance * 0.8);
 
-      const exitTransaction = await module
-        .connect(user)
-        .exit(DesignatedTokenBalance, [
-          randomTokenOne.address,
-          randomTokenTwo.address,
-        ]);
-
-      const receipt = await exitTransaction.wait();
-
-      const newBalanceExec = await randomTokenOne.balanceOf(avatar.address);
-
-      const newUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
-        user.address
-      );
-      const newUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
-        user.address
-      );
-
-      const newLeaverBalance = await designatedToken.balanceOf(user.address);
-      const newOwnerBalance = await designatedToken.balanceOf(avatar.address);
-
-      // 4/5 of the random token total supply
-      expect(newBalanceExec).to.be.equal(
-        RandomTokenOneBalance.mul(800).div(1000)
-      );
-      // 1/5 of the random token total supply
-      expect(newUserBalanceInRandomTokenOne).to.be.equal(
-        RandomTokenOneBalance.mul(200).div(1000)
-      );
-      // 1/5 of the random token total supply
-      expect(newUserBalanceInRandomTokenTwo).to.be.equal(
-        RandomTokenTwoBalance.mul(200).div(1000)
-      );
-      // 1/5 of the ETH balance
       expect(
-        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
-      ).to.be.equal(80);
+        parseInt((await tokenOne.balanceOf(avatar.address))._hex)
+      ).to.be.equal(previousAvatarTokenOneBalance * 0.8);
 
-      expect(newLeaverBalance.toNumber()).to.be.equal(0);
-      expect(newOwnerBalance).to.be.equal(DesignatedTokenBalance);
+      expect(
+        parseInt((await tokenTwo.balanceOf(avatar.address))._hex)
+      ).to.be.equal(previousAvatarTokenTwoBalance * 0.8);
 
-      expect(receipt.events[4].args[0]).to.be.equal(user.address);
+      // didn't calculate exactly because of gas costs
+      expect(
+        BigNumber.from(await waffle.provider.getBalance(user.address)).gt(
+          previousUserETHBalance
+        )
+      );
+
+      expect(
+        parseInt((await tokenOne.balanceOf(user.address))._hex)
+      ).to.be.equal(
+        previousUserTokenOneBalance + previousAvatarTokenOneBalance * 0.2
+      );
+
+      expect(
+        parseInt((await tokenTwo.balanceOf(user.address))._hex)
+      ).to.be.equal(
+        previousUserTokenTwoBalance + previousAvatarTokenTwoBalance * 0.2
+      );
     });
 
-    it("user should receive 10% of safe assets because he is redeeming 1/10 of the circulating supply", async () => {
-      const {
-        avatar,
-        module,
-        randomTokenOne,
-        randomTokenTwo,
-        designatedToken,
-      } = await setupTestWithTestAvatar();
+    it("redeeming 10% of circulating supply returns 10% of the avatar's assets", async () => {
+      const { avatar, module, tokenOne, tokenTwo, designatedToken } =
+        await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
 
-      await designatedToken
-        .connect(user)
-        .approve(avatar.address, DesignatedTokenBalance);
+      await designatedToken.approve(avatar.address, DesignatedTokenBalance);
 
-      const oldBalanceExec = await randomTokenOne.balanceOf(avatar.address);
-      const oldUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
-        user.address
+      const previousAvatarETHBalance = parseInt(
+        (await waffle.provider.getBalance(avatar.address))._hex
       );
-      const oldUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
-        user.address
+      const previousAvatarTokenOneBalance = parseInt(
+        (await tokenOne.balanceOf(avatar.address))._hex
       );
+      const previousAvatarTokenTwoBalance = parseInt(
+        (await tokenTwo.balanceOf(avatar.address))._hex
+      );
+
+      const previousUserETHBalance = BigNumber.from(
+        await waffle.provider.getBalance(user.address)
+      );
+      const previousUserTokenOneBalance = parseInt(
+        (await tokenOne.balanceOf(user.address))._hex
+      );
+      const previousUserTokenTwoBalance = parseInt(
+        (await tokenTwo.balanceOf(user.address))._hex
+      );
+
+      await expect(
+        await module.exit(DesignatedTokenBalance.div(2), [
+          tokenOne.address,
+          tokenTwo.address,
+        ])
+      )
+        .to.emit(module, "ExitSuccessful")
+        .withArgs(user.address);
+
       expect(
         parseInt((await waffle.provider.getBalance(avatar.address))._hex)
-      ).to.be.equal(100);
+      ).to.be.equal(previousAvatarETHBalance * 0.9);
 
       expect(
-        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
-      ).to.be.equal(100);
-      expect(oldBalanceExec).to.be.equal(RandomTokenOneBalance);
-      expect(oldUserBalanceInRandomTokenOne).to.be.equal(BigNumber.from(0));
-      expect(oldUserBalanceInRandomTokenTwo).to.be.equal(BigNumber.from(0));
-      const exitTransaction = await module
-        .connect(user)
-        .exit(DesignatedTokenBalance.div(2), [
-          randomTokenOne.address,
-          randomTokenTwo.address,
-        ]);
+        parseInt((await tokenOne.balanceOf(avatar.address))._hex)
+      ).to.be.equal(previousAvatarTokenOneBalance * 0.9);
 
-      const receipt = await exitTransaction.wait();
-
-      const newBalanceExec = await randomTokenOne.balanceOf(avatar.address);
-
-      const newUserBalanceInRandomTokenOne = await randomTokenOne.balanceOf(
-        user.address
-      );
-      const newUserBalanceInRandomTokenTwo = await randomTokenTwo.balanceOf(
-        user.address
-      );
-      const newLeaverBalance = await designatedToken.balanceOf(user.address);
-      const newOwnerBalance = await designatedToken.balanceOf(avatar.address);
-
-      // 9/10 of the random token total supply
-      expect(newBalanceExec).to.be.equal(
-        RandomTokenOneBalance.mul(900).div(1000)
-      );
-
-      // 1/10 of the random token total supply
-      expect(newUserBalanceInRandomTokenOne).to.be.equal(
-        RandomTokenOneBalance.mul(100).div(1000)
-      );
-
-      // 1/10 of the random token total supply
-      expect(newUserBalanceInRandomTokenTwo).to.be.equal(
-        RandomTokenTwoBalance.mul(100).div(1000)
-      );
-
-      // 1/10 of ETH balance
       expect(
-        parseInt((await waffle.provider.getBalance(avatar.address))._hex)
-      ).to.be.equal(90);
+        parseInt((await tokenTwo.balanceOf(avatar.address))._hex)
+      ).to.be.equal(previousAvatarTokenTwoBalance * 0.9);
 
-      expect(newLeaverBalance).to.be.equal(DesignatedTokenBalance.div(2));
-      expect(newOwnerBalance).to.be.equal(DesignatedTokenBalance.div(2));
+      // didn't calculate exactly because of gas costs
+      expect(
+        BigNumber.from(await waffle.provider.getBalance(user.address)).gt(
+          previousUserETHBalance
+        )
+      );
 
-      expect(receipt.events[4].args[0]).to.be.equal(user.address);
+      expect(
+        parseInt((await tokenOne.balanceOf(user.address))._hex)
+      ).to.be.equal(
+        previousUserTokenOneBalance + previousAvatarTokenOneBalance * 0.1
+      );
+
+      expect(
+        parseInt((await tokenTwo.balanceOf(user.address))._hex)
+      ).to.be.equal(
+        previousUserTokenTwoBalance + previousAvatarTokenTwoBalance * 0.1
+      );
     });
 
     it("throws because user haven't approve designated tokens", async () => {
-      const { avatar, module, randomTokenOne, randomTokenTwo } =
+      const { avatar, module, tokenOne, tokenTwo } =
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
 
       await expect(
         module
           .connect(user)
-          .exit(DesignatedTokenBalance, [
-            randomTokenOne.address,
-            randomTokenTwo.address,
-          ])
+          .exit(DesignatedTokenBalance, [tokenOne.address, tokenTwo.address])
       ).to.be.revertedWith("Error on exit execution");
-    });
-  });
-
-  describe("setCirculatingSupply", () => {
-    const NEW_BALANCE = BigNumber.from(10000000);
-    it("should update circulating supply ", async () => {
-      const { module, circulatingSupply } = await setupTestWithTestAvatar();
-      const currentCirculatingSupply = await module.getCirculatingSupply();
-      expect(DesignatedTokenBalance.mul(5)).to.be.equal(
-        currentCirculatingSupply
-      );
-      await circulatingSupply.connect(user).set(NEW_BALANCE);
-      const newCirculatingSupply = await module.getCirculatingSupply();
-      expect(NEW_BALANCE).to.be.equal(newCirculatingSupply);
-    });
-
-    it("throws if not authorized", async () => {
-      const { circulatingSupply } = await setupTestWithTestAvatar();
-      await expect(
-        circulatingSupply.connect(anotherUser).set(NEW_BALANCE)
-      ).to.be.revertedWith(`caller is not the owner`);
     });
   });
 
@@ -458,14 +409,13 @@ describe("Exit", async () => {
 
   describe("setDesignedToken()", () => {
     it("should set designated token", async () => {
-      const { module, avatar, randomTokenOne } =
-        await setupTestWithTestAvatar();
+      const { module, avatar, tokenOne } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("setDesignatedToken", [
-        randomTokenOne.address,
+        tokenOne.address,
       ]);
       await avatar.exec(module.address, 0, data);
       const newTokenAddress = await module.designatedToken();
-      expect(newTokenAddress).to.be.equal(randomTokenOne.address);
+      expect(newTokenAddress).to.be.equal(tokenOne.address);
     });
 
     it("throws if avatar is msg.sender is not the avatar", async () => {
