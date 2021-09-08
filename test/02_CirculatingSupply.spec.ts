@@ -69,7 +69,7 @@ describe("CirculatingSupply", async () => {
         designatedToken.address,
         [avatar.address]
       );
-      await expect(await circulatingSupply.token()).to.be.equals(
+      expect(await circulatingSupply.token()).to.be.equals(
         designatedToken.address
       );
     });
@@ -85,7 +85,7 @@ describe("CirculatingSupply", async () => {
         avatar.address,
         "0x0000000000000000000000000000000000000000",
       ];
-      await expect(
+      expect(
         (
           await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
         ).toString()
@@ -104,7 +104,7 @@ describe("CirculatingSupply", async () => {
         avatar.address,
         "0x0000000000000000000000000000000000000000",
       ];
-      await expect(
+      expect(
         (
           await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
         ).toString()
@@ -117,9 +117,9 @@ describe("CirculatingSupply", async () => {
       const { avatar, circulatingSupply, designatedToken, initializeParams } =
         await setupTests();
 
-      await expect(
-        circulatingSupply.setUp(initializeParams)
-      ).to.be.revertedWith("Contract is already initialized");
+      expect(circulatingSupply.setUp(initializeParams)).to.be.revertedWith(
+        "Contract is already initialized"
+      );
     });
 
     it("sets owner", async () => {
