@@ -44,6 +44,7 @@ describe("Exit", async () => {
       "CirculatingSupply"
     );
     const circulatingSupply = await CirculatingSupply.deploy(
+      user.address,
       token.designatedToken.address,
       [avatar.address]
     );

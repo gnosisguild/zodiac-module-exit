@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract CirculatingSupply is Ownable {
+contract CirculatingSupply is OwnableUpgradeable {
     event ExclusionAdded(address indexed excludedAddress);
     event ExclusionRemoved(address indexed RemovedAddress);
     event TokenSet(address indexed newToken);
@@ -16,8 +16,12 @@ contract CirculatingSupply is Ownable {
     // Mapping of excluded addresses
     mapping(address => address) internal exclusions;
 
-    constructor(address _token, address[] memory _exclusions) {
-        bytes memory initParams = abi.encode(_token, _exclusions);
+    constructor(
+        address _owner,
+        address _token,
+        address[] memory _exclusions
+    ) {
+        bytes memory initParams = abi.encode(_owner, _token, _exclusions);
         setUp(initParams);
     }
 
@@ -36,10 +40,10 @@ contract CirculatingSupply is Ownable {
     function setUp(bytes memory initializeParams) public {
         require(!initialized, "Contract is already initialized");
         initialized = true;
-        (address _token, address[] memory _exclusions) = abi.decode(
-            initializeParams,
-            (address, address[])
-        );
+        (address _owner, address _token, address[] memory _exclusions) = abi
+            .decode(initializeParams, (address, address, address[]));
+        __Ownable_init();
+        transferOwnership(_owner);
         token = _token;
         for (uint256 i = 0; i < _exclusions.length; i++) {
             excludeAddress(_exclusions[i]);
