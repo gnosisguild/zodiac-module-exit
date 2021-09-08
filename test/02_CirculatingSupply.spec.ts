@@ -87,10 +87,7 @@ describe("CirculatingSupply", async () => {
         designatedToken.address,
         [avatar.address]
       );
-      const exclusions = [
-        avatar.address,
-        "0x0000000000000000000000000000000000000000",
-      ];
+      const exclusions = [avatar.address, SENTINEL_EXCLUSIONS];
       expect(
         (
           await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
@@ -105,11 +102,7 @@ describe("CirculatingSupply", async () => {
         designatedToken.address,
         [avatar.address, user1.address]
       );
-      const exclusions = [
-        user1.address,
-        avatar.address,
-        "0x0000000000000000000000000000000000000000",
-      ];
+      const exclusions = [user1.address, avatar.address, SENTINEL_EXCLUSIONS];
       expect(
         (
           await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
@@ -205,11 +198,7 @@ describe("CirculatingSupply", async () => {
         "CirculatingSupply",
         newProxyAddress
       );
-      const exclusions = [
-        avatar.address,
-        user1.address,
-        "0x0000000000000000000000000000000000000000",
-      ];
+      const exclusions = [avatar.address, user1.address, SENTINEL_EXCLUSIONS];
       expect(
         (
           await newProxy.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
@@ -395,9 +384,7 @@ describe("CirculatingSupply", async () => {
         3
       );
       tx = tx.toString();
-      expect(tx).to.be.equals(
-        [[], "0x0000000000000000000000000000000000000000"].toString()
-      );
+      expect(tx).to.be.equals([[], SENTINEL_EXCLUSIONS].toString());
     });
 
     it("returns one exclusion if one exclusion is enabled", async () => {
@@ -408,10 +395,7 @@ describe("CirculatingSupply", async () => {
       );
       tx = tx.toString();
       expect(tx).to.be.equals(
-        [
-          [avatar.address],
-          "0x0000000000000000000000000000000000000000",
-        ].toString()
+        [[avatar.address], SENTINEL_EXCLUSIONS].toString()
       );
     });
 
@@ -426,11 +410,7 @@ describe("CirculatingSupply", async () => {
       );
       tx = tx.toString();
       expect(tx).to.be.equals(
-        [
-          user1.address,
-          avatar.address,
-          "0x0000000000000000000000000000000000000000",
-        ].toString()
+        [user1.address, avatar.address, SENTINEL_EXCLUSIONS].toString()
       );
     });
   });
