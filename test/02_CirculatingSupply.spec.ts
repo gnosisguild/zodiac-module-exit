@@ -59,7 +59,7 @@ describe("CirculatingSupply", async () => {
         designatedToken.address,
         [avatar.address]
       );
-      await expect(await circulatingSupply.owner()).to.be.equals(user1.address);
+      expect(await circulatingSupply.owner()).to.be.equals(user1.address);
     });
 
     it("sets token to designatedToken", async () => {
@@ -125,14 +125,28 @@ describe("CirculatingSupply", async () => {
     it("sets owner", async () => {
       const { circulatingSupply, initializeParams, factory } =
         await setupTests();
-      console.log(initializeParams);
 
-      const proxy = await factory.deployModule(
-        circulatingSupply.address,
-        initializeParams,
-        saltNonce
+      const setupEncodeParams = circulatingSupply.interface.encodeFunctionData(
+        "setUp",
+        [initializeParams]
       );
-      await expect(await proxy.owner()).to.be.equals(user1.address);
+
+      const receipt = await factory
+        .deployModule(circulatingSupply.address, setupEncodeParams, saltNonce)
+        .then((tx: any) => tx.wait());
+
+      // retrieve new address from event
+      const {
+        args: [newProxyAddress],
+      } = receipt.events.find(
+        ({ event }: { event: string }) => event === "ModuleProxyCreation"
+      );
+
+      const newProxy = await hre.ethers.getContractAt(
+        "CirculatingSupply",
+        newProxyAddress
+      );
+      expect(await newProxy.owner()).to.be.eq(user1.address);
     });
   });
 });
