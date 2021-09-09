@@ -225,9 +225,7 @@ describe("Exit", async () => {
       await avatar.exec(module.address, 0, data);
 
       await avatar.setModule(module.address);
-      await designatedToken
-        .connect(user)
-        .approve(avatar.address, DesignatedTokenBalance);
+      await designatedToken.approve(module.address, DesignatedTokenBalance);
 
       await expect(
         module.exit(DesignatedTokenBalance, [
@@ -242,12 +240,10 @@ describe("Exit", async () => {
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
       await expect(
-        module
-          .connect(user)
-          .exit(DesignatedTokenBalance.mul(2), [
-            tokenOne.address,
-            tokenTwo.address,
-          ])
+        module.exit(DesignatedTokenBalance.mul(2), [
+          tokenOne.address,
+          tokenTwo.address,
+        ])
       ).to.be.revertedWith("Amount to redeem is greater than balance");
     });
 
@@ -256,7 +252,7 @@ describe("Exit", async () => {
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
 
-      await designatedToken.approve(avatar.address, DesignatedTokenBalance);
+      await designatedToken.approve(module.address, DesignatedTokenBalance);
 
       const previousAvatarETHBalance = parseInt(
         (await waffle.provider.getBalance(avatar.address))._hex
@@ -324,7 +320,7 @@ describe("Exit", async () => {
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
 
-      await designatedToken.approve(avatar.address, DesignatedTokenBalance);
+      await designatedToken.approve(module.address, DesignatedTokenBalance);
 
       const previousAvatarETHBalance = parseInt(
         (await waffle.provider.getBalance(avatar.address))._hex
@@ -393,10 +389,11 @@ describe("Exit", async () => {
       await avatar.setModule(module.address);
 
       await expect(
-        module
-          .connect(user)
-          .exit(DesignatedTokenBalance, [tokenOne.address, tokenTwo.address])
-      ).to.be.revertedWith("Error on exit execution");
+        module.exit(DesignatedTokenBalance, [
+          tokenOne.address,
+          tokenTwo.address,
+        ])
+      ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
     });
   });
 
