@@ -26,8 +26,6 @@ contract CirculatingSupply is OwnableUpgradeable {
     }
 
     function setUp(bytes memory initializeParams) public {
-        require(!initialized, "Contract is already initialized");
-        initialized = true;
         (address _owner, address _token, address[] memory _exclusions) = abi
             .decode(initializeParams, (address, address, address[]));
         __Ownable_init();
