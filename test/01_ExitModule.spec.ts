@@ -247,6 +247,32 @@ describe("Exit", async () => {
       ).to.be.revertedWith("Amount to redeem is greater than balance");
     });
 
+    it("reverts if tokens[] is unorderred", async () => {
+      const { avatar, module, designatedToken, tokenOne, tokenTwo } =
+        await setupTestWithTestAvatar();
+      await avatar.setModule(module.address);
+      await designatedToken.approve(module.address, DesignatedTokenBalance);
+      await expect(
+        module.exit(DesignatedTokenBalance, [
+          tokenOne.address,
+          tokenTwo.address,
+        ])
+      ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
+    });
+
+    it("reverts if tokens[] contains duplicates", async () => {
+      const { avatar, module, designatedToken, tokenOne, tokenTwo } =
+        await setupTestWithTestAvatar();
+      await avatar.setModule(module.address);
+      await designatedToken.approve(module.address, DesignatedTokenBalance);
+      await expect(
+        module.exit(DesignatedTokenBalance, [
+          tokenOne.address,
+          tokenOne.address,
+        ])
+      ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
+    });
+
     it("redeeming 20% of circulating supply returns 20% of the avatar's assets", async () => {
       const { avatar, module, tokenOne, tokenTwo, designatedToken } =
         await setupTestWithTestAvatar();
@@ -276,8 +302,8 @@ describe("Exit", async () => {
 
       await expect(
         await module.exit(DesignatedTokenBalance, [
-          tokenOne.address,
           tokenTwo.address,
+          tokenOne.address,
         ])
       )
         .to.emit(module, "ExitSuccessful")
@@ -344,8 +370,8 @@ describe("Exit", async () => {
 
       await expect(
         await module.exit(DesignatedTokenBalance.div(2), [
-          tokenOne.address,
           tokenTwo.address,
+          tokenOne.address,
         ])
       )
         .to.emit(module, "ExitSuccessful")
