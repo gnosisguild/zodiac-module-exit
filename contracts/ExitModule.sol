@@ -68,8 +68,8 @@ contract Exit is Module {
 
     /// @dev Execute the share of assets and the transfer of designated tokens
     /// @param amountToRedeem Amount to be sent to the avatar
-    /// @param tokens Array of tokens that the leaver will recieve
-    /// @notice Will throw if a token sent is added in the denied token list
+    /// @param tokens Array of tokens to claim, orderred lowest to highest
+    /// @notice Will revert if tokens[] is not orderred highest to lowest, contains duplicates, or includes denied tokens
     function exit(uint256 amountToRedeem, address[] calldata tokens) public {
         require(
             designatedToken.balanceOf(msg.sender) >= amountToRedeem,
@@ -84,9 +84,15 @@ contract Exit is Module {
             transferNativeAsset(msg.sender, amountToRedeem, supply);
         }
 
+        address previousToken;
         for (uint8 i = 0; i < tokens.length; i++) {
             require(!deniedTokens[tokens[i]], "Invalid token");
+            require(
+                tokens[i] > previousToken,
+                "tokens[] is out of order or contains a duplicate"
+            );
             transferToken(tokens[i], msg.sender, amountToRedeem, supply);
+            previousToken = tokens[i];
         }
 
         emit ExitSuccessful(msg.sender);
