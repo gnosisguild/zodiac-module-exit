@@ -78,18 +78,7 @@ contract Exit is Module {
 
         uint256 supply = getCirculatingSupply();
 
-        // 0x23b872dd - bytes4(keccak256("transferFrom(address,address,uint256)"))
-        bytes memory data = abi.encodeWithSelector(
-            0x23b872dd,
-            msg.sender,
-            avatar,
-            amountToRedeem
-        );
-
-        require(
-            exec(address(designatedToken), 0, data, Enum.Operation.Call),
-            "Error on exit execution"
-        );
+        designatedToken.transferFrom(msg.sender, avatar, amountToRedeem);
 
         if (avatar.balance > 0) {
             transferNativeAsset(msg.sender, amountToRedeem, supply);
