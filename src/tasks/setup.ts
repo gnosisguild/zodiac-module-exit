@@ -1,10 +1,131 @@
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { task, types } from "hardhat/config";
-import { BigNumber, Contract } from "ethers";
-import { AbiCoder } from "ethers/lib/utils";
+import { BigNumber } from "ethers";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { deployAndSetUpModule } from "cesar-test-zodiac";
 
-const AddressOne = "0x0000000000000000000000000000000000000001";
+interface FactoryTaskArgs {
+  proxied: boolean;
+}
+
+interface CirculatingSupplyTaskArgs extends FactoryTaskArgs {
+  owner: string;
+  token: string;
+  exclusions: string;
+}
+
+interface ExitSetupArgs extends FactoryTaskArgs {
+  owner: string;
+  avatar: string;
+  target: string;
+  token: string;
+  supply: string;
+}
+
+const deployCirculatingSupply = async (
+  taskArgs: CirculatingSupplyTaskArgs,
+  hardhatRuntime: HardhatRuntimeEnvironment
+) => {
+  const [caller] = await hardhatRuntime.ethers.getSigners();
+  console.log("Using the account:", caller.address);
+  const exclusions = taskArgs.exclusions ? taskArgs.exclusions.split(",") : [];
+  const Supply = await hardhatRuntime.ethers.getContractFactory(
+    "CirculatingSupply"
+  );
+
+  if (taskArgs.proxied) {
+    const chainId = await hardhatRuntime.getChainId();
+    const { transaction } = deployAndSetUpModule(
+      "circulatingSupply",
+      {
+        types: ["address", "address", "address[]"],
+        values: [taskArgs.owner, taskArgs.token, exclusions],
+      },
+      hardhatRuntime.ethers.provider,
+      Number(chainId),
+      Date.now().toString()
+    );
+    const deploymentTransaction = await caller.sendTransaction(transaction);
+    const receipt = await deploymentTransaction.wait();
+
+    console.log(
+      "Circulating supply contract deployed to",
+      receipt.logs[1].address
+    );
+    return;
+  }
+
+  const supply = await Supply.deploy(
+    taskArgs.owner,
+    taskArgs.token,
+    exclusions
+  );
+  console.log("Circulating supply contract deployed to", supply.address);
+};
+
+task("deployCirculatingSupply", "Deploy circulating supply contract")
+  .addParam("owner", "Address of the owner", undefined, types.string)
+  .addParam("token", "Address of the designated token", undefined, types.string)
+  .addParam(
+    "exclusions",
+    "List of address to exclude (e.g: 0xab,0xgm,0xez)",
+    undefined,
+    types.string,
+    true
+  )
+  .addParam(
+    "proxied",
+    "Deploys contract through factoryz",
+    false,
+    types.boolean,
+    true
+  )
+  .setAction(deployCirculatingSupply);
+
+const setupModule = async (
+  taskArgs: ExitSetupArgs,
+  hardhatRuntime: HardhatRuntimeEnvironment
+) => {
+  const [caller] = await hardhatRuntime.ethers.getSigners();
+  console.log("Using the account:", caller.address);
+
+  if (taskArgs.proxied) {
+    const { transaction } = deployAndSetUpModule(
+      "exit",
+      {
+        types: ["address", "address", "address", "address", "address"],
+        values: [
+          taskArgs.owner,
+          taskArgs.avatar,
+          taskArgs.target,
+          taskArgs.token,
+          taskArgs.supply,
+        ],
+      },
+      hardhatRuntime.ethers.provider,
+      Number(await hardhatRuntime.getChainId()),
+      Date.now().toString()
+    );
+
+    const deploymentTransaction = await caller.sendTransaction(transaction);
+    const receipt = await deploymentTransaction.wait();
+
+    console.log("Module deployed to: ", receipt.logs[1].address);
+    return;
+  }
+
+  const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
+
+  const module = await Module.deploy(
+    taskArgs.owner,
+    taskArgs.avatar,
+    taskArgs.target,
+    taskArgs.token,
+    taskArgs.supply
+  );
+  console.log("Module deployed to:", module.address);
+};
 
 task("setup", "deploy a Exit Module")
   .addParam("owner", "Address of the owner", undefined, types.string)
@@ -14,92 +135,16 @@ task("setup", "deploy a Exit Module")
     undefined,
     types.string
   )
+  .addParam("target", "Address of the target", undefined, types.string)
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
     "supply",
     "Circulating supply of the designated token",
-    BigNumber.from(10).pow(18).mul(10).toString(),
-    types.string
-  )
-  .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-
-    const Supply = await hardhatRuntime.ethers.getContractFactory(
-      "CirculatingSupply"
-    );
-    const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
-
-    const supply = await Supply.deploy(taskArgs.supply);
-    const module = await Module.deploy(
-      taskArgs.owner,
-      taskArgs.avatar,
-      taskArgs.token,
-      supply.address
-    );
-
-    console.log("Circulating Supply contract deployed to:", supply.address);
-    console.log("Module deployed to:", module.address);
-  });
-
-task("factorySetup", "Deploy and initialize Safe Exit through a Proxy Factory")
-  .addParam("factory", "Address of the Proxy Factory", undefined, types.string)
-  .addParam(
-    "mastercopy",
-    "Address of the Safe Exit Master Copy",
     undefined,
     types.string
   )
-  .addParam("owner", "Address of the owner", undefined, types.string)
-  .addParam(
-    "avatar",
-    "Address of the avatar (e.g. Safe)",
-    undefined,
-    types.string
-  )
-  .addParam("token", "Address of the designated token", undefined, types.string)
-  .addParam(
-    "supply",
-    "Circulating supply of designated token",
-    BigNumber.from(10).pow(18).mul(10).toString(),
-    types.string
-  )
-  .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-
-    const FactoryAbi = [
-      `function deployModule(
-        address masterCopy, 
-        bytes memory initializer
-      ) public returns (address proxy)`,
-    ];
-
-    const Supply = await hardhatRuntime.ethers.getContractFactory(
-      "CirculatingSupply"
-    );
-
-    const supply = await Supply.deploy(taskArgs.supply);
-    const Factory = new Contract(taskArgs.factory, FactoryAbi, caller);
-
-    const encodedData = new AbiCoder().encode(
-      ["address", "address", "address", "address"],
-      [taskArgs.owner, taskArgs.avatar, taskArgs.token, supply.address]
-    );
-
-    const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
-
-    const initParams = Module.interface.encodeFunctionData("setUp", [
-      encodedData,
-    ]);
-
-    const receipt = await Factory.deployModule(
-      taskArgs.mastercopy,
-      initParams
-    ).then((tx: any) => tx.wait(3));
-    console.log("Circulating Supply contract deployed to:", supply.address);
-    console.log("Module deployed to:", receipt.logs[1].address);
-  });
+  .addParam("proxied", "Deploy module through proxy", false, types.boolean)
+  .setAction(setupModule);
 
 task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("module", "Address of the Safe Exit", undefined, types.string)
