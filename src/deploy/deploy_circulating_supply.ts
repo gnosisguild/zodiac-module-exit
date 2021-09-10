@@ -7,15 +7,9 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
   const { deployer } = await getNamedAccounts();
   const { deploy } = deployments;
-  const args = [
-    FirstAddress,
-    FirstAddress,
-    FirstAddress,
-    FirstAddress,
-    FirstAddress
-  ];
+  const args = [FirstAddress, FirstAddress, []];
 
-  await deploy("Exit", {
+  await deploy("CirculatingSupply", {
     from: deployer,
     args,
     log: true,
@@ -23,5 +17,5 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 };
 
-deploy.tags = ["exit-module"];
+deploy.tags = ["circulating-supply"];
 export default deploy;
