@@ -3,7 +3,7 @@ import "@nomiclabs/hardhat-ethers";
 import { task, types } from "hardhat/config";
 import { BigNumber } from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { deployAndSetUpModule } from "cesar-test-zodiac";
+import { deployAndSetUpModule } from "@gnosis.pm/zodiac";
 
 interface FactoryTaskArgs {
   proxied: boolean;
@@ -91,6 +91,7 @@ const setupModule = async (
   console.log("Using the account:", caller.address);
 
   if (taskArgs.proxied) {
+    const chainId = await hardhatRuntime.getChainId();
     const { transaction } = deployAndSetUpModule(
       "exit",
       {
@@ -104,14 +105,14 @@ const setupModule = async (
         ],
       },
       hardhatRuntime.ethers.provider,
-      Number(await hardhatRuntime.getChainId()),
+      Number(chainId),
       Date.now().toString()
     );
 
     const deploymentTransaction = await caller.sendTransaction(transaction);
     const receipt = await deploymentTransaction.wait();
 
-    console.log("Module deployed to: ", receipt.logs[1].address);
+    console.log("Module deployed to:", receipt.logs[1].address);
     return;
   }
 
@@ -174,6 +175,29 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
     });
   });
 
+const deployDesignatedToken = async (
+  taskArgs: { user: string },
+  hardhatRuntime: HardhatRuntimeEnvironment
+) => {
+  const [caller] = await hardhatRuntime.ethers.getSigners();
+  console.log("Using the account:", caller.address);
+
+  const Token = await hardhatRuntime.ethers.getContractFactory("TestToken");
+  const token = await Token.deploy(18);
+
+  await token.deployTransaction.wait(3);
+  console.log("Token deployed to:", token.address);
+
+  const receiver = taskArgs.user || caller.address;
+  await token.mint(receiver, BigNumber.from(10).pow(18));
+
+  console.log("Token minted to:", receiver);
+  await hardhatRuntime.run("verify:verify", {
+    address: token.address,
+    constructorArguments: [18],
+  });
+};
+
 task("deployDesignatedToken")
   .addParam(
     "user",
@@ -181,24 +205,6 @@ task("deployDesignatedToken")
     "",
     types.string
   )
-  .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-
-    const Token = await hardhatRuntime.ethers.getContractFactory("TestToken");
-    const token = await Token.deploy(18);
-
-    await token.deployTransaction.wait(3);
-    console.log("Token deployed to:", token.address);
-
-    const receiver = taskArgs.user || caller.address;
-    await token.mint(receiver, BigNumber.from(10).pow(18));
-
-    console.log("Token minted to:", receiver);
-    await hardhatRuntime.run("verify:verify", {
-      address: token.address,
-      constructorArguments: [18],
-    });
-  });
+  .setAction(deployDesignatedToken);
 
 export {};
