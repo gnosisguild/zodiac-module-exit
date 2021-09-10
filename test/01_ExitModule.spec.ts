@@ -232,7 +232,7 @@ describe("Exit", async () => {
           tokenOne.address,
           tokenTwo.address,
         ])
-      ).to.be.revertedWith(`Invalid token`);
+      ).to.be.revertedWith(`Denied token`);
     });
 
     it("throws because user is trying to redeem more tokens than he owns", async () => {
