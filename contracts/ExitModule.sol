@@ -84,7 +84,7 @@ contract Exit is Module {
 
         address previousToken;
         for (uint8 i = 0; i < tokens.length; i++) {
-            require(!deniedTokens[tokens[i]], "Invalid token");
+            require(!deniedTokens[tokens[i]] && tokens[i] != address(designatedToken), "Denied token");
             require(
                 tokens[i] > previousToken,
                 "tokens[] is out of order or contains a duplicate"
