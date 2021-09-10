@@ -9,7 +9,6 @@ contract CirculatingSupply is OwnableUpgradeable {
     event ExclusionRemoved(address indexed RemovedAddress);
     event TokenSet(address indexed newToken);
 
-    bool public initialized;
     address public token;
     address internal constant SENTINEL_EXCLUSIONS = address(0x1);
 
