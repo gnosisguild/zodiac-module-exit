@@ -232,7 +232,23 @@ describe("Exit", async () => {
           tokenOne.address,
           tokenTwo.address,
         ])
-      ).to.be.revertedWith(`Invalid token`);
+      ).to.be.revertedWith(`Denied token`);
+    });
+
+    it("throws if designated token is in list", async () => {
+      const { avatar, module, tokenOne, tokenTwo, designatedToken } =
+        await setupTestWithTestAvatar();
+      const data = module.interface.encodeFunctionData("addToDenylist", [
+        [tokenOne.address],
+      ]);
+      await avatar.exec(module.address, 0, data);
+
+      await avatar.setModule(module.address);
+      await designatedToken.approve(module.address, DesignatedTokenBalance);
+
+      await expect(
+        module.exit(DesignatedTokenBalance, [designatedToken.address])
+      ).to.be.revertedWith(`Denied token`);
     });
 
     it("throws because user is trying to redeem more tokens than he owns", async () => {
