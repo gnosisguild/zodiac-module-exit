@@ -22,27 +22,32 @@ Note 2: If you want to test the exit function (the how-to is described below) - 
 
 The first step is to deploy the module. Every Safe will have their own module. The module is linked to a Safe (called owner in the contract).
 
-- The owner is the address that can call setter functions (would usually be the safe)
-- The avatar is the address that the module uses to execute transactions (it calls the `execTransactionFromModule` function)
-
 ## Deploying the module
 
-Hardhat tasks can be used to deploy a Exit module instance. There are two different tasks to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (with the task `setup`), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the task `factorySetup`) - In rinkeby the address of the Proxy Factory is: `0xd067410a85ffC8C55f7245DE4BfE16C95329D232` and the Master Copy of the Safe Exit: `0xe1a55322aDE704208129E74E963fa25C8C257eD6`.
+The module has three attributes:
 
-These setup tasks requires the following parameters:
+- The owner is the address that can call setter functions (would usually be the safe)
+- The avatar is the address that holds the assets (e.g Safe)
+- The target is the address that the module uses to execute transactions (it calls the `execTransactionFromModule` function)
+
+
+Hardhat tasks can be used to deploy a Exit module instance. There are two different ways to deploy the module, the first one is through a normal deployment and passing arguments to the constructor (without the `proxied` flag), or, deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) and save on gas costs (with the `proxied` flag) - The master copy and factory address can be found in the [zodiac repository](https://github.com/gnosis/zodiac/blob/master/src/factory/constants.ts) and these are the addresses that are going to be used when deploying the module through factory.
+
+The setup task will 
 
 - `owner` (the address of the owner)
 - `avatar` (the address of the avatar - e.g. Safe)
+- `target` (the address of the target, this is the contract that execute the transactions)
 - `token` (the address of the designated token)
-- `supply` (circulating supply of designated token, if not provided 10e18 will be set)
+- `supply` (circulating supply contract address)
 
 An example for this on rinkeby would be:
 
-`yarn hardhat --network rinkeby setup --owner <owner_address> --avatar <avatar_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
+`yarn hardhat --network rinkeby setup --owner <owner_address> --avatar <avatar_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply_address>`
 
 or
 
-`yarn hardhat --network rinkeby factorySetup --factory <factory_address> --mastercopy <masterCopy_address> --owner <owner_address> --avatar <avatar_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply>`
+`yarn hardhat --network rinkeby setup --owner <owner_address> --avatar <avatar_address> --token 0x0000000000000000000000000000000000000100 --supply <circulating_supply_address> --proxy true`
 
 This should return the address of the deployed Exit module. For this guide we assume this to be `0x9797979797979797979797979797979797979797`
 
@@ -72,4 +77,4 @@ To execute the exit, call the `exit(uint256 amountToRedeem, address[] tokens)` f
 
 ### Deploy a master copy
 
-The master copy contracts can be deployed through `yarn deploy` command. Note that this only should be done if the Exit Module contract gets an update and the ones referred on the (zodiac repository)[https://github.com/gnosis/zodiac/blob/master/src/factory/constants.ts] should be used.
+The master copy contracts can be deployed through `yarn deploy` command. Note that this only should be done if the Exit Module contract gets an update and the ones referred on the [zodiac repository](https://github.com/gnosis/zodiac/blob/master/src/factory/constants.ts) should be used.
