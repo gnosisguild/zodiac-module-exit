@@ -19,12 +19,16 @@ describe("Exit", async () => {
     const tokenOne = await Token.deploy(6);
     const tokenTwo = await Token.deploy(12);
 
+    const tokensOrdered = [tokenOne.address, tokenTwo.address].sort(
+      (a, b) => Number(a) - Number(b)
+    );
     await designatedToken.mint(user.address, DesignatedTokenBalance);
     return {
       tokenOne,
       tokenTwo,
       Token,
       designatedToken,
+      tokensOrdered,
     };
   });
 
@@ -236,32 +240,25 @@ describe("Exit", async () => {
     });
 
     it("throws because user is trying to redeem more tokens than he owns", async () => {
-      const { avatar, module, tokenOne, tokenTwo } =
-        await setupTestWithTestAvatar();
+      const { avatar, module, tokensOrdered } = await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
       await expect(
-        module.exit(DesignatedTokenBalance.mul(2), [
-          tokenOne.address,
-          tokenTwo.address,
-        ])
+        module.exit(DesignatedTokenBalance.mul(2), tokensOrdered)
       ).to.be.revertedWith("Amount to redeem is greater than balance");
     });
 
     it("reverts if tokens[] is unorderred", async () => {
-      const { avatar, module, designatedToken, tokenOne, tokenTwo } =
+      const { avatar, module, designatedToken, tokensOrdered } =
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
       await designatedToken.approve(module.address, DesignatedTokenBalance);
       await expect(
-        module.exit(DesignatedTokenBalance, [
-          tokenOne.address,
-          tokenTwo.address,
-        ])
+        module.exit(DesignatedTokenBalance, [...tokensOrdered].reverse())
       ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
     });
 
     it("reverts if tokens[] contains duplicates", async () => {
-      const { avatar, module, designatedToken, tokenOne, tokenTwo } =
+      const { avatar, module, designatedToken, tokenOne } =
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
       await designatedToken.approve(module.address, DesignatedTokenBalance);
@@ -274,8 +271,14 @@ describe("Exit", async () => {
     });
 
     it("redeeming 20% of circulating supply returns 20% of the avatar's assets", async () => {
-      const { avatar, module, tokenOne, tokenTwo, designatedToken } =
-        await setupTestWithTestAvatar();
+      const {
+        avatar,
+        module,
+        tokenOne,
+        tokenTwo,
+        tokensOrdered,
+        designatedToken,
+      } = await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
 
       await designatedToken.approve(module.address, DesignatedTokenBalance);
@@ -300,12 +303,7 @@ describe("Exit", async () => {
         (await tokenTwo.balanceOf(user.address))._hex
       );
 
-      await expect(
-        await module.exit(DesignatedTokenBalance, [
-          tokenTwo.address,
-          tokenOne.address,
-        ])
-      )
+      await expect(await module.exit(DesignatedTokenBalance, tokensOrdered))
         .to.emit(module, "ExitSuccessful")
         .withArgs(user.address);
 
@@ -342,8 +340,14 @@ describe("Exit", async () => {
     });
 
     it("redeeming 10% of circulating supply returns 10% of the avatar's assets", async () => {
-      const { avatar, module, tokenOne, tokenTwo, designatedToken } =
-        await setupTestWithTestAvatar();
+      const {
+        avatar,
+        module,
+        tokenOne,
+        tokenTwo,
+        designatedToken,
+        tokensOrdered,
+      } = await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
 
       await designatedToken.approve(module.address, DesignatedTokenBalance);
@@ -369,10 +373,7 @@ describe("Exit", async () => {
       );
 
       await expect(
-        await module.exit(DesignatedTokenBalance.div(2), [
-          tokenTwo.address,
-          tokenOne.address,
-        ])
+        await module.exit(DesignatedTokenBalance.div(2), tokensOrdered)
       )
         .to.emit(module, "ExitSuccessful")
         .withArgs(user.address);
