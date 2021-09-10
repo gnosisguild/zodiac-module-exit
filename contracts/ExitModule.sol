@@ -40,7 +40,7 @@ contract Exit is Module {
         setUp(initParams);
     }
 
-    function setUp(bytes memory initParams) public override {
+    function setUp(bytes memory initParams) public override  {
         (
             address _owner,
             address _avatar,
@@ -51,8 +51,7 @@ contract Exit is Module {
             initParams,
             (address, address, address, address, address)
         );
-        require(!initialized, "Module is already initialized");
-        initialized = true;
+        __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         avatar = _avatar;
         require(_target != address(0), "Target can not be zero address");
@@ -60,7 +59,6 @@ contract Exit is Module {
         designatedToken = ERC20(_designatedToken);
         circulatingSupply = CirculatingSupply(_circulatingSupply);
 
-        __Ownable_init();
         transferOwnership(_owner);
 
         emit ExitModuleSetup(msg.sender, _avatar);

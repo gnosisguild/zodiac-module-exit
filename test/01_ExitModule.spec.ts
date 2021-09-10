@@ -95,7 +95,7 @@ describe("Exit", async () => {
         circulatingSupply.address
       );
       await expect(module.setUp(initializeParams)).to.be.revertedWith(
-        "Module is already initialized"
+        "Initializable: contract is already initialized"
       );
     });
 

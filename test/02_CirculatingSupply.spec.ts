@@ -117,7 +117,7 @@ describe("CirculatingSupply", async () => {
         await setupTests();
 
       expect(circulatingSupply.setUp(initializeParams)).to.be.revertedWith(
-        "Contract is already initialized"
+        "Initializable: contract is already initialized"
       );
     });
 
