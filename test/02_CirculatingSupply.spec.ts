@@ -26,10 +26,10 @@ describe("CirculatingSupply", async () => {
       designatedToken.address,
       [avatar.address]
     );
-    await user1.sendTransaction({ to: avatar.address, value: 100 });
-    await designatedToken.mint(avatar.address, 100);
-    await designatedToken.mint(user1.address, 100);
-    await designatedToken.mint(user2.address, 100);
+    expect(user1.sendTransaction({ to: avatar.address, value: 100 }));
+    expect(designatedToken.mint(avatar.address, 100));
+    expect(designatedToken.mint(user1.address, 100));
+    expect(designatedToken.mint(user2.address, 100));
 
     const initializeParams = new AbiCoder().encode(
       ["address", "address", "address[]"],
@@ -215,7 +215,9 @@ describe("CirculatingSupply", async () => {
 
     it("returns circulating supply with multiple exclusions", async () => {
       const { circulatingSupply } = await setupTests();
-      circulatingSupply.exclude(user1.address);
+      expect(circulatingSupply.exclude(user1.address))
+        .to.emit(circulatingSupply, "ExclusionAdded")
+        .withArgs(user1.address);
       expect(await circulatingSupply.get()).to.be.equals(100);
     });
   });
@@ -265,6 +267,9 @@ describe("CirculatingSupply", async () => {
 
     it("reverts if exclusion is already enabled", async () => {
       const { circulatingSupply } = await setupTests();
+      expect(circulatingSupply.exclude(user1.address))
+        .to.emit(circulatingSupply, "ExclusionAdded")
+        .withArgs(user1.address);
       expect(circulatingSupply.exclude(user1.address)).to.be.revertedWith(
         "Exclusion already enabled"
       );
