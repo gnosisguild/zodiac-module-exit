@@ -30,9 +30,6 @@ const deployCirculatingSupply = async (
   const [caller] = await hardhatRuntime.ethers.getSigners();
   console.log("Using the account:", caller.address);
   const exclusions = taskArgs.exclusions ? taskArgs.exclusions.split(",") : [];
-  const Supply = await hardhatRuntime.ethers.getContractFactory(
-    "CirculatingSupply"
-  );
 
   if (taskArgs.proxied) {
     const chainId = await hardhatRuntime.getChainId();
@@ -56,6 +53,9 @@ const deployCirculatingSupply = async (
     return;
   }
 
+  const Supply = await hardhatRuntime.ethers.getContractFactory(
+    "CirculatingSupply"
+  );
   const supply = await Supply.deploy(
     taskArgs.owner,
     taskArgs.token,
@@ -76,7 +76,7 @@ task("deployCirculatingSupply", "Deploy circulating supply contract")
   )
   .addParam(
     "proxied",
-    "Deploys contract through factoryz",
+    "Deploys contract through factory",
     false,
     types.boolean,
     true
@@ -169,6 +169,7 @@ task("verifyEtherscan", "Verifies the contract on etherscan")
       constructorArgsParams: [
         taskArgs.owner,
         taskArgs.avatar,
+        taskArgs.target,
         taskArgs.token,
         taskArgs.supply,
       ],
