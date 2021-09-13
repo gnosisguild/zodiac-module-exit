@@ -41,7 +41,7 @@ describe("Exit", async () => {
       anotherUser.address,
       DesignatedTokenBalance.mul(4)
     );
-    await user.sendTransaction({ to: avatar.address, value: 100 });
+    await user.sendTransaction({ to: avatar.address, value: BigNumber.from(10).pow(18) });
     await tokenOne.mint(avatar.address, TokenOneBalance);
     await tokenTwo.mint(avatar.address, TokenTwoBalance);
     const CirculatingSupply = await hre.ethers.getContractFactory(

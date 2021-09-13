@@ -124,7 +124,7 @@ contract Exit is Module {
     ) private {
         uint256 amount = (amountToRedeem * avatar.balance) / supply;
         require(
-            exec(leaver, amount, bytes("0x"), Enum.Operation.Call),
+            exec(leaver, amount, "0x", Enum.Operation.Call),
             "Error on native asset transfer"
         );
     }
