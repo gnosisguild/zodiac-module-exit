@@ -40,7 +40,7 @@ contract Exit is Module {
         setUp(initParams);
     }
 
-    function setUp(bytes memory initParams) public override  {
+    function setUp(bytes memory initParams) public override {
         (
             address _owner,
             address _avatar,
@@ -84,7 +84,11 @@ contract Exit is Module {
 
         address previousToken;
         for (uint8 i = 0; i < tokens.length; i++) {
-            require(!deniedTokens[tokens[i]] && tokens[i] != address(designatedToken), "Denied token");
+            require(
+                !deniedTokens[tokens[i]] &&
+                    tokens[i] != address(designatedToken),
+                "Denied token"
+            );
             require(
                 tokens[i] > previousToken,
                 "tokens[] is out of order or contains a duplicate"
@@ -156,6 +160,13 @@ contract Exit is Module {
     /// @notice Can only be modified by owner
     function setDesignatedToken(address _token) public onlyOwner {
         designatedToken = ERC20(_token);
+    }
+
+    /// @dev Change the circulating supply vairable
+    /// @param _circulatingSupply Address of new circulating supply contract
+    /// @notice Can only be modified by owner
+    function setcirculatingSupply(address _circulatingSupply) public onlyOwner {
+        circulatingSupply = CirculatingSupply(_circulatingSupply);
     }
 
     function getCirculatingSupply() public view returns (uint256) {
