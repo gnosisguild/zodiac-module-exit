@@ -150,6 +150,7 @@ task("setup", "deploy a Exit Module")
 task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("module", "Address of the Safe Exit", undefined, types.string)
   .addParam("owner", "Address of the owner", undefined, types.string)
+  .addParam("target", "Address of the target", undefined, types.string)
   .addParam(
     "avatar",
     "Address of the avatar (e.g. Safe)",
