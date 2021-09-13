@@ -467,6 +467,26 @@ describe("Exit", async () => {
     });
   });
 
+  describe("setCirculatingSupply()", () => {
+    it("throws if avatar is msg.sender is not the owner", async () => {
+      const { module } = await setupTestWithTestAvatar();
+      await expect(module.setCirculatingSupply(AddressZero)).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+
+    it("should set designated token", async () => {
+      const { module, avatar, circulatingSupply } =
+        await setupTestWithTestAvatar();
+      const data = module.interface.encodeFunctionData("setCirculatingSupply", [
+        circulatingSupply.address,
+      ]);
+      await avatar.exec(module.address, 0, data);
+      const circulatingSuppyAddress = await module.circulatingSupply();
+      expect(circulatingSuppyAddress).to.be.equal(circulatingSupply.address);
+    });
+  });
+
   describe("renounceOwnership", () => {
     it("should renounce to ownership", async () => {
       const { module, avatar } = await setupTestWithTestAvatar();
