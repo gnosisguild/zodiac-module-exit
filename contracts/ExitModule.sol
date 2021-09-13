@@ -165,7 +165,7 @@ contract Exit is Module {
     /// @dev Change the circulating supply vairable
     /// @param _circulatingSupply Address of new circulating supply contract
     /// @notice Can only be modified by owner
-    function setcirculatingSupply(address _circulatingSupply) public onlyOwner {
+    function setCirculatingSupply(address _circulatingSupply) public onlyOwner {
         circulatingSupply = CirculatingSupply(_circulatingSupply);
     }
 
