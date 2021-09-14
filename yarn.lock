@@ -165,7 +165,7 @@
     "@ethereumjs/common" "^2.4.0"
     ethereumjs-util "^7.1.0"
 
-"@ethereumjs/vm@^5.5.0":
+"@ethereumjs/vm@^5.5.2":
   version "5.5.2"
   resolved "https://registry.yarnpkg.com/@ethereumjs/vm/-/vm-5.5.2.tgz#918a2c1000aaa9fdbe6007a4fdc2c62833122adf"
   integrity sha512-AydZ4wfvZAsBuFzs3xVSA2iU0hxhL8anXco3UW3oh9maVC34kTEytOfjHf06LTEfN0MF9LDQ4ciLa7If6ZN/sg==
@@ -615,7 +615,7 @@
   resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-contracts/-/safe-contracts-1.3.0.tgz#316741a7690d8751a1f701538cfc9ec80866eedc"
   integrity sha512-1p+1HwGvxGUVzVkFjNzglwHrLNA67U/axP0Ct85FzzH8yhGJb4t9jDjPYocVMzLorDoWAfKicGy1akPY9jXRVw==
 
-"@gnosis.pm/zodiac@1.0.1":
+"@gnosis.pm/zodiac@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@gnosis.pm/zodiac/-/zodiac-1.0.1.tgz#36d3df705319909661429af72fc4cea295b21ddf"
   integrity sha512-MBfTXmE9LO8xcByrMxaH9RhwHObzn1ZNrd3g00ly0836wmRq/PJOvVbHJ51McD3VoVveaFFC8S5OVwomRZNFpw==
@@ -4951,16 +4951,16 @@ hardhat-deploy@0.8.11:
     murmur-128 "^0.2.1"
     qs "^6.9.4"
 
-hardhat@2.4.3:
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.4.3.tgz#093373b383eacec0d3e7fb223353b2f0cb9f2802"
-  integrity sha512-xgbnhEnmaKau8xT6wPJlzoyMLAZyxQoElACQQCyEeAY1DURpZbYwjIQUywmL/ZNv3QEl38Yqu/n8mPOc2HXyGA==
+hardhat@2.6.4:
+  version "2.6.4"
+  resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.6.4.tgz#9ff3f139f697bfc4e14836a3fef3ca4c62357d65"
+  integrity sha512-6QNfu1FptjtyGJ+jBR7LMX7AMY9gWWw9kAUD7v0YZNZH1ZBgsZdMHqXKiSzO5pLQXo+fy9zZovKAUNYbjQ/1fw==
   dependencies:
     "@ethereumjs/block" "^3.4.0"
     "@ethereumjs/blockchain" "^5.4.0"
     "@ethereumjs/common" "^2.4.0"
     "@ethereumjs/tx" "^3.3.0"
-    "@ethereumjs/vm" "^5.5.0"
+    "@ethereumjs/vm" "^5.5.2"
     "@ethersproject/abi" "^5.1.2"
     "@sentry/node" "^5.18.1"
     "@solidity-parser/parser" "^0.11.0"
