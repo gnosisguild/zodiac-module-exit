@@ -20,8 +20,6 @@ Note: In this script, one (1) token is minted to the address passed as the user 
 
 This should return the address of the deployed token. For this guide we assume this to be `0x0000000000000000000000000000000000000100`
 
-Note 2: If you want to test the exit function (the how-to is described below) - You will need to give allowance of your designated tokens to the safe, you can do this calling the `approve` function of the token from etherscan (The token will be verified on deployment) and passing 1000000000000000000 as the amount and the safe address the spender
-
 In order to deploy the circulating supply contract, the following command can be used:
 
 ```bash
@@ -79,9 +77,9 @@ In order to test the exit execution on rinkeby, you will need some ERC20 tokens.
 
 Request at least two tokens and send them to the Safe Address.
 
-Reminder: You need to give allowance to the Safe, check **Prerequisites** section for more information.
+Next, you will need to give an allowance to the Exit contract over the designated tokens that were minted as part of running the `deployDesignatedToken` task. You can do this calling the `approve` function of the token from etherscan (the token will be verified on deployment) and passing 1000000000000000000 as the amount and the Exit contract's address the spender.
 
-To execute the exit, call the `exit(uint256 amountToRedeem, address[] tokens)` function with the account that received the designated tokens when you deployed it and passing as arguments the tokens addresses that you sent to the Safe (So it can pay you back those tokens). Example of arguments:
+To execute the exit, call the `exit(uint256 amountToRedeem, address[] tokens)` function with the same account, passing as arguments the tokens addresses that you sent to the Safe to claim a payout of these tokens. Example of arguments:
 
 - Amount to redeem: `1000000000000000`
 - Tokens: `["0xa0533da0743a5517736beb1309ec0bdaa3e960b9", "0x14796a730446112eb5cbc234db9f116ea0e9bbdb"]`
