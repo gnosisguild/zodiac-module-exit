@@ -7,19 +7,20 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
   const { deployer } = await getNamedAccounts();
   const { deploy } = deployments;
+
   const args = [
     FirstAddress,
     FirstAddress,
     FirstAddress,
     FirstAddress,
-    FirstAddress
+    FirstAddress,
   ];
 
   await deploy("Exit", {
     from: deployer,
     args,
     log: true,
-    deterministicDeployment: true,
+    deterministicDeployment: true
   });
 };
 

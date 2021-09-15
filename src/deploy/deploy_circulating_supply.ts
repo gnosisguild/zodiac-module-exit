@@ -9,6 +9,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const args = [FirstAddress, FirstAddress, []];
 
+
   await deploy("CirculatingSupply", {
     from: deployer,
     args,
