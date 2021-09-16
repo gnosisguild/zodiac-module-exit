@@ -44,4 +44,4 @@ The audit results are available as a pdf in [this repo](audits/ZodiacExitModuleS
 
 ### Security and Liability
 
-All contracts 
+All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
