@@ -33,3 +33,15 @@ All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MER
 ### License
 
 Created under the [LGPL-3.0+ license](LICENSE).
+
+### Audits
+
+An audit has been performed by the [G0 group](https://github.com/g0-group).
+
+All issues and notes of the audit have been addressed in commit [4e7029acf8c71727f484ca0b1873de021964d3c7](https://github.com/gnosis/zodiac-module-exit/commit/4e7029acf8c71727f484ca0b1873de021964d3c7).
+
+The audit results are available as a pdf in [this repo](audits/ZodiacExitModuleSep2021.pdf) or on the [g0-group repo](https://github.com/g0-group/Audits/blob/e11752abb010f74e32a6fc61142032a10deed578/ZodiacExitModuleSep2021.pdf).
+
+### Security and Liability
+
+All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
