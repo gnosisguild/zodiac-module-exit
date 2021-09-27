@@ -8,7 +8,7 @@ The Exit Module belongs to the [Zodiac](https://github.com/gnosis/zodiac) collec
 
 If you have any questions about Zodiac, join the [Gnosis Guild Discord](https://discord.gg/wwmBWTgyEq). Follow [@GnosisGuild](https://twitter.com/gnosisguild) on Twitter for updates.
 
-### About the Bridge Module
+### About the Exit Module
 
 This module allows participants to redeem a designated token for a proportional share of an avatar's digital assets, similar to Moloch DAO's rageQuit() function.
 
@@ -33,7 +33,7 @@ The contracts have been developed with [Solidity 0.8.4](https://github.com/ether
 
 ### Setup Guide
 
-Follow our [Exit Module Setup Guide](./docs/setup_guide.md). s
+Follow our [Exit Module Setup Guide](./docs/setup_guide.md). 
 
 
 ### License
