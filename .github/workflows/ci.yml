@@ -1,5 +1,8 @@
 name: Exit
-on: [push]
+on:
+  push:
+    paths:
+      - 'packages/contracts/**'
 
 jobs:
   tests:
