@@ -54,15 +54,13 @@ contract ExitERC721 is ExitBase {
     // @param tokens Array of tokens to claim, ordered lowest to highest
     // @notice Will revert if tokens[] is not ordered highest to lowest, contains duplicates, or includes denied tokens
     function exit(uint256 tokenId, address[] calldata tokens) public {
-        // TODO: Allow approved addresses to exit?
         require(
             collection.ownerOf(tokenId) == msg.sender,
             "Only token owner can exit"
         );
 
         // Transfer asset to avatar (safe)
-        // TODO: use safeTransferFrom or transferForm?
-        collection.safeTransferFrom(msg.sender, avatar, tokenId);
+        collection.transferFrom(msg.sender, avatar, tokenId);
 
         _exit(tokens, "");
     }
