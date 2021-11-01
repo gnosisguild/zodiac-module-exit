@@ -2,12 +2,14 @@
 pragma solidity ^0.8.6;
 
 import "./ExitBase.sol";
+import "./CirculatingSupplyERC721.sol";
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 contract ExitERC721 is ExitBase {
     ERC721Enumerable public collection;
+    CirculatingSupplyERC721 public circulatingSupply;
 
     // @dev Initialize function, will be triggered when a new proxy is deployed
     // @param _owner Address of the owner
@@ -19,13 +21,15 @@ contract ExitERC721 is ExitBase {
         address _owner,
         address _avatar,
         address _target,
-        address _collection
+        address _collection,
+        address _circulatingSupply
     ) {
         bytes memory initParams = abi.encode(
             _owner,
             _avatar,
             _target,
-            _collection
+            _collection,
+            _circulatingSupply
         );
         setUp(initParams);
     }
@@ -35,14 +39,16 @@ contract ExitERC721 is ExitBase {
             address _owner,
             address _avatar,
             address _target,
-            address _collection
-        ) = abi.decode(initParams, (address, address, address, address));
+            address _collection,
+            address _circulatingSupply
+        ) = abi.decode(initParams, (address, address, address, address, address));
         __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         require(_target != address(0), "Target can not be zero address");
         avatar = _avatar;
         target = _target;
         collection = ERC721Enumerable(_collection);
+        circulatingSupply = CirculatingSupplyERC721(_circulatingSupply);
 
         transferOwnership(_owner);
 
@@ -78,6 +84,6 @@ contract ExitERC721 is ExitBase {
         override
         returns (uint256)
     {
-        return supply / collection.totalSupply();
+        return supply / circulatingSupply.get();
     }
 }
