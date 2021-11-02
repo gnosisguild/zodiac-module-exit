@@ -7,9 +7,8 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableSortLabel from '@material-ui/core/TableSortLabel'
-import Paper from '@material-ui/core/Paper'
-import Checkbox from '@material-ui/core/Checkbox'
 import classNames from 'classnames'
+import { Checkbox } from '../commons/input/Checkbox'
 
 interface Amount {
   amount: number
@@ -18,9 +17,9 @@ interface Amount {
 
 interface Data {
   token: string
-  gas: Amount
-  dao: Amount
-  claim: Amount
+  gas: number
+  dao: number
+  claim: number
 }
 
 interface HeadCell {
@@ -33,25 +32,10 @@ interface HeadCell {
 type Order = 'asc' | 'desc'
 
 function createData(token: string, gas: number, dao: number, claim: number): Data {
-  const createAmount = (amount: number): Amount => ({ unit: 'ETH', amount: amount })
-  return { token, gas: createAmount(gas), dao: createAmount(dao), claim: createAmount(claim) }
+  return { token, gas, dao, claim }
 }
 
-const rows = [
-  createData('Cupcake', 305, 3.7, 67),
-  createData('Donut', 452, 25.0, 51),
-  createData('Eclair', 262, 16.0, 24),
-  createData('Frozen yoghurt', 159, 6.0, 24),
-  createData('Gingerbread', 356, 16.0, 49),
-  createData('Honeycomb', 408, 3.2, 87),
-  createData('Ice cream sandwich', 237, 9.0, 37),
-  createData('Jelly Bean', 375, 0.0, 94),
-  createData('KitKat', 518, 26.0, 65),
-  createData('Lollipop', 392, 0.2, 98),
-  createData('Marshmallow', 318, 0, 81),
-  createData('Nougat', 360, 19.0, 9),
-  createData('Oreo', 437, 18.0, 63),
-]
+const rows = [createData('ETH', 80000, 100, 10), createData('UNI', 80000, 300, 30), createData('USDT', 80000, 100, 10)]
 
 function isAmount(value?: Partial<Amount>): value is Amount {
   return !!(value && value.amount !== undefined && value.unit !== undefined)
@@ -71,13 +55,13 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
 function getComparator<Key extends keyof never>(
   order: Order,
   orderBy: Key,
-): (a: { [key in Key]: string | Amount }, b: { [key in Key]: string | Amount }) => number {
+): (a: { [key in Key]: string | number }, b: { [key in Key]: string | number }) => number {
   return order === 'desc'
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy)
 }
 
-function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
+function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0])
@@ -88,10 +72,10 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
 }
 
 const headCells: HeadCell[] = [
-  { id: 'token', label: 'Token', bgColorHeader: '#E8FAF9', bgColor: '#F7FFFE' },
-  { id: 'gas', label: 'Gas Cost to Claim', bgColorHeader: '#FAF8E8', bgColor: '#FEFDF7' },
-  { id: 'dao', label: 'Dao Holdings', bgColorHeader: '#EDF0FF', bgColor: '#F9FAFF' },
-  { id: 'claim', label: 'Claimable Value', bgColorHeader: '#E3F5E1', bgColor: '#F7FFF7' },
+  { id: 'token', label: 'Token' },
+  { id: 'gas', label: 'Gas Cost to Claim' },
+  { id: 'dao', label: 'Dao Holdings' },
+  { id: 'claim', label: 'Claimable Value' },
 ]
 
 interface EnhancedTableProps {
@@ -124,12 +108,14 @@ function EnhancedTableHead(props: EnhancedTableProps) {
           />
         </TableCell>
         {headCells.map((headCell) => (
-          <>
+          <React.Fragment key={headCell.id}>
             <TableCell
               key={headCell.id}
               align="right"
               padding="normal"
-              className={classNames(classes.headerCell, classes.headerBorder)}
+              className={classNames(classes.headerCell, classes.headerBorder, {
+                [classes.bgColumn]: ['gas', 'claim'].includes(headCell.id),
+              })}
               style={{ backgroundColor: headCell.bgColorHeader || headCell.bgColor }}
               sortDirection={orderBy === headCell.id ? order : false}
             >
@@ -147,7 +133,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
               </TableSortLabel>
             </TableCell>
             <TableSpaceCell className={classes.headerBorder} />
-          </>
+          </React.Fragment>
         ))}
       </TableRow>
     </TableHead>
@@ -157,7 +143,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      width: '100%',
+      marginTop: theme.spacing(2),
     },
     paper: {
       width: '100%',
@@ -165,6 +151,12 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     table: {
       minWidth: 750,
+    },
+    transparent: {
+      opacity: 0.5,
+    },
+    bgColumn: {
+      backgroundColor: 'rgba(217, 212, 173, 0.1)',
     },
     visuallyHidden: {
       border: 0,
@@ -181,6 +173,7 @@ const useStyles = makeStyles((theme: Theme) =>
       padding: theme.spacing(1, 2),
     },
     headerBorder: {
+      borderTop: '1px solid rgba(81, 81, 81, 1)',
       boxShadow: 'inset 0px 1px 0px rgb(40 54 61 / 50%), inset 0px -1px 0px rgb(40 54 61 / 50%)',
     },
   }),
@@ -227,63 +220,56 @@ export function AssetsTable(): React.ReactElement {
   const isSelected = (name: string) => selected.indexOf(name) !== -1
 
   return (
-    <Paper className={classes.paper}>
-      <TableContainer>
-        <Table className={classes.table} aria-labelledby="tableTitle" aria-label="enhanced table">
-          <EnhancedTableHead
-            classes={classes}
-            numSelected={selected.length}
-            order={order}
-            orderBy={orderBy}
-            onSelectAllClick={handleSelectAllClick}
-            onRequestSort={handleRequestSort}
-            rowCount={rows.length}
-          />
-          <TableBody>
-            {stableSort(rows, getComparator(order, orderBy)).map((row, index) => {
-              const isItemSelected = isSelected(row.token)
-              const labelId = `enhanced-table-checkbox-${index}`
+    <TableContainer className={classes.root}>
+      <Table className={classes.table} aria-labelledby="tableTitle" aria-label="enhanced table">
+        <EnhancedTableHead
+          classes={classes}
+          numSelected={selected.length}
+          order={order}
+          orderBy={orderBy}
+          onSelectAllClick={handleSelectAllClick}
+          onRequestSort={handleRequestSort}
+          rowCount={rows.length}
+        />
+        <TableBody>
+          {stableSort(rows, getComparator(order, orderBy)).map((row, index) => {
+            const isItemSelected = isSelected(row.token)
+            const labelId = `enhanced-table-checkbox-${index}`
 
-              return (
-                <TableRow
-                  hover
-                  onClick={(event) => handleClick(event, row.token)}
-                  role="checkbox"
-                  aria-checked={isItemSelected}
-                  tabIndex={-1}
-                  key={row.token}
-                  selected={isItemSelected}
-                >
-                  <TableCell padding="checkbox">
-                    <Checkbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
-                  </TableCell>
-                  <TableCell
-                    component="th"
-                    id={labelId}
-                    scope="row"
-                    align="right"
-                    style={{ backgroundColor: headCells[0].bgColor }}
-                  >
-                    {row.token}
-                  </TableCell>
-                  <TableSpaceCell />
-                  <TableCell align="right" style={{ backgroundColor: headCells[1].bgColor }}>
-                    {row.gas.amount} {row.gas.unit}
-                  </TableCell>
-                  <TableSpaceCell />
-                  <TableCell align="right" style={{ backgroundColor: headCells[2].bgColor }}>
-                    {row.dao.amount} {row.dao.unit}
-                  </TableCell>
-                  <TableSpaceCell />
-                  <TableCell align="right" style={{ backgroundColor: headCells[3].bgColor }}>
-                    {row.claim.amount} {row.claim.unit}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Paper>
+            return (
+              <TableRow
+                hover
+                onClick={(event) => handleClick(event, row.token)}
+                className={classNames({ [classes.transparent]: !isItemSelected })}
+                role="checkbox"
+                aria-checked={isItemSelected}
+                tabIndex={-1}
+                key={row.token}
+                selected={isItemSelected}
+              >
+                <TableCell padding="checkbox">
+                  <Checkbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
+                </TableCell>
+                <TableCell id={labelId} scope="row" align="right">
+                  {row.token}
+                </TableCell>
+                <TableSpaceCell />
+                <TableCell className={classes.bgColumn} align="right">
+                  {row.gas} ETH
+                </TableCell>
+                <TableSpaceCell />
+                <TableCell align="right">
+                  {row.dao} {row.token}
+                </TableCell>
+                <TableSpaceCell />
+                <TableCell className={classes.bgColumn} align="right">
+                  {row.claim} {row.token}
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
   )
 }

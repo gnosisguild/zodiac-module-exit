@@ -2,29 +2,28 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { ThemeProvider } from 'styled-components'
 import { createTheme, CssBaseline, ThemeProvider as MUIThemeProvider } from '@material-ui/core'
-import { Loader, theme as gnosisTheme } from '@gnosis.pm/safe-react-components'
-import SafeProvider from '@gnosis.pm/safe-apps-react-sdk'
+import { theme as gnosisTheme } from '@gnosis.pm/safe-react-components'
 import GlobalStyle from './GlobalStyle'
-import { grey } from '@material-ui/core/colors'
 import MUIShadows from '@material-ui/core/styles/shadows'
 import createPalette from '@material-ui/core/styles/createPalette'
-import { Row } from './components/commons/layout/Row'
 import { App } from './App'
 
 const palette = createPalette({
-  type: 'light',
-  primary: grey,
+  type: 'dark',
   background: {
-    default: '#F8FAFB',
-    paper: '#FFFFFF',
+    default: 'rgba(224, 197, 173, 0.1)',
+    paper: 'rgba(217, 212, 173, 0.1)',
   },
   text: {
-    primary: '#001428',
+    secondary: 'rgba(217, 212, 173, 1)',
   },
 })
 
+palette.primary = palette.augmentColor({
+  '500': '#30312C',
+})
 palette.secondary = palette.augmentColor({
-  '500': gnosisTheme.colors.primary,
+  '500': 'rgb(34, 50, 101)',
 })
 
 const shadows = MUIShadows
@@ -36,41 +35,124 @@ const muiTheme = createTheme({
   palette,
   shadows,
   typography: {
-    fontFamily: gnosisTheme.fonts.fontFamily,
-    h3: {
-      fontSize: 28,
-      fontWeight: 'bold',
-    },
+    fontFamily: 'Spectral',
     h4: {
       fontSize: 24,
-      fontWeight: 'bold',
+      fontWeight: 'normal',
     },
     h5: {
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: 'normal',
     },
     h6: {
       fontSize: 14,
-      fontWeight: 'bold',
+      fontWeight: 'normal',
     },
     body2: {
       fontSize: 12,
     },
     subtitle1: {
-      fontSize: 16,
-      color: palette.primary.main,
+      fontSize: 12,
+      color: palette.common.white,
     },
   },
   shape: {
-    borderRadius: 6,
+    borderRadius: 0,
   },
   overrides: {
+    MuiPaper: {
+      root: {
+        borderRadius: '0 !important',
+        border: '1px solid',
+        borderColor: 'rgba(217, 212, 173, 0.3)',
+        position: 'relative',
+        zIndex: 3,
+        '&::before': {
+          content: '" "',
+          position: 'absolute',
+          zIndex: -1,
+          top: '2px',
+          left: '2px',
+          right: '2px',
+          bottom: '2px',
+          border: '1px solid rgba(217, 212, 173, 0.3)',
+        },
+      },
+    },
+    MuiCssBaseline: {
+      '@global': {
+        body: {
+          background:
+            'linear-gradient(108.86deg, rgba(26, 33, 66, 1) 6.24%, rgba(12, 19, 8, 1) 53.08%, rgba(37, 6, 4, 1) 96.54%);',
+        },
+      },
+    },
     MuiTypography: {
       gutterBottom: { marginBottom: 8 },
     },
-    MuiCard: {
+    MuiChip: {
       root: {
-        padding: 20,
+        padding: '4px 8px',
+        height: 'auto',
+        backgroundColor: 'rgba(217, 212, 173, 0.1)',
+        border: '1px solid rgba(217, 212, 173, 0.3)',
+      },
+      avatar: {
+        display: 'contents !important',
+      },
+      label: {
+        paddingLeft: 0,
+        paddingRight: 0,
+      },
+    },
+    MuiButton: {
+      root: {
+        lineHeight: 1.4,
+        textTransform: 'none',
+        position: 'relative',
+        borderRadius: 0,
+        '&::before': {
+          content: '" "',
+          position: 'absolute',
+          zIndex: -1,
+          top: -3,
+          left: -3,
+          right: -3,
+          bottom: -3,
+          border: '1px solid rgba(217, 212, 173, 0.3)',
+        },
+      },
+      contained: {
+        boxShadow: 'none',
+        border: '1px solid rgba(217, 212, 173, 0.3);',
+      },
+      containedSizeSmall: {
+        padding: '4px 8px',
+      },
+    },
+    MuiInputBase: {
+      root: {
+        padding: '8px 0 8px 8px',
+        border: '1px solid rgb(255,255,255)',
+        borderRadius: 0,
+      },
+      input: {
+        padding: 0,
+      },
+    },
+    MuiPopover: {
+      paper: {
+        backgroundColor: 'rgb(16, 16, 16)',
+      },
+    },
+    MuiInputLabel: {
+      root: {
+        fontSize: 16,
+      },
+    },
+    MuiTableCell: {
+      root: {
+        fontFamily: 'Roboto Mono',
       },
     },
   },
@@ -82,15 +164,15 @@ const Main = () => {
       <ThemeProvider theme={gnosisTheme}>
         <CssBaseline />
         <GlobalStyle />
-        <SafeProvider
-          loader={
-            <Row alignItems="center" justifyContent="center" height="100%">
-              <Loader size="md" />
-            </Row>
-          }
-        >
-          <App />
-        </SafeProvider>
+        {/*<SafeProvider*/}
+        {/*  loader={*/}
+        {/*    <Row alignItems="center" justifyContent="center" height="100%">*/}
+        {/*      <Loader size="md" />*/}
+        {/*    </Row>*/}
+        {/*  }*/}
+        {/*>*/}
+        <App />
+        {/*</SafeProvider>*/}
       </ThemeProvider>
     </MUIThemeProvider>
   )

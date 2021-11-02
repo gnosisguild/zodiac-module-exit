@@ -2,6 +2,15 @@
   "name": "safe-exit-ui",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/types ./src/contracts/abis/*.json",
+    "postinstall": "yarn build:types"
+  },
   "dependencies": {
     "@gnosis.pm/safe-apps-react-sdk": "4.0.3",
     "@gnosis.pm/safe-react-components": "^0.8.0",
@@ -16,30 +25,6 @@
     "react-scripts": "4.0.3",
     "styled-components": "^5.3.0"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/types ./src/contracts/abis/*.json",
-    "postinstall": "yarn build:types"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "homepage": "./",
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.2.2",
@@ -63,5 +48,20 @@
     "prettier": "2.3.2",
     "typechain": "^5.1.2",
     "typescript": "~4.3.5"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
