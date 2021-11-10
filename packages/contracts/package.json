@@ -11,8 +11,7 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint --max-warnings 0 .",
     "fmt:sol": "prettier 'contracts/**/*.sol' -w",
-    "prepack": "yarn build",
-    "prepare": "husky install"
+    "prepack": "yarn build"
   },
   "repository": {
     "type": "git"
@@ -40,7 +39,6 @@
     "ethereum-waffle": "3.4.0",
     "hardhat": "2.6.4",
     "hardhat-deploy": "0.8.11",
-    "husky": "7.0.1",
     "prettier": "2.3.2",
     "prettier-plugin-solidity": "1.0.0-beta.16",
     "solhint": "3.3.6",
@@ -54,7 +52,7 @@
     "@openzeppelin/contracts": "^4.2.0",
     "argv": "0.0.2",
     "dotenv": "10.0.0",
-    "ethers": "5.4.4",
+    "ethers": "^5.0.19",
     "yargs": "16.1.1"
   }
 }
