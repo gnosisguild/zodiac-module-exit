@@ -1,0 +1,19 @@
+{
+  "name": "@gnosis.pm/zodiac-module-exit",
+  "version": "1.0.0",
+  "description": "A module that allows users to redeem their designated tokens for a proportional share assets held in an account.",
+  "scripts": {
+    "build": "yarn contracts:build",
+    "contracts:build": "cd packages/contracts && yarn build",
+    "contracts:install": "cd packages/contracts && yarn install",
+    "preinstall": "yarn contracts:install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gnosis/zodiac-module-exit.git"
+  },
+  "author": "",
+  "license": "LGPL-3.0+",
+  "dependencies": {},
+  "devDependencies": {}
+}
