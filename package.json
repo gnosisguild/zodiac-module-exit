@@ -3,58 +3,18 @@
   "version": "1.0.0",
   "description": "A module that allows users to redeem their designated tokens for a proportional share assets held in an account.",
   "scripts": {
-    "build": "hardhat compile",
-    "test": "hardhat test",
-    "deploy": "hardhat deploy --network",
-    "coverage": "hardhat coverage",
-    "lint": "yarn lint:sol && yarn lint:ts",
-    "lint:sol": "solhint 'contracts/**/*.sol'",
-    "lint:ts": "eslint --max-warnings 0 .",
-    "fmt:sol": "prettier 'contracts/**/*.sol' -w",
-    "prepack": "yarn build",
-    "prepare": "husky install"
+    "build": "yarn contracts:build",
+    "contracts:test": "cd packages/contracts && yarn coverage",
+    "contracts:build": "cd packages/contracts && yarn build",
+    "contracts:install": "cd packages/contracts && yarn install",
+    "preinstall": "yarn contracts:install"
   },
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "git+https://github.com/gnosis/zodiac-module-exit.git"
   },
   "author": "",
   "license": "LGPL-3.0+",
-  "devDependencies": {
-    "@gnosis.pm/zodiac": "^1.0.1",
-    "@nomiclabs/hardhat-ethers": "2.0.2",
-    "@nomiclabs/hardhat-etherscan": "2.1.4",
-    "@nomiclabs/hardhat-waffle": "2.0.1",
-    "@types/chai": "4.2.21",
-    "@types/mocha": "8.2.3",
-    "@types/node": "16.3.3",
-    "@types/yargs": "17.0.2",
-    "@typescript-eslint/eslint-plugin": "4.28.4",
-    "@typescript-eslint/parser": "4.28.4",
-    "chai": "4.3.4",
-    "debug": "4.3.2",
-    "eslint": "7.31.0",
-    "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-import": "2.23.4",
-    "eslint-plugin-no-only-tests": "2.6.0",
-    "eslint-plugin-prettier": "3.4.0",
-    "ethereum-waffle": "3.4.0",
-    "hardhat": "2.6.4",
-    "hardhat-deploy": "0.8.11",
-    "husky": "7.0.1",
-    "prettier": "2.3.2",
-    "prettier-plugin-solidity": "1.0.0-beta.16",
-    "solhint": "3.3.6",
-    "solhint-plugin-prettier": "0.0.5",
-    "solidity-coverage": "0.7.17",
-    "ts-node": "10.1.0",
-    "typescript": "4.3.5"
-  },
-  "dependencies": {
-    "@gnosis.pm/safe-contracts": "1.3.0",
-    "@openzeppelin/contracts": "^4.2.0",
-    "argv": "0.0.2",
-    "dotenv": "10.0.0",
-    "ethers": "5.4.4",
-    "yargs": "16.1.1"
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }
