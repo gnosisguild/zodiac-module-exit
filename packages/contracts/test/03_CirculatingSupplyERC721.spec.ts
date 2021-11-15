@@ -431,6 +431,18 @@ describe("CirculatingSupplyERC721", async () => {
         .to.emit(circulatingSupply, "ExclusionRemoved")
         .withArgs(2);
     });
+
+    it("removes tokenId=0 from exclusions", async () => {
+      const { CirculatingSupplyERC721, collection } = await setupTests();
+      const params = [user1.address, collection.address, [0]];
+      const { circulatingSupply } = await setupProxyTest(
+        { CirculatingSupplyERC721 },
+        params
+      );
+      await expect(circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, 0))
+        .to.emit(circulatingSupply, "ExclusionRemoved")
+        .withArgs(0);
+    });
   });
 
   describe("isExcluded", async () => {
