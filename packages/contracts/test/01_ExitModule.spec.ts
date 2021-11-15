@@ -8,7 +8,7 @@ const DesignatedTokenBalance = BigNumber.from(10).pow(18).mul(5); // Equal to 5
 const TokenOneBalance = BigNumber.from(10).pow(6).mul(10); //  Equal to 100
 const TokenTwoBalance = BigNumber.from(10).pow(12).mul(10); // Equal to 100
 
-describe("Exit", async () => {
+describe("ExitERC20", async () => {
   let initializeParams: string;
   const [user, anotherUser] = waffle.provider.getWallets();
 
@@ -75,7 +75,7 @@ describe("Exit", async () => {
 
   const setupTestWithTestAvatar = deployments.createFixture(async () => {
     const base = await baseSetup();
-    const Module = await hre.ethers.getContractFactory("Exit");
+    const Module = await hre.ethers.getContractFactory("ExitERC20");
     const module = await Module.deploy(
       base.avatar.address,
       base.avatar.address,
@@ -90,7 +90,7 @@ describe("Exit", async () => {
   describe("setUp() ", () => {
     it("throws if module has already been initialized", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
-      const Module = await hre.ethers.getContractFactory("Exit");
+      const Module = await hre.ethers.getContractFactory("ExitERC20");
       const module = await Module.deploy(
         user.address,
         user.address,
@@ -105,7 +105,7 @@ describe("Exit", async () => {
 
     it("throws if avatar is zero address", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
-      const Module = await hre.ethers.getContractFactory("Exit");
+      const Module = await hre.ethers.getContractFactory("ExitERC20");
       await expect(
         Module.deploy(
           user.address,
@@ -119,7 +119,7 @@ describe("Exit", async () => {
 
     it("throws if target is zero address", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
-      const Module = await hre.ethers.getContractFactory("Exit");
+      const Module = await hre.ethers.getContractFactory("ExitERC20");
       await expect(
         Module.deploy(
           user.address,
@@ -133,7 +133,7 @@ describe("Exit", async () => {
 
     it("should emit event because of successful set up", async () => {
       const { designatedToken, avatar, circulatingSupply } = await baseSetup();
-      const Module = await hre.ethers.getContractFactory("Exit");
+      const Module = await hre.ethers.getContractFactory("ExitERC20");
       const module = await Module.deploy(
         avatar.address,
         avatar.address,
@@ -150,10 +150,10 @@ describe("Exit", async () => {
     });
   });
 
-  describe("addToDenylist()", () => {
+  describe("addToDenyList()", () => {
     it("should add address to denied list", async () => {
       const { module, avatar, tokenOne } = await setupTestWithTestAvatar();
-      const data = module.interface.encodeFunctionData("addToDenylist", [
+      const data = module.interface.encodeFunctionData("addToDenyList", [
         [tokenOne.address],
       ]);
       await avatar.exec(module.address, 0, data);
@@ -162,14 +162,14 @@ describe("Exit", async () => {
     });
     it("throws if not authorized", async () => {
       const { module, tokenTwo } = await setupTestWithTestAvatar();
-      await expect(module.addToDenylist([tokenTwo.address])).to.be.revertedWith(
+      await expect(module.addToDenyList([tokenTwo.address])).to.be.revertedWith(
         `Ownable: caller is not the owner`
       );
     });
 
     it("throws if token is already in list", async () => {
       const { module, avatar, tokenTwo } = await setupTestWithTestAvatar();
-      const data = module.interface.encodeFunctionData("addToDenylist", [
+      const data = module.interface.encodeFunctionData("addToDenyList", [
         [tokenTwo.address],
       ]);
       await avatar.exec(module.address, 0, data);
@@ -180,18 +180,18 @@ describe("Exit", async () => {
     });
   });
 
-  describe("removeFromDenylist()", () => {
+  describe("removeFromDenyList()", () => {
     it("should remove address from denied list", async () => {
       const { module, avatar, tokenOne } = await setupTestWithTestAvatar();
       const addTokenData = module.interface.encodeFunctionData(
-        "addToDenylist",
+        "addToDenyList",
         [[tokenOne.address]]
       );
       await avatar.exec(module.address, 0, addTokenData);
       const moduleIsAdded = await module.deniedTokens(tokenOne.address);
       expect(moduleIsAdded).to.be.true;
       const removeTokenData = module.interface.encodeFunctionData(
-        "removeFromDenylist",
+        "removeFromDenyList",
         [[tokenOne.address]]
       );
 
@@ -203,7 +203,7 @@ describe("Exit", async () => {
     it("throws if token is not added in list", async () => {
       const { module, avatar, tokenTwo } = await setupTestWithTestAvatar();
       const removeTokenData = module.interface.encodeFunctionData(
-        "removeFromDenylist",
+        "removeFromDenyList",
         [[tokenTwo.address]]
       );
       await expect(
@@ -214,7 +214,7 @@ describe("Exit", async () => {
     it("throws if not authorized", async () => {
       const { module, tokenOne } = await setupTestWithTestAvatar();
       await expect(
-        module.removeFromDenylist([tokenOne.address])
+        module.removeFromDenyList([tokenOne.address])
       ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
   });
@@ -223,7 +223,7 @@ describe("Exit", async () => {
     it("throws if token is added in denied tokens list", async () => {
       const { avatar, module, tokenOne, tokenTwo, designatedToken } =
         await setupTestWithTestAvatar();
-      const data = module.interface.encodeFunctionData("addToDenylist", [
+      const data = module.interface.encodeFunctionData("addToDenyList", [
         [tokenOne.address],
       ]);
       await avatar.exec(module.address, 0, data);
@@ -240,9 +240,9 @@ describe("Exit", async () => {
     });
 
     it("throws if designated token is in list", async () => {
-      const { avatar, module, tokenOne, tokenTwo, designatedToken } =
+      const { avatar, module, tokenOne, designatedToken } =
         await setupTestWithTestAvatar();
-      const data = module.interface.encodeFunctionData("addToDenylist", [
+      const data = module.interface.encodeFunctionData("addToDenyList", [
         [tokenOne.address],
       ]);
       await avatar.exec(module.address, 0, data);
@@ -252,7 +252,7 @@ describe("Exit", async () => {
 
       await expect(
         module.exit(DesignatedTokenBalance, [designatedToken.address])
-      ).to.be.revertedWith(`Denied token`);
+      ).to.be.revertedWith("Designated token can't be redeemed");
     });
 
     it("throws because user is trying to redeem more tokens than he owns", async () => {
