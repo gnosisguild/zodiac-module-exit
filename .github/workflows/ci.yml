@@ -1,8 +1,5 @@
 name: Exit
-on:
-  push:
-    paths:
-      - 'packages/contracts/**'
+on: [push]
 
 jobs:
   tests:
@@ -17,9 +14,11 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
-      - run: yarn build
-      - run: yarn coverage
+      - run: yarn contracts:build
+      - run: yarn contracts:test
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "./packages/contracts/coverage/lcov.info"
+          base-path: "./packages/contracts"
