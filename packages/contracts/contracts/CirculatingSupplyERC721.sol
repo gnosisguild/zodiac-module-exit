@@ -73,17 +73,22 @@ contract CirculatingSupplyERC721 is OwnableUpgradeable {
     // @dev Enables the balance of an address from the circulatingSupply calculation
     // @param exclusion Address to be excluded
     // @notice This can only be called by the owner
-    function exclude(uint256 exclusion) public onlyOwner {
+    function exclude(uint256 exclusion) external onlyOwner {
         _exclude(exclusion);
     }
 
     function _exclude(uint256 exclusion) private {
+        require(
+            exclusion != SENTINEL_EXCLUSIONS,
+            "Invalid exclusion"
+        );
         require(
             exclusions[exclusion] == 0 || (exclusion == 0 && !zeroExcluded),
             "Exclusion already enabled"
         );
         if (exclusion == 0) {
             zeroExcluded = true;
+            emit ExclusionAdded(exclusion);
             return;
         }
         assert(exclusion != 0);
@@ -100,10 +105,15 @@ contract CirculatingSupplyERC721 is OwnableUpgradeable {
     public
     onlyOwner
     {
+        require(
+            exclusion != SENTINEL_EXCLUSIONS,
+            "Invalid exclusion"
+        );
         if (exclusion == 0) {
             // Handle special case (zero)
             require(zeroExcluded, "Exclusion already disabled");
             zeroExcluded = false;
+            emit ExclusionRemoved(exclusion);
             return;
         }
         assert(exclusion != 0);

@@ -46,7 +46,7 @@ describe("CirculatingSupplyERC721", async () => {
       collection,
       collection2,
       CirculatingSupplyERC721,
-      factory
+      factory,
     };
   });
 
@@ -144,9 +144,9 @@ describe("CirculatingSupplyERC721", async () => {
         params
       );
 
-      expect(circulatingSupply.setUp(initializeParams)).to.be.revertedWith(
-        "Initializable: contract is already initialized"
-      );
+      await expect(
+        circulatingSupply.setUp(initializeParams)
+      ).to.be.revertedWith("Initializable: contract is already initialized");
     });
 
     it("sets owner", async () => {
@@ -274,7 +274,7 @@ describe("CirculatingSupplyERC721", async () => {
         params
       );
 
-      expect(
+      await expect(
         circulatingSupply.connect(user2).setCollection(collection2.address)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -300,8 +300,8 @@ describe("CirculatingSupplyERC721", async () => {
         params
       );
 
-      expect(await circulatingSupply.setCollection(collection2.address))
-        .to.emit(circulatingSupply, "TokenSet")
+      await expect(circulatingSupply.setCollection(collection2.address))
+        .to.emit(circulatingSupply, "CollectionSet")
         .withArgs(collection2.address);
     });
   });
@@ -314,9 +314,9 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.connect(user2).exclude(1)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
-      );
+      await expect(
+        circulatingSupply.connect(user2).exclude(1)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it("reverts if exclusion is SENTINEL_EXCLUSIONS", async () => {
@@ -326,9 +326,9 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.exclude(SENTINEL_EXCLUSIONS)).to.be.revertedWith(
-        "Invalid exclusion"
-      );
+      await expect(
+        circulatingSupply.exclude(SENTINEL_EXCLUSIONS)
+      ).to.be.revertedWith("Invalid exclusion");
     });
 
     it("reverts if exclusion is already enabled", async () => {
@@ -338,10 +338,10 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.exclude(1))
+      await expect(circulatingSupply.exclude(1))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(1);
-      expect(circulatingSupply.exclude(1)).to.be.revertedWith(
+      await expect(circulatingSupply.exclude(1)).to.be.revertedWith(
         "Exclusion already enabled"
       );
     });
@@ -353,7 +353,7 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.exclude(1))
+      await expect(circulatingSupply.exclude(1))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(1);
     });
@@ -365,7 +365,7 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.exclude(0))
+      await expect(circulatingSupply.exclude(0))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(0);
     });
@@ -379,7 +379,7 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(
+      await expect(
         circulatingSupply.connect(user2).removeExclusion(SENTINEL_EXCLUSIONS, 1)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -391,7 +391,7 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(
+      await expect(
         circulatingSupply.removeExclusion(
           SENTINEL_EXCLUSIONS,
           SENTINEL_EXCLUSIONS
@@ -406,13 +406,13 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.exclude(2))
+      await expect(circulatingSupply.exclude(2))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(2);
-      expect(circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, 2))
+      await expect(circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, 2))
         .to.emit(circulatingSupply, "ExclusionRemoved")
-        .withArgs(user1.address);
-      expect(
+        .withArgs(2);
+      await expect(
         circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, 2)
       ).to.be.revertedWith("Exclusion already disabled");
     });
@@ -424,10 +424,10 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.exclude(2))
+      await expect(circulatingSupply.exclude(2))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(2);
-      expect(circulatingSupply.removeExclusion(1, 2))
+      await expect(circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, 2))
         .to.emit(circulatingSupply, "ExclusionRemoved")
         .withArgs(2);
     });
@@ -464,9 +464,9 @@ describe("CirculatingSupplyERC721", async () => {
         params
       );
 
-      expect(await circulatingSupply.exclude(2))
+      await expect(circulatingSupply.exclude(2))
         .to.emit(circulatingSupply, "ExclusionAdded")
-        .withArgs(user2.address);
+        .withArgs(2);
       expect(await circulatingSupply.isExcluded(2)).to.be.equals(true);
     });
   });
@@ -509,7 +509,7 @@ describe("CirculatingSupplyERC721", async () => {
         { CirculatingSupplyERC721 },
         params
       );
-      expect(circulatingSupply.exclude(0))
+      await expect(circulatingSupply.exclude(0))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(0);
       let tx = await circulatingSupply.getExclusionsPaginated(
