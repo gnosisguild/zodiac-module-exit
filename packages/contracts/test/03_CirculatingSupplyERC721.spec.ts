@@ -46,10 +46,7 @@ describe("CirculatingSupplyERC721", async () => {
       collection,
       collection2,
       CirculatingSupplyERC721,
-      // circulatingSupply,
-      // initializeParams,
-      factory,
-      // setupEncodeParams,
+      factory
     };
   });
 

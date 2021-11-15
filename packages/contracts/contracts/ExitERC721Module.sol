@@ -86,4 +86,15 @@ contract ExitERC721 is ExitBase {
     {
         return supply / circulatingSupply.get();
     }
+
+    // @dev Change the circulating supply variable
+    // @param _circulatingSupply Address of new circulating supply contract
+    // @notice Can only be modified by owner
+    function setCirculatingSupply(address _circulatingSupply) public onlyOwner {
+        circulatingSupply = CirculatingSupplyERC721(_circulatingSupply);
+    }
+
+    function getCirculatingSupply() public view returns (uint256) {
+        return circulatingSupply.get();
+    }
 }
