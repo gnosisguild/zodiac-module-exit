@@ -1,21 +1,31 @@
 import React from 'react'
-import { TextField as MUITextField, withStyles, StandardTextFieldProps } from '@material-ui/core'
+import {
+  Grid,
+  GridProps,
+  InputBase,
+  InputLabel,
+  makeStyles,
+  StandardTextFieldProps,
+  TextField as MUITextField,
+  withStyles,
+} from '@material-ui/core'
+import classNames from 'classnames'
 
 const StyledTextField = withStyles((theme) => ({
   root: {
     '& label.Mui-focused': {
       position: 'relative',
       transform: 'none',
-      fontSize: theme.typography.fontSize,
       color: theme.palette.text.primary,
-      marginBottom: theme.spacing(0.5),
+      marginBottom: theme.spacing(1),
     },
     '& .MuiInputBase-root': {
-      backgroundColor: theme.palette.background.paper,
-      padding: theme.spacing(1, 0, 1, 1),
       marginTop: 0,
-      borderTopLeftRadius: theme.shape.borderRadius,
-      borderTopRightRadius: theme.shape.borderRadius,
+      minHeight: '37px',
+    },
+    '& .MuiInputBase-root input': {
+      fontFamily: 'Roboto Mono',
+      fontSize: '.75rem',
     },
     '& .MuiSelect-select:focus': {
       backgroundColor: 'transparent',
@@ -23,18 +33,91 @@ const StyledTextField = withStyles((theme) => ({
   },
 }))(MUITextField)
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    position: 'relative',
+    flexWrap: 'nowrap',
+    justifyContent: 'flex-end',
+  },
+  label: {
+    color: theme.palette.text.primary,
+    marginBottom: theme.spacing(1),
+  },
+  inputContainer: {
+    flexGrow: 1,
+  },
+  input: {
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    '& input': {
+      borderRightWidth: 1,
+      borderRightStyle: 'solid',
+      borderRightColor: theme.palette.secondary.main,
+      paddingRight: theme.spacing(1),
+      textAlign: 'right',
+    },
+  },
+  append: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: theme.spacing(1),
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: theme.palette.text.primary,
+    borderLeftWidth: 0,
+  },
+}))
+
 export interface TextFieldProps extends Omit<StandardTextFieldProps, 'variant' | 'label'> {
   label?: string
+  append?: React.ReactElement | string
+  AppendProps?: GridProps
 }
 
-export const TextField = ({ InputLabelProps, label, ...props }: TextFieldProps): React.ReactElement => {
+export const TextField = ({ InputProps, InputLabelProps, label, append, AppendProps, ...props }: TextFieldProps) => {
+  const classes = useStyles()
+
+  if (props.select || !append) {
+    return (
+      <StyledTextField
+        focused={!props.disabled}
+        label={label}
+        placeholder={label}
+        InputProps={{
+          disableUnderline: true,
+          ...InputProps,
+        }}
+        InputLabelProps={{
+          shrink: true,
+          ...InputLabelProps,
+        }}
+        {...props}
+      />
+    )
+  }
+
   return (
-    <StyledTextField
-      focused={!props.disabled}
-      label={label}
-      placeholder={label}
-      InputLabelProps={{ shrink: true, ...InputLabelProps }}
-      {...props}
-    />
+    <div>
+      <InputLabel {...InputLabelProps} className={classes.label}>
+        {label}
+      </InputLabel>
+      <Grid container className={classes.root}>
+        <Grid item className={classes.inputContainer}>
+          <InputBase
+            disabled={props.disabled}
+            placeholder={props.placeholder}
+            onClick={props.onClick}
+            inputMode={props.inputMode}
+            value={props.value}
+            onChange={props.onChange}
+            {...InputProps}
+            className={classNames(classes.input, InputProps?.className)}
+          />
+        </Grid>
+        <Grid item xs={8} {...AppendProps} className={classNames(classes.append, AppendProps?.className)}>
+          {append}
+        </Grid>
+      </Grid>
+    </div>
   )
 }

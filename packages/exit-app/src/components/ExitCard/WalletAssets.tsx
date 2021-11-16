@@ -3,7 +3,7 @@ import { ValueLine } from '../commons/ValueLine'
 import { ReactComponent as ExternalIcon } from '../../assets/icons/external-icon.svg'
 import classNames from 'classnames'
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
-import { useWallet } from '../OnboardButton'
+import { useWallet } from '../../hooks/useWallet'
 
 interface WalletAssetsProps {
   className?: string

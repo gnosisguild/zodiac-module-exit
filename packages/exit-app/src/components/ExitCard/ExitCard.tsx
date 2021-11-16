@@ -10,6 +10,9 @@ import ArrowUpIcon from '../../assets/icons/arrow-up.svg'
 import { WalletAssets } from './WalletAssets'
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    padding: theme.spacing(2),
+  },
   spacing: {
     marginTop: theme.spacing(2.5),
   },
@@ -33,7 +36,7 @@ export const ExitCard = (): React.ReactElement => {
   const token = loading ? <Skeleton className={classes.loader} variant="text" width={80} /> : '$WORK'
 
   return (
-    <div>
+    <div className={classes.root}>
       <Typography variant="body1" className={classes.description}>
         Redeem your {token} tokens for a share of the DAOs assets.
       </Typography>
