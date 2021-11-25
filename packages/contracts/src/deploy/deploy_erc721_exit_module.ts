@@ -16,14 +16,12 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     FirstAddress,
   ];
 
-  const response = await deploy("ExitERC721", {
+  await deploy("ExitERC721", {
     from: deployer,
     args,
     log: true,
     deterministicDeployment: true,
   });
-
-  console.log("response", response);
 };
 
 deploy.tags = ["erc721-exit-module"];
