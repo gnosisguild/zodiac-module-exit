@@ -1,27 +1,32 @@
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
-import { task, types } from "hardhat/config";
-import { BigNumber } from "ethers";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { deployAndSetUpModule } from "@gnosis.pm/zodiac";
+import { BigNumber } from "ethers";
+import { task, types } from "hardhat/config";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 interface FactoryTaskArgs {
   proxied: boolean;
 }
 
 interface CirculatingSupplyTaskArgs extends FactoryTaskArgs {
+  type: "ERC20" | "ERC721";
   owner: string;
   token: string;
   exclusions: string;
 }
 
 interface ExitSetupArgs extends FactoryTaskArgs {
+  type: "ERC20" | "ERC721";
   owner: string;
   avatar: string;
   target: string;
   token: string;
   supply: string;
 }
+
+const wait = (seconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
 const deployCirculatingSupply = async (
   taskArgs: CirculatingSupplyTaskArgs,
@@ -53,18 +58,35 @@ const deployCirculatingSupply = async (
     return;
   }
 
-  const Supply = await hardhatRuntime.ethers.getContractFactory(
-    "CirculatingSupply"
-  );
+  const contract =
+    taskArgs.type === "ERC721"
+      ? "CirculatingSupplyERC721"
+      : "CirculatingSupply";
+
+  const Supply = await hardhatRuntime.ethers.getContractFactory(contract);
   const supply = await Supply.deploy(
     taskArgs.owner,
     taskArgs.token,
     exclusions
   );
   console.log("Circulating supply contract deployed to", supply.address);
+
+  console.log("Wait 10s to verify contract...");
+  wait(10);
+
+  await hardhatRuntime.run("verify:verify", {
+    address: supply.address,
+    constructorArguments: [taskArgs.owner, taskArgs.token, exclusions],
+  });
 };
 
 task("deployCirculatingSupply", "Deploy circulating supply contract")
+  .addParam(
+    "type",
+    "Which token type is going to be used ERC20 or ERC721?",
+    "ERC20",
+    types.string
+  )
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam("token", "Address of the designated token", undefined, types.string)
   .addParam(
@@ -116,7 +138,8 @@ const setupModule = async (
     return;
   }
 
-  const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
+  const contract = taskArgs.type === "ERC721" ? "ExitERC721" : "ExitERC20";
+  const Module = await hardhatRuntime.ethers.getContractFactory(contract);
 
   const module = await Module.deploy(
     taskArgs.owner,
@@ -126,9 +149,29 @@ const setupModule = async (
     taskArgs.supply
   );
   console.log("Module deployed to:", module.address);
+
+  console.log("Wait 10s to verify contract...");
+  wait(10);
+
+  await hardhatRuntime.run("verify:verify", {
+    address: module.address,
+    constructorArguments: [
+      taskArgs.owner,
+      taskArgs.avatar,
+      taskArgs.target,
+      taskArgs.token,
+      taskArgs.supply,
+    ],
+  });
 };
 
 task("setup", "deploy a Exit Module")
+  .addParam(
+    "type",
+    "Which token type is going to be used ERC20 or ERC721?",
+    "ERC20",
+    types.string
+  )
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
     "avatar",
@@ -194,6 +237,9 @@ const deployDesignatedToken = async (
   await token.mint(receiver, BigNumber.from(10).pow(18));
 
   console.log("Token minted to:", receiver);
+
+  console.log("Wait 10s to verify contract...");
+  wait(10);
   await hardhatRuntime.run("verify:verify", {
     address: token.address,
     constructorArguments: [18],
@@ -208,5 +254,35 @@ task("deployDesignatedToken")
     types.string
   )
   .setAction(deployDesignatedToken);
+
+const deployTestTokenERC721 = async (
+  taskArgs: Record<string, unknown>,
+  hardhatRuntime: HardhatRuntimeEnvironment
+) => {
+  const [caller] = await hardhatRuntime.ethers.getSigners();
+  console.log("Using the account:", caller.address);
+
+  const Token = await hardhatRuntime.ethers.getContractFactory(
+    "TestTokenERC721"
+  );
+  const token = await Token.deploy();
+
+  await token.deployTransaction.wait(3);
+  console.log("Token deployed to:", token.address);
+
+  const receiver = taskArgs.user || caller.address;
+  await token.mint(receiver);
+
+  console.log("Token minted to:", receiver);
+
+  console.log("Wait 10s to verify contract...");
+  wait(10);
+  await hardhatRuntime.run("verify:verify", {
+    address: token.address,
+    constructorArguments: [],
+  });
+};
+
+task("deployTestTokenERC721").setAction(deployTestTokenERC721);
 
 export {};
