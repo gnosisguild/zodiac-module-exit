@@ -1,14 +1,17 @@
 import { createGlobalStyle } from 'styled-components'
+
 import avertaFont from '@gnosis.pm/safe-react-components/dist/fonts/averta-normal.woff2'
 import avertaBoldFont from '@gnosis.pm/safe-react-components/dist/fonts/averta-bold.woff2'
 
-import RobotoMonoRegularWoff from './assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff2'
-import RobotoMonoRegularWoff2 from './assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff'
+import MonacoFont from '../assets/fonts/Monaco.woff'
 
-import SpectralRegularWoff from './assets/fonts/Spectral/spectral-v7-latin-regular.woff'
-import SpectralRegularWoff2 from './assets/fonts/Spectral/spectral-v7-latin-regular.woff2'
+import RobotoMonoRegularWoff from '../assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff2'
+import RobotoMonoRegularWoff2 from '../assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff'
 
-const GlobalStyle = createGlobalStyle`
+import SpectralRegularWoff from '../assets/fonts/Spectral/spectral-v7-latin-regular.woff'
+import SpectralRegularWoff2 from '../assets/fonts/Spectral/spectral-v7-latin-regular.woff2'
+
+export const ZodiacStyle = createGlobalStyle`
     html {
         height: 100%
     }
@@ -19,9 +22,28 @@ const GlobalStyle = createGlobalStyle`
        padding: 0px;
     }
 
+    /* Works on Firefox*/
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(217, 212, 173, 0.6) rgba(217, 212, 173, 0.1);
+    }
+
+    /* Works on Chrome, Edge, and Safari */
+    *::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: none;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background-color: rgba(217, 212, 173, 0.3);
+      border-radius: 0px;
+    }
+
     #root {
         height: 100%;
-        padding-right: 0.5rem;
     }
 
     .MuiFormControl-root,
@@ -35,6 +57,7 @@ const GlobalStyle = createGlobalStyle`
         url(${avertaFont}) format('woff2'),
         url(${avertaBoldFont}) format('woff');
     }
+
     
     @font-face {
       font-family: 'Roboto Mono';
@@ -43,6 +66,12 @@ const GlobalStyle = createGlobalStyle`
       src: local(''),
       url(${RobotoMonoRegularWoff}) format('woff2'),
       url(${RobotoMonoRegularWoff2}) format('woff');
+    }
+    
+
+    @font-face {
+        font-family: 'Monaco';
+        src: local('Monaco'), url(${MonacoFont}) format('woff');
     }
 
     /* spectral-regular - latin */
@@ -55,5 +84,3 @@ const GlobalStyle = createGlobalStyle`
       url(${SpectralRegularWoff}) format('woff');
     }
 `
-
-export default GlobalStyle

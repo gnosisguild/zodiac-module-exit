@@ -1,6 +1,10 @@
 import { Button, makeStyles, Paper, Typography } from '@material-ui/core'
 import { TextField } from '../commons/input/TextField'
 import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
+import { useRootDispatch } from '../../store'
+import { useState } from 'react'
+import { ethers } from 'ethers'
+import { setAccount } from '../../store/main'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -20,6 +24,14 @@ const useStyles = makeStyles((theme) => ({
 
 export const AttachAccount = () => {
   const classes = useStyles()
+  const dispatch = useRootDispatch()
+  const [account, _setAccount] = useState('')
+  const isValid = ethers.utils.isAddress(account)
+
+  const handleAttach = () => {
+    dispatch(setAccount(account))
+  }
+
   return (
     <div className={classes.root}>
       <Paper classes={{ root: classes.card }}>
@@ -33,11 +45,19 @@ export const AttachAccount = () => {
 
         <TextField
           className={classes.spacing}
+          onChange={(evt) => _setAccount(evt.target.value)}
           label="Account Address"
           placeholder="0x59C945953C10AbC7f3716a8cECd09b5eb4d865Ca"
         />
 
-        <Button fullWidth={true} variant="contained" color="secondary" startIcon={<ArrowUp />}>
+        <Button
+          disabled={!isValid}
+          fullWidth
+          variant="contained"
+          color="secondary"
+          startIcon={<ArrowUp />}
+          onClick={handleAttach}
+        >
           Attach Account
         </Button>
       </Paper>

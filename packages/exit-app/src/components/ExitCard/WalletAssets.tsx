@@ -4,10 +4,13 @@ import { ReactComponent as ExternalIcon } from '../../assets/icons/external-icon
 import classNames from 'classnames'
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
 import { useWallet } from '../../hooks/useWallet'
+import { BigNumber, ethers } from 'ethers'
+import { useRootSelector } from '../../store'
+import { getToken } from '../../store/main/selectors'
 
 interface WalletAssetsProps {
   className?: string
-  loading?: boolean
+  balance?: BigNumber
 }
 
 interface ConnectWalletProps {
@@ -45,18 +48,18 @@ const ConnectWallet = ({ className, onClick }: ConnectWalletProps) => {
   )
 }
 
-export const WalletAssets = ({ loading, className }: WalletAssetsProps) => {
+export const WalletAssets = ({ balance, className }: WalletAssetsProps) => {
   const classes = useStyles()
 
-  const { startOnboard, onboard, provider } = useWallet()
-
-  console.log({ onboard, provider })
+  const { startOnboard } = useWallet()
+  const token = useRootSelector(getToken)
+  const balanceText = token && balance && ethers.utils.formatUnits(balance, token.decimals)
 
   return (
     <div className={classNames(className, classes.root)}>
-      <ConnectWallet className={classes.connectWallet} onClick={startOnboard} />
-      <ValueLine label="Your Balance" loading={loading} />
-      <ValueLine label="Market Value" icon={<ExternalIcon />} loading={loading} />
+      {balance ? null : <ConnectWallet className={classes.connectWallet} onClick={startOnboard} />}
+      <ValueLine label="Your Balance" loading={!balance} value={balanceText} />
+      <ValueLine label="Market Value" icon={<ExternalIcon />} loading={!balance} />
     </div>
   )
 }

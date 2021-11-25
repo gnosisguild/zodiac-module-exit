@@ -1,92 +1,75 @@
-import { useEffect, useState } from 'react'
 import Onboard from 'bnc-onboard'
 import { ethers } from 'ethers'
+import { REDUX_STORE, useRootSelector } from '../store'
+import { resetWallet, setENS, setWallet } from '../store/main'
+import { useEffect, useState } from 'react'
+import { getWalletAddress } from '../store/main/selectors'
 
 const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
 
-let provider: ethers.providers.Web3Provider
+let _provider: ethers.providers.Web3Provider | undefined
 
-const RPC_URL = 'https://<network>.infura.io/v3/<INFURA_KEY>'
+const RPC_URL = 'https://rinkeby.infura.io/v3/' + INFURA_KEY
+const NETWORK_ID = 4 // Rinkeby Testnet
+
 const wallets = [
-  { walletName: 'coinbase', preferred: true },
-  { walletName: 'trust', preferred: true, rpcUrl: RPC_URL },
   { walletName: 'metamask', preferred: true },
-  { walletName: 'authereum' },
-  {
-    walletName: 'ledger',
-    rpcUrl: RPC_URL,
-  },
-  {
-    walletName: 'keepkey',
-    rpcUrl: RPC_URL,
-  },
-  {
-    walletName: 'walletConnect',
-    infuraKey: INFURA_KEY,
-  },
+  { walletName: 'gnosis', preferred: true },
+  { walletName: 'coinbase', preferred: true },
+  { walletName: 'ledger', rpcUrl: RPC_URL, preferred: true },
+  { walletName: 'walletConnect', infuraKey: INFURA_KEY, preferred: true },
   { walletName: 'opera' },
   { walletName: 'operaTouch' },
-  { walletName: 'torus' },
-  { walletName: 'status' },
-  { walletName: 'imToken', rpcUrl: RPC_URL },
-  { walletName: 'meetone' },
-  { walletName: 'mykey', rpcUrl: RPC_URL },
-  { walletName: 'huobiwallet', rpcUrl: RPC_URL },
-  { walletName: 'hyperpay' },
-  { walletName: 'wallet.io', rpcUrl: RPC_URL },
-  { walletName: 'atoken' },
-  { walletName: 'frame' },
-  { walletName: 'ownbit' },
-  { walletName: 'alphawallet' },
-  { walletName: 'gnosis', preferred: true },
-  { walletName: 'xdefi' },
-  { walletName: 'bitpie' },
-  { walletName: 'binance', preferred: true },
-  { walletName: 'liquality' },
 ]
 
+const onboard = Onboard({
+  dappId: ONBOARD_JS_DAPP_ID,
+  networkId: NETWORK_ID,
+  darkMode: true,
+  subscriptions: {
+    wallet: (wallet) => {
+      if (wallet.provider) {
+        _provider = new ethers.providers.Web3Provider(wallet.provider)
+      }
+    },
+    address(address) {
+      if (address) {
+        REDUX_STORE.dispatch(setWallet(address))
+      } else {
+        REDUX_STORE.dispatch(resetWallet())
+      }
+    },
+    ens(ens) {
+      if (ens && ens.name) {
+        REDUX_STORE.dispatch(setENS(ens.name))
+      }
+    },
+  },
+  walletSelect: {
+    wallets,
+  },
+  walletCheck: [
+    { checkName: 'derivationPath' },
+    { checkName: 'accounts' },
+    { checkName: 'connect' },
+    { checkName: 'network' },
+  ],
+})
+
 export const useWallet = () => {
-  const chainId = 4
-
-  const [onboard] = useState(() => {
-    return Onboard({
-      dappId: ONBOARD_JS_DAPP_ID,
-      networkId: chainId,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      networkName: chainId === 137 ? 'polygon' : undefined,
-      subscriptions: {
-        wallet: (wallet) => {
-          console.log('before', { wallet, provider })
-          if (wallet.provider) {
-            provider = new ethers.providers.Web3Provider(wallet.provider)
-          }
-          console.log('after', { wallet, provider })
-        },
-      },
-      walletSelect: {
-        wallets,
-      },
-      walletCheck: [
-        { checkName: 'derivationPath' },
-        { checkName: 'accounts' },
-        { checkName: 'connect' },
-        { checkName: 'network' },
-      ],
-    })
-  })
-
-  useEffect(() => {
-    console.log('onboard', onboard)
-    console.log('onboard state', onboard.getState())
-  }, [onboard])
+  const [provider, setProvider] = useState(_provider)
+  const wallet = useRootSelector(getWalletAddress)
 
   const startOnboard = async () => {
     const selected = await onboard.walletSelect()
     if (selected) await onboard.walletCheck()
-    console.log({ onboard, provider })
+    setProvider(_provider)
   }
 
-  return { onboard, provider, startOnboard }
+  useEffect(() => {
+    setProvider(_provider)
+  }, [wallet])
+
+  return { provider, startOnboard }
 }

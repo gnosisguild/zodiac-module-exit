@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, makeStyles, Typography } from '@material-ui/core'
 import { ValueLine } from '../commons/ValueLine'
 import classNames from 'classnames'
@@ -8,6 +8,12 @@ import { Skeleton } from '@material-ui/lab'
 import { TextField } from '../commons/input/TextField'
 import ArrowUpIcon from '../../assets/icons/arrow-up.svg'
 import { WalletAssets } from './WalletAssets'
+import { useRootDispatch, useRootSelector } from '../../store'
+import { getAccount, getCirculatingSupply, getToken, getWalletAddress } from '../../store/main/selectors'
+import { useWallet } from '../../hooks/useWallet'
+import { BigNumber, ethers } from 'ethers'
+import { getTokenBalance } from '../../services/module'
+import { fetchExitModuleData } from '../../store/main/actions'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -31,27 +37,52 @@ const useStyles = makeStyles((theme) => ({
 
 export const ExitCard = (): React.ReactElement => {
   const classes = useStyles()
-  const [loading] = useState(true)
+  const account = useRootSelector(getAccount)
+  const wallet = useRootSelector(getWalletAddress)
+  const token = useRootSelector(getToken)
+  const circulatingSupply = useRootSelector(getCirculatingSupply)
 
-  const token = loading ? <Skeleton className={classes.loader} variant="text" width={80} /> : '$WORK'
+  const [balance, setBalance] = useState<BigNumber>()
+
+  const dispatch = useRootDispatch()
+  const { provider } = useWallet()
+
+  useEffect(() => {
+    if (wallet && token && provider) {
+      getTokenBalance(provider, token.address, wallet).then((_balance) => setBalance(_balance))
+    }
+  }, [wallet, token, provider])
+
+  const loader = <Skeleton className={classes.loader} variant="text" width={80} />
+  const tokenSymbol = token ? token.symbol : loader
+
+  useEffect(() => {
+    if (provider && account) {
+      dispatch(fetchExitModuleData({ provider, module: account }))
+    }
+  }, [account, dispatch, provider])
 
   return (
     <div className={classes.root}>
       <Typography variant="body1" className={classes.description}>
-        Redeem your {token} tokens for a share of the DAOs assets.
+        Redeem your {tokenSymbol} tokens for a share of the DAOs assets.
       </Typography>
 
       <div className={classNames(classes.spacing, classes.content)}>
-        <ValueLine label="Circulating Supply" loading={loading} />
-        <ValueLine label="DAO Assets Value" icon={<ExternalIcon />} loading={loading} />
+        <ValueLine
+          label="Circulating Supply"
+          loading={!circulatingSupply}
+          value={circulatingSupply && token && ethers.utils.formatUnits(circulatingSupply.value, token.decimals)}
+        />
+        <ValueLine label="DAO Assets Value" icon={<ExternalIcon />} loading={!circulatingSupply} />
       </div>
 
-      <WalletAssets className={classNames(classes.spacing, classes.content)} loading={loading} />
+      <WalletAssets className={classNames(classes.spacing, classes.content)} balance={balance} />
 
       <TextField color="secondary" className={classes.spacing} label="Exit Amount" />
 
       <div className={classNames(classes.spacing, classes.content)}>
-        <ValueLine label="Claimable Value" icon={<QuestionIcon />} loading={loading} />
+        <ValueLine label="Claimable Value" icon={<QuestionIcon />} loading={!wallet} />
       </div>
 
       <Button
