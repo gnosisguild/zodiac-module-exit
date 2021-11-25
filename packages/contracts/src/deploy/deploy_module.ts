@@ -16,11 +16,11 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     FirstAddress,
   ];
 
-  await deploy("Exit", {
+  await deploy("ExitERC20", {
     from: deployer,
     args,
     log: true,
-    deterministicDeployment: true
+    deterministicDeployment: true,
   });
 };
 

@@ -246,38 +246,38 @@ describe("CirculatingSupply", async () => {
   describe("exclude", async () => {
     it("reverts if caller is not the owner", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(
+      await expect(
         circulatingSupply.connect(user2).exclude(user2.address)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it("reverts if exclusion is zero address", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(circulatingSupply.exclude(AddressZero)).to.be.revertedWith(
+      await expect(circulatingSupply.exclude(AddressZero)).to.be.revertedWith(
         "Invalid exclusion"
       );
     });
 
     it("reverts if exclusion is SENTINEL_EXCLUSIONS", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(circulatingSupply.exclude(SENTINEL_EXCLUSIONS)).to.be.revertedWith(
-        "Invalid exclusion"
-      );
+      await expect(
+        circulatingSupply.exclude(SENTINEL_EXCLUSIONS)
+      ).to.be.revertedWith("Invalid exclusion");
     });
 
     it("reverts if exclusion is already enabled", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(circulatingSupply.exclude(user1.address))
+      await expect(circulatingSupply.exclude(user1.address))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
-      expect(circulatingSupply.exclude(user1.address)).to.be.revertedWith(
+      await expect(circulatingSupply.exclude(user1.address)).to.be.revertedWith(
         "Exclusion already enabled"
       );
     });
 
     it("enables a exclusion", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(circulatingSupply.exclude(user1.address))
+      await expect(circulatingSupply.exclude(user1.address))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
     });
@@ -286,7 +286,7 @@ describe("CirculatingSupply", async () => {
   describe("removeExclusion", async () => {
     it("reverts if caller is not the owner", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(
+      await expect(
         circulatingSupply
           .connect(user2)
           .removeExclusion(SENTINEL_EXCLUSIONS, user2.address)
@@ -295,14 +295,14 @@ describe("CirculatingSupply", async () => {
 
     it("reverts if exclusion is zero address", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(
+      await expect(
         circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, AddressZero)
       ).to.be.revertedWith("Invalid exclusion");
     });
 
     it("reverts if exclusion is SENTINEL_EXCLUSIONS", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(
+      await expect(
         circulatingSupply.removeExclusion(
           SENTINEL_EXCLUSIONS,
           SENTINEL_EXCLUSIONS
@@ -312,25 +312,25 @@ describe("CirculatingSupply", async () => {
 
     it("reverts if exclusion is already disabled", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(circulatingSupply.exclude(user1.address))
+      await expect(circulatingSupply.exclude(user1.address))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
-      expect(
+      await expect(
         circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
       )
         .to.emit(circulatingSupply, "ExclusionRemoved")
         .withArgs(user1.address);
-      expect(
+      await expect(
         circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
       ).to.be.revertedWith("Exclusion already disabled");
     });
 
     it("disables a exclusion", async () => {
       const { circulatingSupply } = await setupTests();
-      expect(circulatingSupply.exclude(user1.address))
+      await expect(circulatingSupply.exclude(user1.address))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
-      expect(
+      await expect(
         circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
       )
         .to.emit(circulatingSupply, "ExclusionRemoved")
@@ -363,11 +363,11 @@ describe("CirculatingSupply", async () => {
     it("returns true if exclusion is enabled", async () => {
       const { circulatingSupply } = await setupTests();
       // delete once you figure out why you need to do this twice
-      expect(await circulatingSupply.exclude(user1.address))
+      await expect(circulatingSupply.exclude(user1.address))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
 
-      expect(await circulatingSupply.exclude(user2.address))
+      await expect(circulatingSupply.exclude(user2.address))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user2.address);
       expect(await circulatingSupply.isExcluded(user2.address)).to.be.equals(
@@ -406,7 +406,7 @@ describe("CirculatingSupply", async () => {
 
     it("returns two exclusions if two exclusions are enabled", async () => {
       const { avatar, circulatingSupply } = await setupTests();
-      expect(circulatingSupply.exclude(user1.address))
+      await expect(circulatingSupply.exclude(user1.address))
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
       let tx = await circulatingSupply.getExclusionsPaginated(
