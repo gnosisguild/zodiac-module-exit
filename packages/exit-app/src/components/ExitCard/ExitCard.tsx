@@ -11,6 +11,7 @@ import { useRootDispatch, useRootSelector } from '../../store'
 import {
   getAssets,
   getCirculatingSupply,
+  getClaimAmount,
   getDesignatedToken,
   getModule,
   getSelectedTokens,
@@ -67,6 +68,7 @@ export const ExitCard = (): React.ReactElement => {
   const circulatingSupply = useRootSelector(getCirculatingSupply)
   const assets = useRootSelector(getAssets)
   const selectedTokens = useRootSelector(getSelectedTokens)
+  const claimAmount = useRootSelector(getClaimAmount)
 
   const fiatDaoAsset = getFiatDaoAsset(token, assets)
   const claimableAmount = getClaimableAmount(token, assets, balance)
@@ -74,7 +76,7 @@ export const ExitCard = (): React.ReactElement => {
   const handleExit = async () => {
     const signer = await provider?.getSigner()
     if (signer && wallet && module && token) {
-      const weiAmount = ethers.utils.parseUnits(claimableAmount, token.decimals)
+      const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
 
       const ERC20 = Erc20__factory.connect(token.address, signer)
       const allowance = await ERC20.allowance(wallet, module)
