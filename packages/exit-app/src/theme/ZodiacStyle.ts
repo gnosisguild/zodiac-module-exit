@@ -50,6 +50,10 @@ export const ZodiacStyle = createGlobalStyle`
     .MuiInputBase-root {
         width: 100% !important;
     }
+    
+    aside.bn-onboard-custom {
+      z-index: 2;
+    }
 
     @font-face {
         font-family: 'Averta';

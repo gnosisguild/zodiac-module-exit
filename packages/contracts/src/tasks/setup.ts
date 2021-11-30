@@ -116,7 +116,7 @@ const setupModule = async (
     return;
   }
 
-  const Module = await hardhatRuntime.ethers.getContractFactory("Exit");
+  const Module = await hardhatRuntime.ethers.getContractFactory("ExitERC20");
 
   const module = await Module.deploy(
     taskArgs.owner,

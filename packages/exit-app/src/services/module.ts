@@ -1,6 +1,7 @@
 import { BigNumber, ethers } from 'ethers'
 import { Erc20__factory, ZodiacModuleExit__factory } from '../contracts/types'
 import { Call, Contract, Provider } from 'ethcall'
+import { Token, TokenType } from '../store/main/models'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
   const ethcallProvider = new Provider()
@@ -8,7 +9,7 @@ export async function getExitModule(provider: ethers.providers.BaseProvider, mod
 
   const exit = new Contract(module, ZodiacModuleExit__factory.abi)
   const txs: Call[] = [exit.circulatingSupply(), exit.designatedToken(), exit.getCirculatingSupply()]
-  const results = await ethcallProvider.tryAll(Object.values(txs))
+  const results = await ethcallProvider.tryAll(txs)
 
   return {
     circulatingSupplyAddress: results[0] as string,
@@ -17,15 +18,16 @@ export async function getExitModule(provider: ethers.providers.BaseProvider, mod
   }
 }
 
-export async function getToken(provider: ethers.providers.BaseProvider, token: string) {
+export async function getToken(provider: ethers.providers.BaseProvider, token: string): Promise<Token> {
   const ethcallProvider = new Provider()
   await ethcallProvider.init(provider)
 
   const cs = new Contract(token, Erc20__factory.abi)
   const txs: Call[] = [cs.symbol(), cs.decimals()]
-  const results = await ethcallProvider.tryAll(Object.values(txs))
+  const results = await ethcallProvider.tryAll(txs)
 
   return {
+    type: TokenType.ERC20,
     address: token,
     symbol: results[0] as string,
     decimals: results[1] as number,

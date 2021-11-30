@@ -47,7 +47,7 @@ export const App = (): React.ReactElement => {
       </Grid>
       <Grid item xs={8}>
         <div className={classes.item}>
-          <AssetsCard />
+          <AssetsCard safe={account} />
         </div>
       </Grid>
     </Grid>

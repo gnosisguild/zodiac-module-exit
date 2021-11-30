@@ -6,7 +6,10 @@ import { Button, ButtonProps, makeStyles } from '@material-ui/core'
 import { useWallet } from '../../hooks/useWallet'
 import { BigNumber, ethers } from 'ethers'
 import { useRootSelector } from '../../store'
-import { getToken } from '../../store/main/selectors'
+import { getAssets, getDesignatedToken } from '../../store/main/selectors'
+import { TextAmount } from '../commons/text/TextAmount'
+import { balanceFormatter } from '../../utils/format'
+import { getClaimableAmount } from '../../utils/math'
 
 interface WalletAssetsProps {
   className?: string
@@ -52,14 +55,33 @@ export const WalletAssets = ({ balance, className }: WalletAssetsProps) => {
   const classes = useStyles()
 
   const { startOnboard } = useWallet()
-  const token = useRootSelector(getToken)
+  const token = useRootSelector(getDesignatedToken)
+  const assets = useRootSelector(getAssets)
+
   const balanceText = token && balance && ethers.utils.formatUnits(balance, token.decimals)
+  const marketValue = getClaimableAmount(token, assets, balance)
 
   return (
     <div className={classNames(className, classes.root)}>
       {balance ? null : <ConnectWallet className={classes.connectWallet} onClick={startOnboard} />}
-      <ValueLine label="Your Balance" loading={!balance} value={balanceText} />
-      <ValueLine label="Market Value" icon={<ExternalIcon />} loading={!balance} />
+      <ValueLine
+        label="Your Balance"
+        loading={!balance}
+        value={
+          balanceText &&
+          token && (
+            <TextAmount>
+              {balanceFormatter.format(parseFloat(balanceText))} {token.symbol}
+            </TextAmount>
+          )
+        }
+      />
+      <ValueLine
+        label="Market Value"
+        icon={<ExternalIcon />}
+        loading={!marketValue}
+        value={marketValue && <TextAmount>~${balanceFormatter.format(parseFloat(marketValue))}</TextAmount>}
+      />
     </div>
   )
 }
