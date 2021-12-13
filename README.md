@@ -33,7 +33,7 @@ The contracts have been developed with [Solidity 0.8.4](https://github.com/ether
 
 ### Setup Guide
 
-Follow our [Exit Module Setup Guide](./docs/setup_guide.md). 
+Follow our [Exit Module Setup Guide](./packages/contracts/docs/setup_guide.md). 
 
 
 ### License
