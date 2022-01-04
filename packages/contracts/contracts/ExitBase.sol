@@ -3,11 +3,10 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Module.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "./IExitBase.sol";
 
-abstract contract ExitBase is Module {
-    event ExitModuleSetup(address indexed initiator, address indexed avatar);
-    event ExitSuccessful(address indexed leaver);
-
+abstract contract ExitBase is Module, IExitBase, IERC165 {
     // @notice Mapping of denied tokens defined by the avatar
     mapping(address => bool) public deniedTokens;
 
@@ -96,5 +95,14 @@ abstract contract ExitBase is Module {
             require(deniedTokens[tokens[i]], "Token not denied");
             deniedTokens[tokens[i]] = false;
         }
+    }
+
+    function supportsInterface(bytes4 interfaceID)
+        external
+        pure
+        override
+        returns (bool)
+    {
+        return interfaceID == 0x01ffc9a7 || interfaceID == 0xaf20af8a;
     }
 }

@@ -41,7 +41,10 @@ contract ExitERC721 is ExitBase {
             address _target,
             address _collection,
             address _circulatingSupply
-        ) = abi.decode(initParams, (address, address, address, address, address));
+        ) = abi.decode(
+            initParams,
+            (address, address, address, address, address)
+        );
         __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         require(_target != address(0), "Target can not be zero address");
@@ -59,7 +62,10 @@ contract ExitERC721 is ExitBase {
     // @param tokenId of token to be used to exit
     // @param tokens Array of tokens to claim, ordered lowest to highest
     // @notice Will revert if tokens[] is not ordered highest to lowest, contains duplicates, or includes denied tokens
-    function exit(uint256 tokenId, address[] calldata tokens) public {
+    function exit(uint256 tokenId, address[] calldata tokens)
+        external
+        override
+    {
         require(
             collection.ownerOf(tokenId) == msg.sender,
             "Only token owner can exit"
