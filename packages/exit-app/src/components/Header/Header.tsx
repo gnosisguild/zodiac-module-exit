@@ -1,12 +1,14 @@
 import React from 'react'
-import { makeStyles, Typography } from '@material-ui/core'
+import { InputLabel, makeStyles, MenuItem, Select, Typography } from '@material-ui/core'
 import classNames from 'classnames'
 import { Row } from '../commons/layout/Row'
 import ExitModuleLogo from '../../assets/images/exit-module-logo.png'
-import { useRootSelector } from '../../store'
-import { getAccount, getENS, getWalletAddress } from '../../store/main/selectors'
+import { useRootDispatch, useRootSelector } from '../../store'
+import { getAccount, getChainId, getENS, getWalletAddress } from '../../store/main/selectors'
 import { EthHashInfo } from '@gnosis.pm/safe-react-components'
 import { shortAddress } from '../../utils/strings'
+import { setChainId } from '../../store/main'
+import { NETWORK_NAME } from '../../utils/networks'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -93,6 +95,18 @@ const useStyles = makeStyles((theme) => ({
   robotoText: {
     fontFamily: 'Roboto Mono',
   },
+  networkPickerContainer: {
+    maxWidth: 180,
+    padding: theme.spacing(0.5, 1),
+  },
+  networkPicker: {
+    marginTop: theme.spacing(0.5),
+    padding: theme.spacing(0.5),
+    fontSize: 12,
+    '&:after': {
+      display: 'none',
+    },
+  },
 }))
 
 export const Header = () => {
@@ -100,6 +114,13 @@ export const Header = () => {
   const account = useRootSelector(getAccount)
   const ens = useRootSelector(getENS)
   const wallet = useRootSelector(getWalletAddress)
+  const chainId = useRootSelector(getChainId)
+
+  const dispatch = useRootDispatch()
+
+  const handleNetworkChange = (value: string) => {
+    dispatch(setChainId(parseInt(value)))
+  }
 
   return (
     <Row className={classes.root}>
@@ -112,6 +133,22 @@ export const Header = () => {
         </Typography>
       </div>
       <div className={classes.banner} />
+      <div className={classNames(classes.banner, classes.networkPickerContainer)}>
+        <InputLabel shrink>Chain</InputLabel>
+        <Select
+          disableUnderline
+          className={classes.networkPicker}
+          disabled={!!account}
+          value={chainId}
+          onChange={(evt) => handleNetworkChange(evt.target.value as string)}
+        >
+          {Object.entries(NETWORK_NAME).map((pair) => (
+            <MenuItem key={pair[0]} value={pair[0]}>
+              {pair[1]}
+            </MenuItem>
+          ))}
+        </Select>
+      </div>
       <div className={classNames(classes.container, classes.header, classes.leftHeader)}>
         <div className={classes.circleIconContainer}>
           {account ? (

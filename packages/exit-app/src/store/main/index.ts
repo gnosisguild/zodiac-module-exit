@@ -1,9 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { MainState, Network } from './models'
 import { fetchExitModuleData, fetchTokenAssets, getGasEstimationsForAssets } from './actions'
+import { BigNumber, ethers } from 'ethers'
+import { getNetworkName } from '../../utils/networks'
+
+const ethereum = (window as any).ethereum
+let initialChainId
+try {
+  const chainId: BigNumber | undefined = ethereum && ethereum.chainId && ethers.BigNumber.from(ethereum.chainId)
+  if (chainId && getNetworkName(chainId.toNumber())) {
+    initialChainId = chainId.toNumber()
+  }
+} catch (err) {}
 
 const initialModulesState: MainState = {
-  chainId: Network.RINKEBY,
+  chainId: initialChainId || Network.MAINNET,
   account: '',
   module: undefined,
   assets: {
@@ -51,6 +62,7 @@ export const mainSlice = createSlice({
         address: action.payload.CSContract,
         value: action.payload.circulatingSupply,
       }
+      state.selectedTokens = state.selectedTokens.filter((token) => token !== action.payload.token.address)
     })
     builder.addCase(fetchTokenAssets.fulfilled, (state, action) => {
       state.assets = action.payload

@@ -57,6 +57,10 @@ const useStyles = makeStyles((theme) => ({
       borderRightColor: theme.palette.secondary.main,
       paddingRight: theme.spacing(1),
     },
+    '&:after': {
+      content: '',
+      display: 'none',
+    },
   },
   append: {
     display: 'flex',

@@ -33,12 +33,12 @@ export const ClaimAmountInput = () => {
   return (
     <TextField
       color="secondary"
+      label="Exit Amount"
       className={classes.spacing}
       InputProps={{ classes: { input: classes.claimInput } }}
       append={token?.symbol}
       value={claimAmount}
       onChange={(evt) => handleExitAmount(evt.target.value)}
-      label="Exit Amount"
     />
   )
 }

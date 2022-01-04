@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, makeStyles, Typography } from '@material-ui/core'
+import { Button, CircularProgress, makeStyles, Typography } from '@material-ui/core'
 import { ValueLine } from '../commons/ValueLine'
 import classNames from 'classnames'
 import { ReactComponent as ExternalIcon } from '../../assets/icons/external-icon.svg'
@@ -47,12 +47,27 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
+enum EXIT_STEP {
+  EXIT,
+  APPROVE,
+  APPROVING,
+  WAITING,
+}
+
+const EXIT_STEP_MESSAGE: Record<EXIT_STEP, string> = {
+  [EXIT_STEP.EXIT]: 'Exit and Claim Assets',
+  [EXIT_STEP.APPROVE]: 'Approve token expense',
+  [EXIT_STEP.APPROVING]: 'Approving...',
+  [EXIT_STEP.WAITING]: 'Exiting...',
+}
+
 export const ExitCard = (): React.ReactElement => {
   const classes = useStyles()
   const { provider } = useWallet()
   const dispatch = useRootDispatch()
 
   const [balance, setBalance] = useState<BigNumber>()
+  const [step, setStep] = useState<EXIT_STEP>(EXIT_STEP.EXIT)
 
   const module = useRootSelector(getModule)
   const wallet = useRootSelector(getWalletAddress)
@@ -65,32 +80,49 @@ export const ExitCard = (): React.ReactElement => {
   const claimRate = useClaimRate()
 
   const handleExit = async () => {
-    const signer = await provider?.getSigner()
-    if (signer && wallet && module && token) {
-      const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
+    try {
+      const signer = await provider?.getSigner()
+      if (signer && wallet && module && token) {
+        const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
 
-      const ERC20 = Erc20__factory.connect(token.address, signer)
-      const allowance = await ERC20.allowance(wallet, module)
+        const ERC20 = Erc20__factory.connect(token.address, signer)
+        const allowance = await ERC20.allowance(wallet, module)
 
-      if (allowance.lt(weiAmount)) {
-        const tx = await ERC20.approve(module, weiAmount)
-        await tx.wait(4)
+        if (allowance.lt(weiAmount)) {
+          setStep(EXIT_STEP.APPROVE)
+          const maxWeiAmount = BigNumber.from(2).pow(256).sub(1)
+          const tx = await ERC20.approve(module, maxWeiAmount)
+          setStep(EXIT_STEP.APPROVING)
+          await tx.wait(2)
+        }
+
+        const claimTokens = sortBigNumberArray(selectedTokens)
+          .filter((token) => !token.isZero())
+          .map((token) => token.toHexString())
+
+        const exitModule = ZodiacModuleExit__factory.connect(module, signer)
+        setStep(EXIT_STEP.WAITING)
+        const exitTx = await exitModule.exit(weiAmount, claimTokens)
+        await exitTx.wait(2)
+
+        if (wallet && token && provider) {
+          getTokenBalance(provider, token.address, wallet)
+            .then((_balance) => setBalance(_balance))
+            .catch(console.error)
+        }
       }
-
-      const claimTokens = sortBigNumberArray(selectedTokens)
-        .filter((token) => !token.isZero())
-        .map((token) => token.toHexString())
-
-      const exitModule = ZodiacModuleExit__factory.connect(module, signer)
-      const exitTx = await exitModule.exit(weiAmount, claimTokens)
-      await exitTx.wait(5)
-      alert('exit successful')
+    } catch (err) {
+      console.warn('error exiting', err)
+    } finally {
+      setStep(EXIT_STEP.EXIT)
     }
   }
 
   useEffect(() => {
     if (wallet && token && provider) {
-      getTokenBalance(provider, token.address, wallet).then((_balance) => setBalance(_balance))
+      getTokenBalance(provider, token.address, wallet)
+        .then((_balance) => setBalance(_balance))
+        .catch(console.error)
     }
   }, [wallet, token, provider])
 
@@ -146,14 +178,21 @@ export const ExitCard = (): React.ReactElement => {
 
       <Button
         fullWidth
+        disabled={step !== EXIT_STEP.EXIT}
         size="large"
         color="secondary"
         variant="contained"
         className={classes.spacing}
-        startIcon={<img src={ArrowUpIcon} alt="arrow up" />}
+        startIcon={
+          step === EXIT_STEP.EXIT ? (
+            <img src={ArrowUpIcon} alt="arrow up" />
+          ) : (
+            <CircularProgress size={20} color="inherit" />
+          )
+        }
         onClick={handleExit}
       >
-        Exit and Claim Assets
+        {EXIT_STEP_MESSAGE[step]}
       </Button>
     </div>
   )

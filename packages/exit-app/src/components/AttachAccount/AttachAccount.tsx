@@ -34,7 +34,7 @@ export const AttachAccount = () => {
   const isValid = ethers.utils.isAddress(account)
 
   const handleAttach = async () => {
-    if (ethers.utils.isAddress(account)) {
+    if (ethers.utils.isAddress(account) && provider) {
       setLoading(true)
       setInvalidSafe(false)
       try {

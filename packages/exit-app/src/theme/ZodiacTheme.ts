@@ -133,6 +133,7 @@ export const ZODIAC_THEME = createTheme({
           content: "''",
           border: '1px solid rgba(217, 212, 173, 0.3)',
           position: 'absolute',
+          zIndex: -1,
           top: -3,
           bottom: -3,
           left: -3,
