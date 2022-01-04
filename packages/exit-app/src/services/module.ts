@@ -2,6 +2,8 @@ import { BigNumber, ethers } from 'ethers'
 import { Erc20__factory, ZodiacModuleExit__factory } from '../contracts/types'
 import { Call, Contract, Provider } from 'ethcall'
 import { Token, TokenType } from '../store/main/models'
+import { fetchContractSourceCode } from './contract'
+import { getSafeModules } from './safe'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
   const ethcallProvider = new Provider()
@@ -37,4 +39,40 @@ export async function getToken(provider: ethers.providers.BaseProvider, token: s
 export async function getTokenBalance(provider: ethers.providers.BaseProvider, token: string, wallet: string) {
   const contract = Erc20__factory.connect(token, provider)
   return contract.balanceOf(wallet)
+}
+
+export async function isExitModule(provider: ethers.providers.BaseProvider, address: string): Promise<boolean> {
+  const exitModule = ZodiacModuleExit__factory.connect(address, provider)
+
+  try {
+    // 0xaf20af8a == IExitBase interface ID
+    return await exitModule.supportsInterface('0xaf20af8a')
+  } catch (err) {
+    console.warn('error determining exit module with ERP-165', err)
+  }
+
+  try {
+    const { ContractName } = await fetchContractSourceCode(provider.network.chainId, address)
+    return ContractName === 'Exit'
+  } catch (err) {
+    console.warn('error determining exit module using Etherscan', err)
+  }
+
+  return false
+}
+
+export async function getExitModulesFromSafe(
+  provider: ethers.providers.BaseProvider,
+  address: string,
+): Promise<string | undefined> {
+  let modules: string[] = []
+  try {
+    modules = await getSafeModules(provider, address)
+  } catch (err) {}
+
+  for (const module of modules) {
+    if (await isExitModule(provider, module)) {
+      return module
+    }
+  }
 }

@@ -10,7 +10,7 @@ export interface MainState {
   wallet?: string
   ens?: string
   token?: Token
-  assets?: SafeAssets
+  assets: SafeAssets
   claimAmount: string
   circulatingSupply?: {
     address: string

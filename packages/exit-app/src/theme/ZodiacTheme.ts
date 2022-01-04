@@ -126,9 +126,19 @@ export const ZODIAC_THEME = createTheme({
     },
     MuiInputBase: {
       root: {
-        padding: '8px 0 8px 8px',
-        border: '1px solid rgb(255,255,255)',
         borderRadius: 0,
+        border: '1px solid rgba(217, 212, 173, 0.3)',
+        padding: '8px 4px',
+        position: 'relative',
+        '&:after': {
+          content: "''",
+          border: '1px solid rgba(217, 212, 173, 0.3)',
+          position: 'absolute',
+          top: -3,
+          bottom: -3,
+          left: -3,
+          right: -3,
+        },
       },
       input: {
         padding: 0,
@@ -142,6 +152,16 @@ export const ZODIAC_THEME = createTheme({
     MuiInputLabel: {
       root: {
         fontSize: 16,
+      },
+    },
+    MuiTableCell: {
+      footer: {
+        color: '',
+      },
+    },
+    MuiLink: {
+      root: {
+        textDecoration: 'underline !important',
       },
     },
   },

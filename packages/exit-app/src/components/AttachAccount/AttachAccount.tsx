@@ -5,6 +5,8 @@ import { useRootDispatch } from '../../store'
 import { useState } from 'react'
 import { ethers } from 'ethers'
 import { setAccount } from '../../store/main'
+import { useWallet } from '../../hooks/useWallet'
+import { getExitModulesFromSafe } from '../../services/module'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -25,11 +27,15 @@ const useStyles = makeStyles((theme) => ({
 export const AttachAccount = () => {
   const classes = useStyles()
   const dispatch = useRootDispatch()
+  const { provider } = useWallet()
   const [account, _setAccount] = useState('')
   const isValid = ethers.utils.isAddress(account)
 
-  const handleAttach = () => {
-    dispatch(setAccount(account))
+  const handleAttach = async () => {
+    if (ethers.utils.isAddress(account)) {
+      const exitModule = await getExitModulesFromSafe(provider, account)
+      dispatch(setAccount({ account, module: exitModule }))
+    }
   }
 
   return (

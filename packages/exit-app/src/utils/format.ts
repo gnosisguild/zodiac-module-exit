@@ -1,12 +1,15 @@
 import { BigNumber, BigNumberish } from 'ethers'
 
 export const fiatFormatter = new Intl.NumberFormat(undefined, {
-  minimumSignificantDigits: 2,
-  maximumSignificantDigits: 2,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 })
 export const balanceFormatter = new Intl.NumberFormat(undefined, {
-  minimumSignificantDigits: 2,
-  maximumSignificantDigits: 6,
+  maximumFractionDigits: 5,
+})
+export const integerFormatter = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
 })
 
 export function sortBigNumberArray(array: BigNumberish[]): BigNumber[] {

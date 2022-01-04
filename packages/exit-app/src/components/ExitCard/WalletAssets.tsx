@@ -80,7 +80,7 @@ export const WalletAssets = ({ balance, className }: WalletAssetsProps) => {
         label="Market Value"
         icon={<ExternalIcon />}
         loading={!marketValue}
-        value={marketValue && <TextAmount>~${balanceFormatter.format(parseFloat(marketValue))}</TextAmount>}
+        value={marketValue && <TextAmount>~${marketValue}</TextAmount>}
       />
     </div>
   )

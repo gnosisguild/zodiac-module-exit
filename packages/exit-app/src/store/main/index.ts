@@ -1,11 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { MainState, Network } from './models'
-import { fetchExitModuleData, fetchTokenAssets } from './actions'
+import { fetchExitModuleData, fetchTokenAssets, getGasEstimationsForAssets } from './actions'
 
 const initialModulesState: MainState = {
   chainId: Network.RINKEBY,
-  account: '0xD63F6393f2ADf6238a557f3c9Cb620D12516E029',
-  module: '0x9165265Aa286B6Aa4ed31bD0aD02e683689D5010',
+  account: '',
+  module: undefined,
+  assets: {
+    fiatTotal: '0',
+    items: [],
+  },
   claimAmount: '0',
   wallet: '',
   ens: '',
@@ -16,8 +20,9 @@ export const mainSlice = createSlice({
   name: 'main',
   initialState: initialModulesState,
   reducers: {
-    setAccount(state, action: PayloadAction<string>) {
-      state.account = action.payload
+    setAccount(state, action: PayloadAction<{ account: string; module?: string }>) {
+      state.account = action.payload.account
+      state.module = action.payload.module
     },
     setWallet(state, action: PayloadAction<string>) {
       state.wallet = action.payload
@@ -46,6 +51,12 @@ export const mainSlice = createSlice({
     })
     builder.addCase(fetchTokenAssets.fulfilled, (state, action) => {
       state.assets = action.payload
+      state.selectedTokens = action.payload.items
+        .map((item) => item.tokenInfo.address)
+        .filter((address) => address !== state.token?.address)
+    })
+    builder.addCase(getGasEstimationsForAssets.fulfilled, (state, action) => {
+      state.assets.items = action.payload
     })
   },
 })

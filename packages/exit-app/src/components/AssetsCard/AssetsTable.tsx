@@ -1,32 +1,28 @@
 import React, { useMemo } from 'react'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell, { TableCellProps } from '@material-ui/core/TableCell'
-import TableContainer from '@material-ui/core/TableContainer'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
-import TableSortLabel from '@material-ui/core/TableSortLabel'
 import classNames from 'classnames'
 import { Checkbox } from '../commons/input/Checkbox'
-import { BigNumber, BigNumberish } from 'ethers'
+import { BigNumber, BigNumberish, ethers } from 'ethers'
 import { SafeAssets, Token, TokenAsset } from '../../store/main/models'
-import { ethers } from 'ethers/lib.esm'
 import { useRootDispatch, useRootSelector } from '../../store'
-import { getClaimAmount, getSelectedTokens } from '../../store/main/selectors'
-import { Typography } from '@material-ui/core'
+import { getSelectedTokens } from '../../store/main/selectors'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableCellProps,
+  TableContainer,
+  TableFooter,
+  TableRow,
+  Typography,
+} from '@material-ui/core'
 import { Row } from '../commons/layout/Row'
 import { TextAmount } from '../commons/text/TextAmount'
-import { balanceFormatter, fiatFormatter } from '../../utils/format'
+import { balanceFormatter, fiatFormatter, integerFormatter } from '../../utils/format'
 import { setSelectedTokens } from '../../store/main'
-
-interface HeadCell {
-  id: string
-  width?: string | number
-  label: string
-  bgColorHeader?: string
-  bgColor?: string
-}
+import { EnhancedTableHead } from './EnhancedTableHead'
+import { EmptyTableContent } from './EmptyTableContent'
+import { useClaimRate } from '../../hooks/useClaimRate'
 
 interface RowAmount {
   value: string
@@ -42,7 +38,7 @@ interface RowItem {
   claimable: RowAmount
 }
 
-type Sort = 'asc' | 'desc'
+export type Sort = 'asc' | 'desc'
 
 function descendingComparator(a: string, b: string) {
   const valueA = parseFloat(a)
@@ -67,70 +63,7 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
   return stabilizedThis.map((el) => el[0])
 }
 
-const headCells: HeadCell[] = [
-  { id: 'token', label: 'Token', width: '15%' },
-  { id: 'gas', label: 'Gas Cost to Claim', width: '20%' },
-  { id: 'holding', label: 'Dao Holdings', width: '30%' },
-  { id: 'claimable', label: 'Claimable Value', width: '30%' },
-]
-
-interface EnhancedTableProps {
-  classes: ReturnType<typeof useStyles>
-  numSelected: number
-  onRequestSort: (event: React.MouseEvent<unknown>) => void
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
-  order: Sort
-  rowCount: number
-}
-
-const TableSpaceCell = (props: TableCellProps) => <TableCell padding="none" style={{ minWidth: 8 }} {...props} />
-
-function EnhancedTableHead(props: EnhancedTableProps) {
-  const { classes, onSelectAllClick, order, numSelected, rowCount, onRequestSort } = props
-
-  return (
-    <TableHead>
-      <TableRow>
-        <TableCell padding="checkbox" className={classes.headerBorder}>
-          <Checkbox
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{ 'aria-label': 'select all desserts' }}
-          />
-        </TableCell>
-        {headCells.map((headCell) => {
-          const sortable = headCell.id === 'claimable'
-          return (
-            <React.Fragment key={headCell.id}>
-              <TableCell
-                key={headCell.id}
-                width={headCell.width}
-                align="right"
-                padding="normal"
-                className={classNames(classes.headerCell, classes.headerBorder, {
-                  [classes.bgColumn]: ['gas', 'claimable'].includes(headCell.id),
-                })}
-                style={{ backgroundColor: headCell.bgColorHeader || headCell.bgColor }}
-                sortDirection={sortable ? order : false}
-              >
-                <TableSortLabel active={sortable} direction={order} onClick={onRequestSort}>
-                  {headCell.label}
-                  {sortable ? (
-                    <span className={classes.visuallyHidden}>
-                      {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                    </span>
-                  ) : null}
-                </TableSortLabel>
-              </TableCell>
-              <TableSpaceCell className={classes.headerBorder} />
-            </React.Fragment>
-          )
-        })}
-      </TableRow>
-    </TableHead>
-  )
-}
+export const TableSpaceCell = (props: TableCellProps) => <TableCell padding="none" style={{ minWidth: 8 }} {...props} />
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -144,8 +77,11 @@ const useStyles = makeStyles((theme: Theme) =>
     table: {
       minWidth: 750,
     },
-    transparent: {
+    blur: {
       opacity: 0.5,
+    },
+    bgTransparent: {
+      background: 'transparent !important',
     },
     bgColumn: {
       backgroundColor: 'rgba(217, 212, 173, 0.1)',
@@ -176,96 +112,61 @@ const useStyles = makeStyles((theme: Theme) =>
     symbolText: {
       display: 'inline',
     },
+    summationSymbol: {
+      fontFamily: 'Averta',
+    },
+    footerCell: {
+      padding: theme.spacing(1),
+    },
+    bodyCell: {
+      padding: theme.spacing(1.5, 1),
+    },
   }),
 )
 
 interface AssetsTableProps {
   assets: SafeAssets
-  totalSupply: string
-  token: Token
+  token?: Token
 }
 
-function formatRowAmount(token?: TokenAsset, amount?: BigNumberish): RowAmount {
+function getFiatAmount(token: TokenAsset, amount?: BigNumberish): number {
+  if (amount === undefined) {
+    return parseFloat(token.fiatBalance)
+  }
+  return parseFloat(token.fiatConversion) * parseFloat(ethers.utils.formatUnits(amount, token.tokenInfo.decimals))
+}
+
+function formatRowAmount(token?: TokenAsset, amount?: BigNumberish, decimals?: number, showDecimals = true): RowAmount {
   if (!token || !amount) return { value: '0', fiat: '0' }
-  const value = ethers.utils.formatUnits(amount, token.tokenInfo.decimals)
-  const fiat = parseFloat(value) * parseFloat(token.fiatConversion)
+  if (!decimals) decimals = token.tokenInfo.decimals
+  const value = ethers.utils.formatUnits(amount, decimals)
+  const fiat = getFiatAmount(token, amount)
+  const valueFormatter = showDecimals ? balanceFormatter : integerFormatter
   return {
-    value: balanceFormatter.format(parseFloat(value)),
+    value: valueFormatter.format(parseFloat(value)),
     fiat: fiatFormatter.format(fiat),
   }
 }
 
-function getClaimableAmount(claimRate: ethers.FixedNumber, balance: BigNumberish) {
-  return claimRate
-    .mulUnsafe(ethers.FixedNumber.from(BigNumber.from(balance)))
-    .toString()
-    .split('.')[0]
+function formatRowFiatAmount(token?: TokenAsset, fiat?: number): RowAmount {
+  if (!token || !fiat) return { value: '0', fiat: '0' }
+  return {
+    value: balanceFormatter.format(fiat / parseFloat(token.fiatConversion)),
+    fiat: fiatFormatter.format(fiat),
+  }
 }
 
-export function AssetsTable({ assets, totalSupply, token }: AssetsTableProps): React.ReactElement {
-  const classes = useStyles()
-  const [sort, setSort] = React.useState<Sort>('asc')
+interface AssetsTableContentProps {
+  rows: RowItem[]
+  selected: string[]
+  classes: Record<string, string>
+}
 
+function AssetsTableContent({ rows, classes, selected }: AssetsTableContentProps): React.ReactElement {
   const dispatch = useRootDispatch()
-  const selected = useRootSelector(getSelectedTokens)
-  const claimAmount = useRootSelector(getClaimAmount)
 
-  const claimRate = useMemo(() => {
-    const amount = ethers.utils.parseUnits(claimAmount, token.decimals)
-    const cs = BigNumber.from(totalSupply)
-    if (amount.gt(cs)) return ethers.FixedNumber.fromValue(BigNumber.from(1))
-    const fnAmount = ethers.FixedNumber.fromValue(amount, 18)
-    const fnCS = ethers.FixedNumber.fromValue(cs, 18)
-    return fnAmount.divUnsafe(fnCS)
-  }, [claimAmount, totalSupply, token])
-
-  const rows = useMemo((): RowItem[] => {
-    return assets.items
-      .filter((assetToken) => token.address !== assetToken.tokenInfo.address)
-      .map((token): RowItem => {
-        const claimable = getClaimableAmount(claimRate, token.balance)
-        return {
-          address: token.tokenInfo.address,
-          symbol: token.tokenInfo.symbol,
-          symbolLogoUrl: token.tokenInfo.logoUri,
-          claimable: formatRowAmount(token, claimable),
-          gas: formatRowAmount(token, '0'),
-          holding: formatRowAmount(token, token.balance),
-        }
-      })
-  }, [assets.items, claimRate, token.address])
-
-  const totals = useMemo(() => {
-    const tokenAsset = assets.items.find((asset) => asset.tokenInfo.symbol === 'ETH')
-    const tokens = selected
-      .map((address) => {
-        return assets.items.find((tokenAsset) => tokenAsset.tokenInfo.address === address)
-      })
-      .filter((token): token is TokenAsset => token !== undefined)
-
-    const gasTotal = tokens.reduce((acc, token) => acc.add(token.gas), BigNumber.from(0))
-    const claimableTotal = tokens.reduce(
-      (acc, token) => acc.add(getClaimableAmount(claimRate, token.balance)),
-      BigNumber.from(0),
-    )
-    const holdingTotal = tokens.reduce((acc, token) => acc.add(token.balance), BigNumber.from(0))
-
-    return {
-      holding: formatRowAmount(tokenAsset, holdingTotal),
-      gas: formatRowAmount(tokenAsset, gasTotal),
-      claimable: formatRowAmount(tokenAsset, claimableTotal),
-    }
-  }, [assets.items, claimRate, selected])
-
-  const handleRequestSort = () => setSort(sort === 'asc' ? 'desc' : 'asc')
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const addresses = rows.map((n) => n.address)
-      dispatch(setSelectedTokens(addresses))
-      return
-    }
-    dispatch(setSelectedTokens([]))
+  if (!rows.length) {
+    return <EmptyTableContent />
   }
 
   const handleClick = (event: React.MouseEvent<unknown>, address: string) => {
@@ -287,6 +188,111 @@ export function AssetsTable({ assets, totalSupply, token }: AssetsTableProps): R
 
   const isSelected = (address: string) => selected.indexOf(address) !== -1
 
+  const items = rows.map((row, index) => {
+    const isItemSelected = isSelected(row.address)
+    const labelId = `enhanced-table-checkbox-${index}`
+
+    return (
+      <TableRow
+        hover
+        key={row.symbol}
+        classes={{ selected: classes.bgTransparent }}
+        className={classNames({ [classes.blur]: !isItemSelected })}
+        onClick={(event) => handleClick(event, row.address)}
+        tabIndex={-1}
+        role="checkbox"
+        selected={isItemSelected}
+        aria-checked={isItemSelected}
+      >
+        <TableCell className={classes.bodyCell} padding="checkbox">
+          <Checkbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
+        </TableCell>
+        <TableCell className={classes.bodyCell} id={labelId} scope="row" align="right">
+          <Row justifyContent="end" alignItems="center">
+            {row.symbolLogoUrl ? <img src={row.symbolLogoUrl} alt="" className={classes.tokenLogo} /> : null}
+            <Typography className={classes.symbolText} variant="body1">
+              {row.symbol}
+            </Typography>
+          </Row>
+        </TableCell>
+        <TableSpaceCell />
+        <TableCell className={classNames(classes.bgColumn, classes.bodyCell)} align="right">
+          <TextAmount>
+            {row.gas.value} gwei ${row.gas.fiat}
+          </TextAmount>
+        </TableCell>
+        <TableSpaceCell />
+        <TableCell className={classes.bodyCell} align="right">
+          <TextAmount>
+            {row.holding.value} {row.symbol} ${row.holding.fiat}
+          </TextAmount>
+        </TableCell>
+        <TableSpaceCell />
+        <TableCell className={classNames(classes.bgColumn, classes.bodyCell)} align="right">
+          <TextAmount>
+            {row.claimable.value} {row.symbol} ${row.claimable.fiat}
+          </TextAmount>
+        </TableCell>
+      </TableRow>
+    )
+  })
+
+  return <TableBody>{items}</TableBody>
+}
+
+export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactElement {
+  const classes = useStyles()
+  const [sort, setSort] = React.useState<Sort>('asc')
+
+  const dispatch = useRootDispatch()
+  const selected = useRootSelector(getSelectedTokens)
+
+  const claimRate = useClaimRate()
+
+  const rows = useMemo((): RowItem[] => {
+    const ethToken = assets.items.find((asset) => asset.tokenInfo.symbol === 'ETH')
+    return assets.items
+      .filter((assetToken) => token?.address !== assetToken.tokenInfo.address)
+      .map((token): RowItem => {
+        const claimRateAmount = ethers.utils.parseUnits(claimRate.toString(), 18)
+        const claimable = ethers.BigNumber.from(token.balance).mul(claimRateAmount).div(BigNumber.from(10).pow(18))
+        return {
+          address: token.tokenInfo.address,
+          symbol: token.tokenInfo.symbol,
+          symbolLogoUrl: token.tokenInfo.logoUri,
+          claimable: formatRowAmount(token, claimable),
+          gas: formatRowAmount(ethToken, token.gas, 9, false),
+          holding: formatRowAmount(token, token.balance),
+        }
+      })
+  }, [assets.items, claimRate, token?.address])
+
+  const totals = useMemo(() => {
+    const tokenAsset = assets.items.find((asset) => asset.tokenInfo.symbol === 'ETH')
+    const tokens = selected
+      .map((address) => {
+        return assets.items.find((tokenAsset) => tokenAsset.tokenInfo.address === address)
+      })
+      .filter((token): token is TokenAsset => token !== undefined)
+
+    const gasTotal = tokens.reduce((acc, token) => acc.add(token.gas), BigNumber.from(0))
+    const holdingTotal = tokens.reduce((acc, token) => acc + getFiatAmount(token), 0)
+    const claimableTotal = tokens.reduce((acc, token) => acc + claimRate * getFiatAmount(token), 0)
+
+    return {
+      gas: formatRowAmount(tokenAsset, gasTotal, 9, false),
+      holding: formatRowFiatAmount(tokenAsset, holdingTotal),
+      claimable: formatRowFiatAmount(tokenAsset, claimableTotal),
+    }
+  }, [assets.items, claimRate, selected])
+
+  const handleRequestSort = () => setSort(sort === 'asc' ? 'desc' : 'asc')
+
+  const handleSelectAllClick = (checked: boolean) => {
+    const addresses = checked ? rows.map((n) => n.address) : []
+    dispatch(setSelectedTokens(addresses))
+  }
+
   return (
     <TableContainer className={classes.root}>
       <Table className={classes.table} aria-labelledby="tableTitle" aria-label="enhanced table">
@@ -294,62 +300,19 @@ export function AssetsTable({ assets, totalSupply, token }: AssetsTableProps): R
           classes={classes}
           numSelected={selected.length}
           order={sort}
-          onSelectAllClick={handleSelectAllClick}
+          onSelectAllClick={(event) => handleSelectAllClick(event.target.checked)}
           onRequestSort={handleRequestSort}
-          rowCount={assets.items.length}
+          rowCount={rows.length}
         />
-        <TableBody>
-          {stableSort(rows, getComparator(sort)).map((row, index) => {
-            const isItemSelected = isSelected(row.address)
-            const labelId = `enhanced-table-checkbox-${index}`
-
-            return (
-              <TableRow
-                hover
-                onClick={(event) => handleClick(event, row.address)}
-                className={classNames({ [classes.transparent]: !isItemSelected })}
-                role="checkbox"
-                aria-checked={isItemSelected}
-                tabIndex={-1}
-                key={row.symbol}
-                selected={isItemSelected}
-              >
-                <TableCell padding="checkbox">
-                  <Checkbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
-                </TableCell>
-                <TableCell id={labelId} scope="row" align="right">
-                  <Row justifyContent="end" alignItems="center">
-                    {row.symbolLogoUrl ? <img src={row.symbolLogoUrl} alt="" className={classes.tokenLogo} /> : null}
-                    <Typography className={classes.symbolText} variant="body1">
-                      {row.symbol}
-                    </Typography>
-                  </Row>
-                </TableCell>
-                <TableSpaceCell />
-                <TableCell className={classes.bgColumn} align="right">
-                  <TextAmount>
-                    {row.gas.value} {row.symbol} ${row.gas.fiat}
-                  </TextAmount>
-                </TableCell>
-                <TableSpaceCell />
-                <TableCell align="right">
-                  <TextAmount>
-                    {row.holding.value} {row.symbol} ${row.holding.fiat}
-                  </TextAmount>
-                </TableCell>
-                <TableSpaceCell />
-                <TableCell className={classes.bgColumn} align="right">
-                  <TextAmount>
-                    {row.claimable.value} {row.symbol} ${row.claimable.fiat}
-                  </TextAmount>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-
+        <AssetsTableContent classes={classes} rows={stableSort(rows, getComparator(sort))} selected={selected} />
+        <TableFooter>
           <TableRow role="checkbox" tabIndex={-1}>
-            <TableCell padding="checkbox" />
-            <TableCell scope="row" align="right">
+            <TableCell className={classes.footerCell} padding="checkbox">
+              <Typography className={classes.summationSymbol} variant="body1">
+                ∑
+              </Typography>
+            </TableCell>
+            <TableCell className={classes.footerCell} scope="row" align="right">
               <Row justifyContent="end" alignItems="center">
                 <Typography className={classes.symbolText} variant="body1">
                   {selected.length} tokens
@@ -357,25 +320,25 @@ export function AssetsTable({ assets, totalSupply, token }: AssetsTableProps): R
               </Row>
             </TableCell>
             <TableSpaceCell />
-            <TableCell className={classes.bgColumn} align="right">
+            <TableCell className={classNames(classes.bgColumn, classes.footerCell)} align="right">
               <TextAmount>
-                {totals.gas.value} gwai ${totals.gas.fiat}
+                {totals.gas.value} gwei ${totals.gas.fiat}
               </TextAmount>
             </TableCell>
             <TableSpaceCell />
-            <TableCell align="right">
+            <TableCell className={classes.footerCell} align="right">
               <TextAmount>
-                {totals.holding.value} ETH ${totals.holding.fiat}
+                ~{totals.holding.value} ETH ${totals.holding.fiat}
               </TextAmount>
             </TableCell>
             <TableSpaceCell />
-            <TableCell className={classes.bgColumn} align="right">
+            <TableCell className={classNames(classes.bgColumn, classes.footerCell)} align="right">
               <TextAmount>
-                {totals.claimable.value} ETH ${totals.claimable.fiat}
+                ~{totals.claimable.value} ETH ${totals.claimable.fiat}
               </TextAmount>
             </TableCell>
           </TableRow>
-        </TableBody>
+        </TableFooter>
       </Table>
     </TableContainer>
   )

@@ -101,8 +101,6 @@ export const Header = () => {
   const ens = useRootSelector(getENS)
   const wallet = useRootSelector(getWalletAddress)
 
-  console.log({ ens, wallet })
-
   return (
     <Row className={classes.root}>
       <div className={classNames(classes.container, classes.header, classes.leftHeader)}>

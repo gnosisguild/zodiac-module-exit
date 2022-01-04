@@ -5,7 +5,8 @@ import { AssetsCard } from './components/AssetsCard/AssetsCard'
 import { Header } from './components/Header/Header'
 import { AttachAccount } from './components/AttachAccount/AttachAccount'
 import { useRootSelector } from './store'
-import { getAccount } from './store/main/selectors'
+import { getAccount, getModule } from './store/main/selectors'
+import { NoModuleCard } from './components/ExitCard/NoModuleCard'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -34,6 +35,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
+export const LeftPanel = () => {
+  const module = useRootSelector(getModule)
+
+  if (!module) {
+    return <NoModuleCard />
+  }
+
+  return <ExitCard />
+}
+
 export const App = (): React.ReactElement => {
   const classes = useStyles()
   const account = useRootSelector(getAccount)
@@ -42,7 +53,7 @@ export const App = (): React.ReactElement => {
     <Grid container spacing={1} className={classes.container}>
       <Grid item xs={4}>
         <div className={classes.item}>
-          <ExitCard />
+          <LeftPanel />
         </div>
       </Grid>
       <Grid item xs={8}>

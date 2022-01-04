@@ -35,6 +35,7 @@ export const ClaimAmountInput = () => {
       color="secondary"
       className={classes.spacing}
       InputProps={{ classes: { input: classes.claimInput } }}
+      append={token?.symbol}
       value={claimAmount}
       onChange={(evt) => handleExitAmount(evt.target.value)}
       label="Exit Amount"

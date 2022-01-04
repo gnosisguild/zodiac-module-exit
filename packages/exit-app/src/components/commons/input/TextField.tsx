@@ -49,12 +49,13 @@ const useStyles = makeStyles((theme) => ({
   input: {
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,
+    padding: '8px 0 8px 8px',
+    border: '1px solid rgb(255,255,255)',
     '& input': {
       borderRightWidth: 1,
       borderRightStyle: 'solid',
       borderRightColor: theme.palette.secondary.main,
       paddingRight: theme.spacing(1),
-      textAlign: 'right',
     },
   },
   append: {
@@ -97,7 +98,7 @@ export const TextField = ({ InputProps, InputLabelProps, label, append, AppendPr
   }
 
   return (
-    <div>
+    <div className={props.className}>
       <InputLabel {...InputLabelProps} className={classes.label}>
         {label}
       </InputLabel>
@@ -114,7 +115,7 @@ export const TextField = ({ InputProps, InputLabelProps, label, append, AppendPr
             className={classNames(classes.input, InputProps?.className)}
           />
         </Grid>
-        <Grid item xs={8} {...AppendProps} className={classNames(classes.append, AppendProps?.className)}>
+        <Grid item xs={4} {...AppendProps} className={classNames(classes.append, AppendProps?.className)}>
           {append}
         </Grid>
       </Grid>

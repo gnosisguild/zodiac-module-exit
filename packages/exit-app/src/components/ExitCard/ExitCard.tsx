@@ -22,11 +22,10 @@ import { BigNumber, ethers } from 'ethers'
 import { getTokenBalance } from '../../services/module'
 import { fetchExitModuleData } from '../../store/main/actions'
 import { TextAmount } from '../commons/text/TextAmount'
-import { SafeAssets, Token } from '../../store/main/models'
 import { fiatFormatter, sortBigNumberArray } from '../../utils/format'
 import { ClaimAmountInput } from './ClaimAmountInput'
-import { getClaimableAmount } from '../../utils/math'
 import { Erc20__factory, ZodiacModuleExit__factory } from '../../contracts/types'
+import { useClaimRate } from '../../hooks/useClaimRate'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,13 +47,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-function getFiatDaoAsset(token?: Token, assets?: SafeAssets) {
-  if (!assets || !token) return
-  const tokenAsset = assets.items.find((asset) => asset.tokenInfo.address === token.address)
-  if (!tokenAsset) return '0'
-  return fiatFormatter.format(parseFloat(tokenAsset.fiatBalance))
-}
-
 export const ExitCard = (): React.ReactElement => {
   const classes = useStyles()
   const { provider } = useWallet()
@@ -70,8 +62,7 @@ export const ExitCard = (): React.ReactElement => {
   const selectedTokens = useRootSelector(getSelectedTokens)
   const claimAmount = useRootSelector(getClaimAmount)
 
-  const fiatDaoAsset = getFiatDaoAsset(token, assets)
-  const claimableAmount = getClaimableAmount(token, assets, balance)
+  const claimRate = useClaimRate()
 
   const handleExit = async () => {
     const signer = await provider?.getSigner()
@@ -103,14 +94,15 @@ export const ExitCard = (): React.ReactElement => {
     }
   }, [wallet, token, provider])
 
-  const loader = <Skeleton className={classes.loader} variant="text" width={80} />
-  const tokenSymbol = token ? token.symbol : loader
-
   useEffect(() => {
     if (provider && module) {
       dispatch(fetchExitModuleData({ provider, module }))
     }
   }, [module, dispatch, provider])
+
+  const loader = <Skeleton className={classes.loader} variant="text" width={80} />
+  const tokenSymbol = token ? token.symbol : loader
+  const claimableAmount = fiatFormatter.format(parseFloat(assets.fiatTotal) * claimRate)
 
   return (
     <div className={classes.root}>
@@ -135,7 +127,7 @@ export const ExitCard = (): React.ReactElement => {
           label="DAO Assets Value"
           icon={<ExternalIcon />}
           loading={!circulatingSupply}
-          value={fiatDaoAsset && <TextAmount>~${fiatDaoAsset}</TextAmount>}
+          value={<TextAmount>~${fiatFormatter.format(parseFloat(assets.fiatTotal))}</TextAmount>}
         />
       </div>
 
@@ -148,7 +140,7 @@ export const ExitCard = (): React.ReactElement => {
           label="Claimable Value"
           icon={<QuestionIcon />}
           loading={!claimableAmount}
-          value={fiatDaoAsset && <TextAmount>~${claimableAmount}</TextAmount>}
+          value={<TextAmount>~${claimableAmount}</TextAmount>}
         />
       </div>
 
