@@ -65,11 +65,7 @@ export async function getExitModulesFromSafe(
   provider: ethers.providers.BaseProvider,
   address: string,
 ): Promise<string | undefined> {
-  let modules: string[] = []
-  try {
-    modules = await getSafeModules(provider, address)
-  } catch (err) {}
-
+  const modules = await getSafeModules(provider, address)
   for (const module of modules) {
     if (await isExitModule(provider, module)) {
       return module

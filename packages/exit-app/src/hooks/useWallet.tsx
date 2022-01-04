@@ -1,14 +1,27 @@
 import Onboard from 'bnc-onboard'
 import { ethers } from 'ethers'
 import { REDUX_STORE, useRootSelector } from '../store'
-import { resetWallet, setENS, setWallet } from '../store/main'
+import { resetWallet, setAccount, setChainId, setENS, setWallet } from '../store/main'
 import { useEffect, useMemo, useState } from 'react'
 import { getChainId, getWalletAddress } from '../store/main/selectors'
+import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
+import { getExitModulesFromSafe } from '../services/module'
 
 const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
 
 let _provider: ethers.providers.JsonRpcProvider
+
+const safe = new SafeAppsSDK()
+safe.getSafeInfo().then(async (safeInfo) => {
+  try {
+    const exitModule = await getExitModulesFromSafe(_provider, safeInfo.safeAddress)
+    REDUX_STORE.dispatch(setAccount({ account: safeInfo.safeAddress, module: exitModule }))
+    REDUX_STORE.dispatch(setChainId(safeInfo.chainId))
+  } catch (err) {
+    console.warn('could get safe modules using gnosis safe-apps-sdk', err)
+  }
+})
 
 const configureOnboardJS = (networkId: number) => {
   _provider = new ethers.providers.InfuraProvider(networkId, INFURA_KEY)
@@ -16,7 +29,6 @@ const configureOnboardJS = (networkId: number) => {
 
   const wallets = [
     { walletName: 'metamask', preferred: true },
-    { walletName: 'gnosis', preferred: true },
     { walletName: 'coinbase', preferred: true },
     { walletName: 'ledger', rpcUrl: RPC_URL, preferred: true },
     { walletName: 'walletConnect', infuraKey: INFURA_KEY, preferred: true },
@@ -30,12 +42,12 @@ const configureOnboardJS = (networkId: number) => {
     darkMode: true,
     subscriptions: {
       wallet: (wallet) => {
-        console.log('wallet', wallet)
         if (wallet.provider) {
           _provider = new ethers.providers.Web3Provider(wallet.provider)
         }
       },
       address(address) {
+        console.log('address', address)
         if (address) {
           REDUX_STORE.dispatch(setWallet(address))
         } else {
@@ -46,9 +58,6 @@ const configureOnboardJS = (networkId: number) => {
         if (ens && ens.name) {
           REDUX_STORE.dispatch(setENS(ens.name))
         }
-      },
-      network(chainId) {
-        console.log('chainId', chainId)
       },
     },
     walletSelect: {
@@ -71,9 +80,15 @@ export const useWallet = () => {
   const wallet = useRootSelector(getWalletAddress)
 
   const startOnboard = async () => {
-    const selected = await onboard.walletSelect()
-    if (selected) await onboard.walletCheck()
-    setProvider(_provider)
+    try {
+      console.log('123', 123)
+      const selected = await onboard.walletSelect()
+      console.log('selected', selected)
+      if (selected) await onboard.walletCheck()
+      setProvider(_provider)
+    } catch (err) {
+      console.warn('err', err)
+    }
   }
 
   useEffect(() => {

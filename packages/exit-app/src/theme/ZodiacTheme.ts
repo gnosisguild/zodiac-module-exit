@@ -60,7 +60,6 @@ export const ZODIAC_THEME = createTheme({
         border: '1px solid',
         borderColor: 'rgba(217, 212, 173, 0.3)',
         position: 'relative',
-        zIndex: 3,
         '&::before': {
           content: '" "',
           position: 'absolute',

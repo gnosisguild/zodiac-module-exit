@@ -27,6 +27,9 @@ export const mainSlice = createSlice({
     setWallet(state, action: PayloadAction<string>) {
       state.wallet = action.payload
     },
+    setChainId(state, action: PayloadAction<number>) {
+      state.chainId = action.payload
+    },
     setENS(state, action: PayloadAction<string>) {
       state.ens = action.payload
     },
@@ -61,4 +64,5 @@ export const mainSlice = createSlice({
   },
 })
 
-export const { setAccount, setENS, setWallet, resetWallet, setClaimAmount, setSelectedTokens } = mainSlice.actions
+export const { setAccount, setChainId, setENS, setWallet, resetWallet, setClaimAmount, setSelectedTokens } =
+  mainSlice.actions

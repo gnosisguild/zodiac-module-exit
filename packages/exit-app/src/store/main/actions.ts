@@ -52,7 +52,7 @@ export const getGasEstimationsForAssets = createAsyncThunk(
         try {
           gas = await getGasEstimationForToken(provider, address)
         } catch (err) {
-          console.warn('unable to estimate gas for ', address)
+          console.warn('unable to estimate gas for', address, err)
         }
       }
       return {

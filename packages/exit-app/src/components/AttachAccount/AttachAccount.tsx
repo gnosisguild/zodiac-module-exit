@@ -1,4 +1,4 @@
-import { Button, makeStyles, Paper, Typography } from '@material-ui/core'
+import { Button, CircularProgress, makeStyles, Paper, Typography } from '@material-ui/core'
 import { TextField } from '../commons/input/TextField'
 import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
 import { useRootDispatch } from '../../store'
@@ -26,6 +26,8 @@ const useStyles = makeStyles((theme) => ({
 
 export const AttachAccount = () => {
   const classes = useStyles()
+  const [invalidSafe, setInvalidSafe] = useState(false)
+  const [loading, setLoading] = useState(false)
   const dispatch = useRootDispatch()
   const { provider } = useWallet()
   const [account, _setAccount] = useState('')
@@ -33,8 +35,17 @@ export const AttachAccount = () => {
 
   const handleAttach = async () => {
     if (ethers.utils.isAddress(account)) {
-      const exitModule = await getExitModulesFromSafe(provider, account)
-      dispatch(setAccount({ account, module: exitModule }))
+      setLoading(true)
+      setInvalidSafe(false)
+      try {
+        const exitModule = await getExitModulesFromSafe(provider, account)
+        dispatch(setAccount({ account, module: exitModule }))
+      } catch (err) {
+        console.warn('attach error', err)
+        setInvalidSafe(true)
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -57,15 +68,22 @@ export const AttachAccount = () => {
         />
 
         <Button
-          disabled={!isValid}
           fullWidth
-          variant="contained"
           color="secondary"
-          startIcon={<ArrowUp />}
+          variant="contained"
+          className={classes.spacing}
           onClick={handleAttach}
+          disabled={!isValid || loading}
+          startIcon={loading ? <CircularProgress size={18} color="primary" /> : <ArrowUp />}
         >
-          Attach Account
+          {loading ? 'Attaching Gnosis Safe...' : 'Attach Account'}
         </Button>
+
+        {invalidSafe ? (
+          <Typography align="center" color="error">
+            The address you entered is not a Gnosis Safe
+          </Typography>
+        ) : null}
       </Paper>
     </div>
   )
