@@ -18,7 +18,7 @@ import {
   getWalletAddress,
 } from '../../store/main/selectors'
 import { useWallet } from '../../hooks/useWallet'
-import { BigNumber, ethers } from 'ethers'
+import { BigNumber, ethers, PopulatedTransaction } from 'ethers'
 import { getTokenBalance } from '../../services/module'
 import { fetchExitModuleData } from '../../store/main/actions'
 import { TextAmount } from '../commons/text/TextAmount'
@@ -26,6 +26,7 @@ import { fiatFormatter, sortBigNumberArray } from '../../utils/format'
 import { ClaimAmountInput } from './ClaimAmountInput'
 import { Erc20__factory, ZodiacModuleExit__factory } from '../../contracts/types'
 import { useClaimRate } from '../../hooks/useClaimRate'
+import SafeAppsSDK, { Transaction as SafeTransaction } from '@gnosis.pm/safe-apps-sdk'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -61,55 +62,95 @@ const EXIT_STEP_MESSAGE: Record<EXIT_STEP, string> = {
   [EXIT_STEP.WAITING]: 'Exiting...',
 }
 
+const MAX_UINT256_AMOUNT = BigNumber.from(2).pow(256).sub(1)
+
+function convertTxToSafeTx(tx: PopulatedTransaction): SafeTransaction {
+  return {
+    to: tx.to as string,
+    value: '0',
+    data: tx.data as string,
+  }
+}
+
 export const ExitCard = (): React.ReactElement => {
   const classes = useStyles()
-  const { provider } = useWallet()
+  const { provider, onboard } = useWallet()
   const dispatch = useRootDispatch()
 
   const [balance, setBalance] = useState<BigNumber>()
   const [step, setStep] = useState<EXIT_STEP>(EXIT_STEP.EXIT)
 
+  const assets = useRootSelector(getAssets)
   const module = useRootSelector(getModule)
   const wallet = useRootSelector(getWalletAddress)
   const token = useRootSelector(getDesignatedToken)
-  const circulatingSupply = useRootSelector(getCirculatingSupply)
-  const assets = useRootSelector(getAssets)
-  const selectedTokens = useRootSelector(getSelectedTokens)
   const claimAmount = useRootSelector(getClaimAmount)
+  const selectedTokens = useRootSelector(getSelectedTokens)
+  const circulatingSupply = useRootSelector(getCirculatingSupply)
 
   const claimRate = useClaimRate()
 
+  const handleUserExit = async () => {
+    if (!provider || !wallet || !module || !token) return
+
+    const signer = await provider.getSigner()
+    const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
+
+    const ERC20 = Erc20__factory.connect(token.address, signer)
+    const allowance = await ERC20.allowance(wallet, module)
+
+    if (allowance.lt(weiAmount)) {
+      setStep(EXIT_STEP.APPROVE)
+      const tx = await ERC20.approve(module, MAX_UINT256_AMOUNT)
+      setStep(EXIT_STEP.APPROVING)
+      await tx.wait(2)
+    }
+
+    const claimTokens = sortBigNumberArray(selectedTokens)
+      .filter((token) => !token.isZero())
+      .map((token) => token.toHexString())
+
+    const exitModule = ZodiacModuleExit__factory.connect(module, signer)
+    setStep(EXIT_STEP.WAITING)
+    const exitTx = await exitModule.exit(weiAmount, claimTokens)
+    await exitTx.wait(2)
+
+    // Update Token Balance
+    setBalance(await getTokenBalance(provider, token.address, wallet))
+  }
+
+  const handleSafeExit = async () => {
+    if (!provider || !wallet || !module || !token) return
+
+    const signer = await provider.getSigner()
+    const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
+
+    const claimTokens = sortBigNumberArray(selectedTokens)
+      .filter((token) => !token.isZero())
+      .map((token) => token.toHexString())
+
+    const ERC20 = Erc20__factory.connect(token.address, signer)
+    const exitModule = ZodiacModuleExit__factory.connect(module, signer)
+
+    const allowance = await ERC20.allowance(wallet, module)
+
+    const txs: PopulatedTransaction[] = []
+    if (allowance.lt(weiAmount)) {
+      txs.push(await ERC20.populateTransaction.approve(module, MAX_UINT256_AMOUNT))
+    }
+    txs.push(await exitModule.populateTransaction.exit(weiAmount, claimTokens))
+
+    const safeSDK = new SafeAppsSDK()
+    await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
+  }
+
   const handleExit = async () => {
     try {
-      const signer = await provider?.getSigner()
-      if (signer && wallet && module && token) {
-        const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
-
-        const ERC20 = Erc20__factory.connect(token.address, signer)
-        const allowance = await ERC20.allowance(wallet, module)
-
-        if (allowance.lt(weiAmount)) {
-          setStep(EXIT_STEP.APPROVE)
-          const maxWeiAmount = BigNumber.from(2).pow(256).sub(1)
-          const tx = await ERC20.approve(module, maxWeiAmount)
-          setStep(EXIT_STEP.APPROVING)
-          await tx.wait(2)
-        }
-
-        const claimTokens = sortBigNumberArray(selectedTokens)
-          .filter((token) => !token.isZero())
-          .map((token) => token.toHexString())
-
-        const exitModule = ZodiacModuleExit__factory.connect(module, signer)
-        setStep(EXIT_STEP.WAITING)
-        const exitTx = await exitModule.exit(weiAmount, claimTokens)
-        await exitTx.wait(2)
-
-        if (wallet && token && provider) {
-          getTokenBalance(provider, token.address, wallet)
-            .then((_balance) => setBalance(_balance))
-            .catch(console.error)
-        }
+      const { wallet } = onboard.getState()
+      if (wallet.type === 'sdk' && wallet.name === 'Gnosis Safe') {
+        await handleSafeExit()
+      } else {
+        await handleUserExit()
       }
     } catch (err) {
       console.warn('error exiting', err)
@@ -122,7 +163,7 @@ export const ExitCard = (): React.ReactElement => {
     if (wallet && token && provider) {
       getTokenBalance(provider, token.address, wallet)
         .then((_balance) => setBalance(_balance))
-        .catch(console.error)
+        .catch((err) => console.error('getTokenBalance:', err))
     }
   }, [wallet, token, provider])
 

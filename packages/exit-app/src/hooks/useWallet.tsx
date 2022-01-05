@@ -1,12 +1,10 @@
 import Onboard from 'bnc-onboard'
 import { ethers } from 'ethers'
 import { REDUX_STORE, useRootSelector } from '../store'
-import { resetWallet, setAccount, setChainId, setENS, setWallet } from '../store/main'
+import { resetWallet, setChainId, setENS, setWallet } from '../store/main'
 import { useEffect, useMemo, useState } from 'react'
 import { getChainId, getWalletAddress } from '../store/main/selectors'
 import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
-import { SafeAppProvider } from '@gnosis.pm/safe-apps-provider'
-import { getExitModulesFromSafe } from '../services/module'
 import { getNetworkRPC } from '../utils/networks'
 import memoize from 'lodash.memoize'
 
@@ -17,15 +15,7 @@ let _provider: ethers.providers.JsonRpcProvider | undefined
 
 const safeSDK = new SafeAppsSDK()
 safeSDK.getSafeInfo().then(async (safeInfo) => {
-  try {
-    const safeProvider = new SafeAppProvider(safeInfo, safeSDK)
-    _provider = new ethers.providers.Web3Provider(safeProvider)
-    const exitModule = await getExitModulesFromSafe(_provider, safeInfo.safeAddress)
-    REDUX_STORE.dispatch(setAccount({ account: safeInfo.safeAddress, module: exitModule }))
-    REDUX_STORE.dispatch(setChainId(safeInfo.chainId))
-  } catch (err) {
-    console.warn('could get safe modules using gnosis safe-apps-sdk', err)
-  }
+  REDUX_STORE.dispatch(setChainId(safeInfo.chainId))
 })
 
 const configureOnboardJS = memoize(
@@ -35,6 +25,7 @@ const configureOnboardJS = memoize(
 
     const wallets = [
       { walletName: 'metamask', preferred: true },
+      { walletName: 'gnosis', preferred: true },
       { walletName: 'coinbase', preferred: true },
       { walletName: 'ledger', rpcUrl: rpcUrl, preferred: true },
       { walletName: 'walletConnect', infuraKey: INFURA_KEY, preferred: true },
@@ -100,5 +91,5 @@ export const useWallet = () => {
     if (_provider) setProvider(_provider)
   }, [chainId, wallet])
 
-  return { provider, startOnboard }
+  return { provider, onboard, startOnboard }
 }

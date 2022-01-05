@@ -4,6 +4,8 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import { SafeTransactionApi } from '../../services/safeTransactionApi'
 import { SafeAssets, TokenAsset } from './models'
 import { getGasEstimationForToken } from '../../services/erc20'
+import { getAccount } from './selectors'
+import { RootState } from '../index'
 
 export const fetchExitModuleData = createAsyncThunk(
   'main/fetchExitModuleData',
@@ -34,23 +36,27 @@ export const fetchTokenAssets = createAsyncThunk(
 
 export const getGasEstimationsForAssets = createAsyncThunk(
   'main/getGasEstimationsForAssets',
-  async ({
-    provider,
-    tokens,
-  }: {
-    tokens: TokenAsset[]
-    provider: ethers.providers.BaseProvider
-  }): Promise<TokenAsset[]> => {
+  async (
+    {
+      provider,
+      tokens,
+    }: {
+      tokens: TokenAsset[]
+      provider: ethers.providers.BaseProvider
+    },
+    store,
+  ): Promise<TokenAsset[]> => {
     const gasPrice = await provider.getGasPrice()
+    const state = store.getState() as RootState
     const requests = tokens.map(async (token) => {
       const address = token.tokenInfo.address
       let gas = BigNumber.from(token.gas)
-      if (BigNumber.from(address).eq(BigNumber.from(0))) {
+      if (BigNumber.from(address).isZero()) {
         // return 21,000 if calculating gas for ETH transfer
         gas = BigNumber.from(21000)
       } else {
         try {
-          gas = await getGasEstimationForToken(provider, address)
+          gas = await getGasEstimationForToken(provider, address, getAccount(state))
         } catch (err) {
           console.warn('unable to estimate gas for', address, err)
         }
