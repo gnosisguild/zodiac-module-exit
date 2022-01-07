@@ -3,6 +3,6 @@
 
 packages/exit-app/node_modules/
 
-packages/exit-app/src/contracts/
+packages/exit-app/src/contracts/types
 
 packages/exit-app/.env
