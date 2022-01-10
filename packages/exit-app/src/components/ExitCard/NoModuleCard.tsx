@@ -21,7 +21,9 @@ const useStyles = makeStyles((theme) => ({
     display: 'inline-block',
     fontSize: 16,
     marginTop: 16,
-    textDecoration: 'underline',
+    '&:visited': {
+      color: 'white',
+    },
   },
   button: {
     marginTop: theme.spacing(2),
@@ -38,7 +40,11 @@ export const NoModuleCard = () => {
     <div className={classes.root}>
       <div className={classes.item}>
         <p className={classes.text}>This account does not have the Exit module enabled.</p>
-        <span className={classes.link}>Read more about Safe Exit here</span>
+        <span>
+          <a className={classes.link} href="https://github.com/gnosis/zodiac-module-exit">
+            Read more about Safe Exit here
+          </a>
+        </span>
       </div>
       <Button
         fullWidth

@@ -5,7 +5,7 @@ import TableCell from '@material-ui/core/TableCell'
 import { Checkbox } from '../commons/input/Checkbox'
 import classNames from 'classnames'
 import TableSortLabel from '@material-ui/core/TableSortLabel'
-import { Sort, TableSpaceCell } from './AssetsTable'
+import { Sort } from './AssetsTable'
 
 interface EnhancedTableProps {
   classes: Record<string, string>
@@ -71,7 +71,6 @@ export function EnhancedTableHead(props: EnhancedTableProps) {
                   headCell.label
                 )}
               </TableCell>
-              <TableSpaceCell className={classes.headerBorder} />
             </React.Fragment>
           )
         })}
