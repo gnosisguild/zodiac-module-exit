@@ -5,7 +5,7 @@ import TableCell from '@material-ui/core/TableCell'
 import { Checkbox } from '../commons/input/Checkbox'
 import classNames from 'classnames'
 import TableSortLabel from '@material-ui/core/TableSortLabel'
-import { Sort, TableSpaceCell } from './AssetsTable'
+import { Sort, TableScrollSpacer } from './AssetsTable'
 
 interface EnhancedTableProps {
   classes: Record<string, string>
@@ -37,6 +37,7 @@ export function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow>
+        <TableScrollSpacer className={classes.startScrollSpacer} />
         <TableCell padding="checkbox" className={classes.headerBorder}>
           <Checkbox
             indeterminate={numSelected > 0 && numSelected < rowCount}
@@ -71,10 +72,10 @@ export function EnhancedTableHead(props: EnhancedTableProps) {
                   headCell.label
                 )}
               </TableCell>
-              <TableSpaceCell className={classes.headerBorder} />
             </React.Fragment>
           )
         })}
+        <TableScrollSpacer className={classes.endScrollSpacer} />
       </TableRow>
     </TableHead>
   )

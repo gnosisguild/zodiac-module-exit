@@ -10,11 +10,11 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableCellProps,
   TableContainer,
   TableFooter,
   TableRow,
   Typography,
+  TableCellProps,
 } from '@material-ui/core'
 import { Row } from '../commons/layout/Row'
 import { TextAmount } from '../commons/text/TextAmount'
@@ -63,12 +63,21 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
   return stabilizedThis.map((el) => el[0])
 }
 
-export const TableSpaceCell = (props: TableCellProps) => <TableCell padding="none" style={{ minWidth: 8 }} {...props} />
+export const TableScrollSpacer = (props: TableCellProps) => (
+  <TableCell padding="none" style={{ minWidth: 10 }} {...props} />
+)
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
       marginTop: theme.spacing(2),
+      backgroundImage:
+        'linear-gradient(to right, #ffffff00, #ffffff00), linear-gradient(to right, #ffffff00, #ffffff00), linear-gradient(to right, rgb(131 134 98 / 50%), rgba(255, 255, 255, 0)), linear-gradient(to left, rgb(131 134 98 / 50%), rgba(255, 255, 255, 0))',
+      backgroundPosition: 'left center, right center, left center, right center',
+      backgroundRepeat: 'no-repeat',
+      backgroundColor: '#ffffff00',
+      backgroundSize: '20px 100%, 20px 100%, 10px 100%, 10px 100%',
+      backgroundAttachment: 'local, local, scroll, scroll',
     },
     paper: {
       width: '100%',
@@ -104,6 +113,10 @@ const useStyles = makeStyles((theme: Theme) =>
       borderTop: '1px solid rgba(81, 81, 81, 1)',
       boxShadow: 'inset 0px 1px 0px rgb(40 54 61 / 50%), inset 0px -1px 0px rgb(40 54 61 / 50%)',
     },
+    noBorder: {
+      border: 'none',
+      boxShadow: 'none',
+    },
     tokenLogo: {
       width: 20,
       verticalAlign: 'middle',
@@ -120,6 +133,17 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     bodyCell: {
       padding: theme.spacing(1.5, 1),
+    },
+    checkCell: {
+      padding: theme.spacing(1.5, 1, 1.5, 0.5),
+    },
+    startScrollSpacer: {
+      background: '#0e1418',
+      borderTop: '1px solid rgba(81, 81, 81, 1)',
+    },
+    endScrollSpacer: {
+      background: '#281f16',
+      borderTop: '1px solid rgba(81, 81, 81, 1)',
     },
   }),
 )
@@ -204,7 +228,8 @@ function AssetsTableContent({ rows, classes, selected }: AssetsTableContentProps
         selected={isItemSelected}
         aria-checked={isItemSelected}
       >
-        <TableCell className={classes.bodyCell} padding="checkbox">
+        <TableScrollSpacer className={classes.startScrollSpacer} />
+        <TableCell className={classNames(classes.bodyCell, classes.checkCell)} padding="checkbox">
           <Checkbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
         </TableCell>
         <TableCell className={classes.bodyCell} id={labelId} scope="row" align="right">
@@ -215,24 +240,22 @@ function AssetsTableContent({ rows, classes, selected }: AssetsTableContentProps
             </Typography>
           </Row>
         </TableCell>
-        <TableSpaceCell />
         <TableCell className={classNames(classes.bgColumn, classes.bodyCell)} align="right">
           <TextAmount>
             {row.gas.value} gwei ${row.gas.fiat}
           </TextAmount>
         </TableCell>
-        <TableSpaceCell />
         <TableCell className={classes.bodyCell} align="right">
           <TextAmount>
             {row.holding.value} {row.symbol} ${row.holding.fiat}
           </TextAmount>
         </TableCell>
-        <TableSpaceCell />
         <TableCell className={classNames(classes.bgColumn, classes.bodyCell)} align="right">
           <TextAmount>
             {row.claimable.value} {row.symbol} ${row.claimable.fiat}
           </TextAmount>
         </TableCell>
+        <TableScrollSpacer className={classes.endScrollSpacer} />
       </TableRow>
     )
   })
@@ -307,6 +330,7 @@ export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactEle
         <AssetsTableContent classes={classes} rows={stableSort(rows, getComparator(sort))} selected={selected} />
         <TableFooter>
           <TableRow role="checkbox" tabIndex={-1}>
+            <TableScrollSpacer className={classes.startScrollSpacer} />
             <TableCell className={classes.footerCell} padding="checkbox">
               <Typography className={classes.summationSymbol} variant="body1">
                 ∑
@@ -319,24 +343,22 @@ export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactEle
                 </Typography>
               </Row>
             </TableCell>
-            <TableSpaceCell />
             <TableCell className={classNames(classes.bgColumn, classes.footerCell)} align="right">
               <TextAmount>
                 {totals.gas.value} gwei ${totals.gas.fiat}
               </TextAmount>
             </TableCell>
-            <TableSpaceCell />
             <TableCell className={classes.footerCell} align="right">
               <TextAmount>
                 ~{totals.holding.value} ETH ${totals.holding.fiat}
               </TextAmount>
             </TableCell>
-            <TableSpaceCell />
             <TableCell className={classNames(classes.bgColumn, classes.footerCell)} align="right">
               <TextAmount>
                 ~{totals.claimable.value} ETH ${totals.claimable.fiat}
               </TextAmount>
             </TableCell>
+            <TableScrollSpacer className={classes.endScrollSpacer} />
           </TableRow>
         </TableFooter>
       </Table>

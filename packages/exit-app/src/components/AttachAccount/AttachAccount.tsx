@@ -22,6 +22,9 @@ const useStyles = makeStyles((theme) => ({
   spacing: {
     marginBottom: theme.spacing(2),
   },
+  errorSpacing: {
+    marginTop: theme.spacing(2),
+  },
 }))
 
 export const AttachAccount = () => {
@@ -53,10 +56,10 @@ export const AttachAccount = () => {
     <div className={classes.root}>
       <Paper classes={{ root: classes.card }}>
         <Typography className={classes.spacing} variant="h4">
-          Attach an Exit enabled Account
+          Attach an Exit enabled Safe
         </Typography>
         <Typography className={classes.spacing} variant="body1">
-          Once an account is attached, you will be able to select the assets to claim, and pull them from the safe (in
+          Once a Safe is attached, you will be able to select the assets to claim, and pull them from the safe (in
           proportion to the amount of a designated token you hold).
         </Typography>
 
@@ -71,7 +74,6 @@ export const AttachAccount = () => {
           fullWidth
           color="secondary"
           variant="contained"
-          className={classes.spacing}
           onClick={handleAttach}
           disabled={!isValid || loading}
           startIcon={loading ? <CircularProgress size={18} color="primary" /> : <ArrowUp />}
@@ -80,7 +82,7 @@ export const AttachAccount = () => {
         </Button>
 
         {invalidSafe ? (
-          <Typography align="center" color="error">
+          <Typography align="center" color="error" className={classes.errorSpacing}>
             The address you entered is not a Gnosis Safe
           </Typography>
         ) : null}

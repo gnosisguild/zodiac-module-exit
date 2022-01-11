@@ -37,13 +37,14 @@ const useStyles = makeStyles((theme) => ({
     '&::before': {
       content: '" "',
       position: 'absolute',
-      zIndex: -1,
+      zIndex: 1,
       top: '-5px',
       left: '-5px',
       right: '-5px',
       bottom: '-5px',
       borderRadius: '60px 0 0 60px',
       border: '1px solid rgba(217, 212, 173, 0.3)',
+      pointerEvents: 'none',
     },
   },
   img: {
@@ -53,6 +54,9 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     marginLeft: theme.spacing(1),
+  },
+  notSet: {
+    opacity: 0.5,
   },
   bagIcon: {
     marginLeft: theme.spacing(2),
@@ -78,12 +82,13 @@ const useStyles = makeStyles((theme) => ({
     '&::before': {
       content: '" "',
       position: 'absolute',
-      zIndex: -1,
+      zIndex: 1,
       top: '-5px',
       left: '-5px',
       right: '-5px',
       bottom: '-5px',
       border: '1px solid rgba(217, 212, 173, 0.3)',
+      pointerEvents: 'none',
     },
   },
   avatar: {
@@ -97,7 +102,7 @@ const useStyles = makeStyles((theme) => ({
   },
   networkPickerContainer: {
     maxWidth: 180,
-    padding: theme.spacing(0.5, 1),
+    padding: theme.spacing(0.5, 0.5),
   },
   networkPicker: {
     marginTop: theme.spacing(0.5),
@@ -167,8 +172,8 @@ export const Header = () => {
             {shortAddress(account)}
           </Typography>
         ) : (
-          <Typography variant="body1" className={classes.title}>
-            No Account Attached
+          <Typography variant="body1" className={classNames(classes.title, classes.notSet)}>
+            No Safe Attached
           </Typography>
         )}
       </div>
@@ -190,8 +195,8 @@ export const Header = () => {
             {ens || shortAddress(wallet)}
           </Typography>
         ) : (
-          <Typography variant="body1" className={classes.title}>
-            Connect Wallet
+          <Typography variant="body1" className={classNames(classes.title, classes.notSet)}>
+            No Wallet Connected
           </Typography>
         )}
       </div>

@@ -11,6 +11,8 @@ import RobotoMonoRegularWoff2 from '../assets/fonts/RobotoMono/roboto-mono-v13-l
 import SpectralRegularWoff from '../assets/fonts/Spectral/spectral-v7-latin-regular.woff'
 import SpectralRegularWoff2 from '../assets/fonts/Spectral/spectral-v7-latin-regular.woff2'
 
+import ZodiacBackground from '../assets/images/zodiac-bg.svg'
+
 export const ZodiacStyle = createGlobalStyle`
     html {
         height: 100%
@@ -20,6 +22,7 @@ export const ZodiacStyle = createGlobalStyle`
        height: 100%;
        margin: 0px;
        padding: 0px;
+       background: url(${ZodiacBackground}) 0% 0% / cover fixed;
     }
 
     /* Works on Firefox*/
@@ -44,6 +47,12 @@ export const ZodiacStyle = createGlobalStyle`
 
     #root {
         height: 100%;
+        background: linear-gradient(
+          108.86deg,
+          rgba(26, 33, 66, 0.85) 6.24%,
+          rgba(12, 19, 8, 0.85) 53.08%,
+          rgba(37, 6, 4, 0.85) 96.54%
+        );
     }
 
     .MuiFormControl-root,

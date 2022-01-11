@@ -17,12 +17,13 @@ const useStyles = makeStyles((theme) => ({
     '&::before': {
       content: '" "',
       position: 'absolute',
-      zIndex: -1,
+      zIndex: 1,
       top: '-2px',
       left: '-2px',
       right: '-2px',
       bottom: '-2px',
       border: '1px solid rgba(217, 212, 173, 0.3)',
+      pointerEvents: 'none',
     },
   },
   item: {
