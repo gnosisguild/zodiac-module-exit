@@ -6,7 +6,16 @@ import { BigNumber, BigNumberish, ethers } from 'ethers'
 import { SafeAssets, Token, TokenAsset } from '../../store/main/models'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { getSelectedTokens } from '../../store/main/selectors'
-import { Table, TableBody, TableCell, TableContainer, TableFooter, TableRow, Typography } from '@material-ui/core'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableFooter,
+  TableRow,
+  Typography,
+  TableCellProps,
+} from '@material-ui/core'
 import { Row } from '../commons/layout/Row'
 import { TextAmount } from '../commons/text/TextAmount'
 import { balanceFormatter, fiatFormatter, integerFormatter } from '../../utils/format'
@@ -54,12 +63,21 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
   return stabilizedThis.map((el) => el[0])
 }
 
-// export const TableSpaceCell = (props: TableCellProps) => <TableCell padding="none" style={{ minWidth: 8 }} {...props} />
+export const TableScrollSpacer = (props: TableCellProps) => (
+  <TableCell padding="none" style={{ minWidth: 10 }} {...props} />
+)
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
       marginTop: theme.spacing(2),
+      backgroundImage:
+        'linear-gradient(to right, #ffffff00, #ffffff00), linear-gradient(to right, #ffffff00, #ffffff00), linear-gradient(to right, rgb(131 134 98 / 50%), rgba(255, 255, 255, 0)), linear-gradient(to left, rgb(131 134 98 / 50%), rgba(255, 255, 255, 0))',
+      backgroundPosition: 'left center, right center, left center, right center',
+      backgroundRepeat: 'no-repeat',
+      backgroundColor: '#ffffff00',
+      backgroundSize: '20px 100%, 20px 100%, 10px 100%, 10px 100%',
+      backgroundAttachment: 'local, local, scroll, scroll',
     },
     paper: {
       width: '100%',
@@ -118,6 +136,14 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     checkCell: {
       padding: theme.spacing(1.5, 1, 1.5, 0.5),
+    },
+    startScrollSpacer: {
+      background: '#0e1418',
+      borderTop: '1px solid rgba(81, 81, 81, 1)',
+    },
+    endScrollSpacer: {
+      background: '#281f16',
+      borderTop: '1px solid rgba(81, 81, 81, 1)',
     },
   }),
 )
@@ -202,6 +228,7 @@ function AssetsTableContent({ rows, classes, selected }: AssetsTableContentProps
         selected={isItemSelected}
         aria-checked={isItemSelected}
       >
+        <TableScrollSpacer className={classes.startScrollSpacer} />
         <TableCell className={classNames(classes.bodyCell, classes.checkCell)} padding="checkbox">
           <Checkbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
         </TableCell>
@@ -228,6 +255,7 @@ function AssetsTableContent({ rows, classes, selected }: AssetsTableContentProps
             {row.claimable.value} {row.symbol} ${row.claimable.fiat}
           </TextAmount>
         </TableCell>
+        <TableScrollSpacer className={classes.endScrollSpacer} />
       </TableRow>
     )
   })
@@ -302,6 +330,7 @@ export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactEle
         <AssetsTableContent classes={classes} rows={stableSort(rows, getComparator(sort))} selected={selected} />
         <TableFooter>
           <TableRow role="checkbox" tabIndex={-1}>
+            <TableScrollSpacer className={classes.startScrollSpacer} />
             <TableCell className={classes.footerCell} padding="checkbox">
               <Typography className={classes.summationSymbol} variant="body1">
                 ∑
@@ -329,6 +358,7 @@ export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactEle
                 ~{totals.claimable.value} ETH ${totals.claimable.fiat}
               </TextAmount>
             </TableCell>
+            <TableScrollSpacer className={classes.endScrollSpacer} />
           </TableRow>
         </TableFooter>
       </Table>
