@@ -18,10 +18,10 @@ const useStyles = makeStyles((theme) => ({
       content: '" "',
       position: 'absolute',
       zIndex: 1,
-      top: '-2px',
-      left: '-2px',
-      right: '-2px',
-      bottom: '-2px',
+      top: '0px',
+      left: '0px',
+      right: '0px',
+      bottom: '0px',
       border: '1px solid rgba(217, 212, 173, 0.3)',
       pointerEvents: 'none',
     },
@@ -32,7 +32,9 @@ const useStyles = makeStyles((theme) => ({
   },
   space: {
     marginTop: theme.spacing(3),
-    padding: theme.spacing(1),
+  },
+  tableCard: {
+    paddingLeft: '0px !important',
   },
 }))
 
@@ -57,7 +59,7 @@ export const App = (): React.ReactElement => {
           <LeftPanel />
         </div>
       </Grid>
-      <Grid item xs={8}>
+      <Grid item xs={8} className={classes.tableCard}>
         <div className={classes.item}>
           <AssetsCard safe={account} />
         </div>

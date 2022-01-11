@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Button, CircularProgress, makeStyles, Typography } from '@material-ui/core'
 import { ValueLine } from '../commons/ValueLine'
 import classNames from 'classnames'
-import { ReactComponent as ExternalIcon } from '../../assets/icons/external-icon.svg'
 import { ReactComponent as QuestionIcon } from '../../assets/icons/question-icon.svg'
 import { Skeleton } from '@material-ui/lab'
 import ArrowUpIcon from '../../assets/icons/arrow-up.svg'
@@ -198,7 +197,6 @@ export const ExitCard = (): React.ReactElement => {
         />
         <ValueLine
           label="DAO Assets Value"
-          icon={<ExternalIcon />}
           loading={!circulatingSupply}
           value={<TextAmount>~${fiatFormatter.format(parseFloat(assets.fiatTotal))}</TextAmount>}
         />
