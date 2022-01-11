@@ -158,6 +158,9 @@ export const ZODIAC_THEME = createTheme({
       },
     },
     MuiTableCell: {
+      root: {
+        fontSize: 16,
+      },
       footer: {
         color: '',
       },
