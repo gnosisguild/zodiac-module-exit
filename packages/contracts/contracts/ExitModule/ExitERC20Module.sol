@@ -3,12 +3,12 @@ pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./CirculatingSupply.sol";
 import "./ExitBase.sol";
+import "../CirculatingSupply/CirculatingSupplyERC20.sol";
 
 contract ExitERC20 is ExitBase {
     ERC20 public designatedToken;
-    CirculatingSupply public circulatingSupply;
+    CirculatingSupplyERC20 public circulatingSupply;
 
     // @dev Initialize function, will be triggered when a new proxy is deployed
     // @param _owner Address of the owner
@@ -51,7 +51,7 @@ contract ExitERC20 is ExitBase {
         avatar = _avatar;
         target = _target;
         designatedToken = ERC20(_designatedToken);
-        circulatingSupply = CirculatingSupply(_circulatingSupply);
+        circulatingSupply = CirculatingSupplyERC20(_circulatingSupply);
 
         transferOwnership(_owner);
 
@@ -76,11 +76,13 @@ contract ExitERC20 is ExitBase {
             );
         }
 
-        uint256 supply = getCirculatingSupply();
+        bytes memory params = abi.encode(
+            amountToRedeem,
+            getCirculatingSupply()
+        );
 
         designatedToken.transferFrom(msg.sender, avatar, amountToRedeem);
 
-        bytes memory params = abi.encode(amountToRedeem, supply);
         _exit(tokens, params);
     }
 
@@ -108,7 +110,7 @@ contract ExitERC20 is ExitBase {
     // @param _circulatingSupply Address of new circulating supply contract
     // @notice Can only be modified by owner
     function setCirculatingSupply(address _circulatingSupply) public onlyOwner {
-        circulatingSupply = CirculatingSupply(_circulatingSupply);
+        circulatingSupply = CirculatingSupplyERC20(_circulatingSupply);
     }
 
     function getCirculatingSupply() public view returns (uint256) {

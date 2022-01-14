@@ -2,10 +2,9 @@
 pragma solidity ^0.8.6;
 
 import "./ExitBase.sol";
-import "./CirculatingSupplyERC721.sol";
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "../CirculatingSupply/CirculatingSupplyERC721.sol";
 
 contract ExitERC721 is ExitBase {
     ERC721Enumerable public collection;
@@ -15,7 +14,7 @@ contract ExitERC721 is ExitBase {
     // @param _owner Address of the owner
     // @param _avatar Address of the avatar (e.g. a Safe or Delay Module)
     // @param _target Address that this module will pass transactions to
-    // @param _designatedToken Address of the ERC20 token that will define the share of users
+    // @param _designatedToken Address of the ERC721 token
     // @notice Designated token address can not be zero
     constructor(
         address _owner,
@@ -65,10 +64,12 @@ contract ExitERC721 is ExitBase {
             "Only token owner can exit"
         );
 
+        bytes memory params = abi.encode(circulatingSupply.get());
+
         // Transfer asset to avatar (safe)
         collection.transferFrom(msg.sender, avatar, tokenId);
 
-        _exit(tokens, "");
+        _exit(tokens, params);
     }
 
     // @dev Change the designated token address variable
@@ -78,13 +79,14 @@ contract ExitERC721 is ExitBase {
         collection = ERC721Enumerable(_collection);
     }
 
-    function getExitAmount(uint256 supply, bytes memory)
+    function getExitAmount(uint256 supply, bytes memory params)
         internal
         view
         override
         returns (uint256)
     {
-        return supply / circulatingSupply.get();
+        uint256 _circulatingSupply = abi.decode(params, (uint256));
+        return supply / _circulatingSupply;
     }
 
     // @dev Change the circulating supply variable

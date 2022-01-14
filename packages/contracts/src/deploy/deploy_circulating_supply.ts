@@ -10,7 +10,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const args = [FirstAddress, FirstAddress, []];
 
 
-  await deploy("CirculatingSupply", {
+  await deploy("CirculatingSupplyERC20", {
     from: deployer,
     args,
     log: true,
