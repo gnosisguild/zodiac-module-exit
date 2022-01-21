@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.6;
 
-import "./ExitBase.sol";
-
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import "./ExitBase.sol";
 import "../CirculatingSupply/CirculatingSupplyERC721.sol";
 
-contract ExitERC721 is ExitBase {
+contract ExitERC721 is ExitBase, ReentrancyGuard {
     ERC721Enumerable public collection;
     CirculatingSupplyERC721 public circulatingSupply;
 
@@ -40,7 +41,10 @@ contract ExitERC721 is ExitBase {
             address _target,
             address _collection,
             address _circulatingSupply
-        ) = abi.decode(initParams, (address, address, address, address, address));
+        ) = abi.decode(
+            initParams,
+            (address, address, address, address, address)
+        );
         __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         require(_target != address(0), "Target can not be zero address");
@@ -58,7 +62,10 @@ contract ExitERC721 is ExitBase {
     // @param tokenId of token to be used to exit
     // @param tokens Array of tokens to claim, ordered lowest to highest
     // @notice Will revert if tokens[] is not ordered highest to lowest, contains duplicates, or includes denied tokens
-    function exit(uint256 tokenId, address[] calldata tokens) public {
+    function exit(uint256 tokenId, address[] calldata tokens)
+        external
+        nonReentrant
+    {
         require(
             collection.ownerOf(tokenId) == msg.sender,
             "Only token owner can exit"
@@ -81,7 +88,7 @@ contract ExitERC721 is ExitBase {
 
     function getExitAmount(uint256 supply, bytes memory params)
         internal
-        view
+        pure
         override
         returns (uint256)
     {

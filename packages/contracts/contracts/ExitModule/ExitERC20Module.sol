@@ -2,11 +2,12 @@
 pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./ExitBase.sol";
 import "../CirculatingSupply/CirculatingSupplyERC20.sol";
 
-contract ExitERC20 is ExitBase {
+contract ExitERC20 is ExitBase, ReentrancyGuard {
     ERC20 public designatedToken;
     CirculatingSupplyERC20 public circulatingSupply;
 
@@ -63,7 +64,10 @@ contract ExitERC20 is ExitBase {
     // @param tokens Array of tokens to claim, ordered lowest to highest
     // @notice Will revert if tokens[] is not ordered highest to lowest, contains duplicates,
     //         includes the designated token or includes denied tokens
-    function exit(uint256 amountToRedeem, address[] calldata tokens) external {
+    function exit(uint256 amountToRedeem, address[] calldata tokens)
+        external
+        nonReentrant
+    {
         require(
             designatedToken.balanceOf(msg.sender) >= amountToRedeem,
             "Amount to redeem is greater than balance"
