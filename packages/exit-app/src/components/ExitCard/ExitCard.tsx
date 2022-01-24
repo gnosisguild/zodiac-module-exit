@@ -23,7 +23,7 @@ import { fetchExitModuleData } from '../../store/main/actions'
 import { TextAmount } from '../commons/text/TextAmount'
 import { fiatFormatter, sortBigNumberArray } from '../../utils/format'
 import { ClaimAmountInput } from './ClaimAmountInput'
-import { Erc20__factory, ZodiacModuleExit__factory } from '../../contracts/types'
+import { Erc20__factory, ExitErc20__factory } from '../../contracts/types'
 import { useClaimRate } from '../../hooks/useClaimRate'
 import SafeAppsSDK, { Transaction as SafeTransaction } from '@gnosis.pm/safe-apps-sdk'
 
@@ -109,7 +109,7 @@ export const ExitCard = (): React.ReactElement => {
       .filter((token) => !token.isZero())
       .map((token) => token.toHexString())
 
-    const exitModule = ZodiacModuleExit__factory.connect(module, signer)
+    const exitModule = ExitErc20__factory.connect(module, signer)
     setStep(EXIT_STEP.WAITING)
     const exitTx = await exitModule.exit(weiAmount, claimTokens)
     await exitTx.wait(2)
@@ -129,7 +129,7 @@ export const ExitCard = (): React.ReactElement => {
       .map((token) => token.toHexString())
 
     const ERC20 = Erc20__factory.connect(token.address, signer)
-    const exitModule = ZodiacModuleExit__factory.connect(module, signer)
+    const exitModule = ExitErc20__factory.connect(module, signer)
 
     const allowance = await ERC20.allowance(wallet, module)
 

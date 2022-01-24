@@ -1,15 +1,15 @@
 import { BigNumber, ethers } from 'ethers'
-import { Erc20__factory, ZodiacModuleExit__factory } from '../contracts/types'
 import { Call, Contract, Provider } from 'ethcall'
 import { Token, TokenType } from '../store/main/models'
 import { fetchContractSourceCode } from './contract'
 import { getSafeModules } from './safe'
+import { Erc20__factory, ExitErc20__factory } from '../contracts/types'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
   const ethcallProvider = new Provider()
   await ethcallProvider.init(provider)
 
-  const exit = new Contract(module, ZodiacModuleExit__factory.abi)
+  const exit = new Contract(module, ExitErc20__factory.abi)
   const txs: Call[] = [exit.circulatingSupply(), exit.designatedToken(), exit.getCirculatingSupply()]
   const results = await ethcallProvider.tryAll(txs)
 
@@ -42,13 +42,13 @@ export async function getTokenBalance(provider: ethers.providers.BaseProvider, t
 }
 
 export async function isExitModule(provider: ethers.providers.BaseProvider, address: string): Promise<boolean> {
-  const exitModule = ZodiacModuleExit__factory.connect(address, provider)
+  const exitModule = ExitErc20__factory.connect(address, provider)
 
   try {
     // 0xaf20af8a == IExitBase interface ID
     return await exitModule.supportsInterface('0xaf20af8a')
   } catch (err) {
-    console.warn('error determining exit module with ERP-165', err)
+    console.warn('error determining exit module using EIP-165', err)
   }
 
   try {

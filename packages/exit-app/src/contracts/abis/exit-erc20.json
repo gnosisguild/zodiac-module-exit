@@ -163,7 +163,7 @@
     "name": "circulatingSupply",
     "outputs": [
       {
-        "internalType": "contract CirculatingSupply",
+        "internalType": "contract CirculatingSupplyERC20",
         "name": "",
         "type": "address"
       }
