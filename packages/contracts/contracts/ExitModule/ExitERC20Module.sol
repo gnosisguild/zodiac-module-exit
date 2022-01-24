@@ -66,6 +66,7 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
     //         includes the designated token or includes denied tokens
     function exit(uint256 amountToRedeem, address[] calldata tokens)
         external
+        override
         nonReentrant
     {
         require(

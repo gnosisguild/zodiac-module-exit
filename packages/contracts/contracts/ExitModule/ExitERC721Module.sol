@@ -64,6 +64,7 @@ contract ExitERC721 is ExitBase, ReentrancyGuard {
     // @notice Will revert if tokens[] is not ordered highest to lowest, contains duplicates, or includes denied tokens
     function exit(uint256 tokenId, address[] calldata tokens)
         external
+        override
         nonReentrant
     {
         require(
