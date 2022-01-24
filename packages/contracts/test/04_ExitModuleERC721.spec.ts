@@ -1,12 +1,11 @@
 import { expect } from "chai";
-import { BigNumber } from "ethers";
-import { AbiCoder } from "ethers/lib/utils";
+import { BigNumber, ethers } from "ethers";
 import hre, { deployments, waffle } from "hardhat";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
-const DesignatedTokenBalance = BigNumber.from(10).pow(18).mul(5); // Equal to 5
-const TokenOneBalance = BigNumber.from(10).pow(6).mul(10); //  Equal to 100
-const TokenTwoBalance = BigNumber.from(10).pow(12).mul(10); // Equal to 100
+const AddressOne = "0x0000000000000000000000000000000000000001";
+const TokenOneBalance = BigNumber.from(10).pow(6).mul(10); //  Equal to 10
+const TokenTwoBalance = BigNumber.from(10).pow(12).mul(10); // Equal to 10
 
 describe("ExitERC721", async () => {
   const [user, anotherUser] = waffle.provider.getWallets();
@@ -65,12 +64,12 @@ describe("ExitERC721", async () => {
     );
 
     const circulatingSupply = await CirculatingSupply.deploy(
-      user.address,
+      avatar.address,
       collection.address,
-      []
+      [avatar.address]
     );
 
-    const initializeParams = new AbiCoder().encode(
+    const initializeParams = ethers.utils.defaultAbiCoder.encode(
       ["address", "address", "address", "address", "address"],
       [
         avatar.address,
@@ -98,13 +97,15 @@ describe("ExitERC721", async () => {
   const setupTestWithTestAvatar = deployments.createFixture(async () => {
     const base = await baseSetup();
     const Module = await hre.ethers.getContractFactory("ExitERC721");
-    const module = await Module.deploy(
-      base.avatar.address,
-      base.avatar.address,
-      base.avatar.address,
-      base.collection.address,
-      base.circulatingSupply.address
-    );
+    const module = (
+      await Module.deploy(
+        base.avatar.address,
+        base.avatar.address,
+        base.avatar.address,
+        base.collection.address,
+        base.circulatingSupply.address
+      )
+    ).connect(user);
 
     const avatarExit = {
       call(func: string, params: any[]) {
@@ -250,7 +251,7 @@ describe("ExitERC721", async () => {
       ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
     });
 
-    it("should returns 20% of the avatar's assets if exit with 1 of 5 tokens", async () => {
+    it("should return 20% of the avatar's assets if exit with 1 of 5 tokens", async () => {
       const { avatar, module, collection, tokenOne, tokenTwo, tokensOrdered } =
         await setupTestWithTestAvatar();
       const tokenId = 1;
@@ -296,7 +297,7 @@ describe("ExitERC721", async () => {
       );
     });
 
-    it("should returns 10% of the avatar's assets if exit with 1 of 10 tokens", async () => {
+    it("should return 10% of the avatar's assets if exit with 1 of 10 tokens", async () => {
       const { avatar, module, collection, tokenOne, tokenTwo, tokensOrdered } =
         await setupTestWithTestAvatar();
       const tokenId = 1;
@@ -350,6 +351,82 @@ describe("ExitERC721", async () => {
           previousBalances.avatar.token2.toNumber() * withdrawPercentage
       );
     });
+
+    it("should exit 2 users with the same amount", async () => {
+      const { avatar, module, collection, tokenOne, tokenTwo, tokensOrdered } =
+        await setupTestWithTestAvatar();
+
+      await collection.approve(module.address, 1);
+      await collection.approve(module.address, 2);
+
+      await avatar.setModule(module.address);
+
+      // Mint 5 more tokens -> Circulating Supply = 10
+      await Promise.all([
+        collection.mint(anotherUser.address, 5),
+        collection.mint(anotherUser.address, 6),
+        collection.mint(anotherUser.address, 7),
+        collection.mint(anotherUser.address, 8),
+        collection.mint(anotherUser.address, 9),
+      ]);
+
+      const initialBalances = await getBalances({
+        avatar,
+        tokenOne,
+        tokenTwo,
+      });
+
+      // Exit with tokenId #1
+      const firstExitTx = await module.exit(1, tokensOrdered);
+      const firstExitReceipt = await firstExitTx.wait();
+
+      const afterFirstExitBalances = await getBalances({
+        avatar,
+        tokenOne,
+        tokenTwo,
+      });
+
+      // Exit with tokenId #2
+      const secondExitTx = await module.exit(2, tokensOrdered);
+      const secondExitReceipt = await secondExitTx.wait();
+
+      const afterSecondExitBalances = await getBalances({
+        avatar,
+        tokenOne,
+        tokenTwo,
+      });
+
+      const firstExitAmount = {
+        eth: afterFirstExitBalances.user.eth
+          .sub(initialBalances.user.eth)
+          .add(firstExitReceipt.gasUsed.mul(firstExitReceipt.effectiveGasPrice))
+          .toString(),
+        token1: afterFirstExitBalances.user.token1
+          .sub(initialBalances.user.token1)
+          .toString(),
+        token2: afterFirstExitBalances.user.token2
+          .sub(initialBalances.user.token2)
+          .toString(),
+      };
+      const secondExitAmount = {
+        eth: afterSecondExitBalances.user.eth
+          .sub(afterFirstExitBalances.user.eth)
+          .add(
+            secondExitReceipt.gasUsed.mul(secondExitReceipt.effectiveGasPrice)
+          )
+          .toString(),
+        token1: afterSecondExitBalances.user.token1
+          .sub(afterFirstExitBalances.user.token1)
+          .toString(),
+        token2: afterSecondExitBalances.user.token2
+          .sub(afterFirstExitBalances.user.token2)
+          .toString(),
+      };
+
+      expect(firstExitAmount.eth).to.be.equal(secondExitAmount.eth);
+      expect(firstExitAmount.token1).to.be.equal(secondExitAmount.token1);
+      expect(firstExitAmount.token2).to.be.equal(secondExitAmount.token2);
+    });
   });
 
   describe("getCirculatingSupply", () => {
@@ -384,7 +461,7 @@ describe("ExitERC721", async () => {
       expect(circulatingSuppyAddress).to.be.equal(circulatingSupply2.address);
     });
   });
-  //
+
   describe("setCollection()", () => {
     it("should set designated token", async () => {
       const { module, avatar, Collection, avatarExit } =

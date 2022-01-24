@@ -45,7 +45,7 @@ describe("ExitERC20", async () => {
     await tokenOne.mint(avatar.address, TokenOneBalance);
     await tokenTwo.mint(avatar.address, TokenTwoBalance);
     const CirculatingSupply = await hre.ethers.getContractFactory(
-      "CirculatingSupply"
+      "CirculatingSupplyERC20"
     );
     const circulatingSupply = await CirculatingSupply.deploy(
       user.address,

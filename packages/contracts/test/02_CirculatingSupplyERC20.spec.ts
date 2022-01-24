@@ -1,13 +1,12 @@
-import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { AddressZero } from "@ethersproject/constants";
-import { AbiCoder } from "ethers/lib/utils";
+import { expect } from "chai";
+import { ethers } from "ethers";
+import hre, { deployments, waffle } from "hardhat";
 
 describe("CirculatingSupply", async () => {
   const [user1, user2] = waffle.provider.getWallets();
   const SENTINEL_EXCLUSIONS = "0x0000000000000000000000000000000000000001";
-  const FirstAddress = "0x0000000000000000000000000000000000000001";
   const saltNonce = "0xfa";
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -19,7 +18,7 @@ describe("CirculatingSupply", async () => {
     const tokenOne = await Token.deploy(6);
     const tokenTwo = await Token.deploy(12);
     const CirculatingSupply = await hre.ethers.getContractFactory(
-      "CirculatingSupply"
+      "CirculatingSupplyERC20"
     );
     const circulatingSupply = await CirculatingSupply.deploy(
       user1.address,
@@ -31,7 +30,7 @@ describe("CirculatingSupply", async () => {
     expect(designatedToken.mint(user1.address, 100));
     expect(designatedToken.mint(user2.address, 100));
 
-    const initializeParams = new AbiCoder().encode(
+    const initializeParams = ethers.utils.defaultAbiCoder.encode(
       ["address", "address", "address[]"],
       [user1.address, designatedToken.address, [user1.address, avatar.address]]
     );
@@ -113,8 +112,7 @@ describe("CirculatingSupply", async () => {
 
   describe("setup()", async () => {
     it("throws on mastercopy because already initialized", async () => {
-      const { avatar, circulatingSupply, designatedToken, initializeParams } =
-        await setupTests();
+      const { circulatingSupply, initializeParams } = await setupTests();
 
       expect(circulatingSupply.setUp(initializeParams)).to.be.revertedWith(
         "Initializable: contract is already initialized"
@@ -122,12 +120,8 @@ describe("CirculatingSupply", async () => {
     });
 
     it("sets owner", async () => {
-      const {
-        circulatingSupply,
-        initializeParams,
-        factory,
-        setupEncodeParams,
-      } = await setupTests();
+      const { circulatingSupply, factory, setupEncodeParams } =
+        await setupTests();
 
       const receipt = await factory
         .deployModule(circulatingSupply.address, setupEncodeParams, saltNonce)
@@ -141,20 +135,15 @@ describe("CirculatingSupply", async () => {
       );
 
       const newProxy = await hre.ethers.getContractAt(
-        "CirculatingSupply",
+        "CirculatingSupplyERC20",
         newProxyAddress
       );
       expect(await newProxy.owner()).to.be.eq(user1.address);
     });
 
     it("sets token to designatedToken", async () => {
-      const {
-        circulatingSupply,
-        initializeParams,
-        factory,
-        setupEncodeParams,
-        designatedToken,
-      } = await setupTests();
+      const { circulatingSupply, factory, setupEncodeParams, designatedToken } =
+        await setupTests();
 
       const receipt = await factory
         .deployModule(circulatingSupply.address, setupEncodeParams, saltNonce)
@@ -168,20 +157,15 @@ describe("CirculatingSupply", async () => {
       );
 
       const newProxy = await hre.ethers.getContractAt(
-        "CirculatingSupply",
+        "CirculatingSupplyERC20",
         newProxyAddress
       );
       expect(await newProxy.token()).to.be.eq(designatedToken.address);
     });
 
     it("adds multiple exclusions", async () => {
-      const {
-        avatar,
-        circulatingSupply,
-        initializeParams,
-        factory,
-        setupEncodeParams,
-      } = await setupTests();
+      const { avatar, circulatingSupply, factory, setupEncodeParams } =
+        await setupTests();
 
       const receipt = await factory
         .deployModule(circulatingSupply.address, setupEncodeParams, saltNonce)
@@ -195,7 +179,7 @@ describe("CirculatingSupply", async () => {
       );
 
       const newProxy = await hre.ethers.getContractAt(
-        "CirculatingSupply",
+        "CirculatingSupplyERC20",
         newProxyAddress
       );
       const exclusions = [avatar.address, user1.address, SENTINEL_EXCLUSIONS];
