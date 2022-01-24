@@ -49,8 +49,9 @@ const useStyles = makeStyles((theme) => ({
   input: {
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,
-    padding: '8px 0 8px 8px',
-    border: '1px solid rgb(255,255,255)',
+    padding: '12px 0 12px 8px',
+    border: '1px solid rgba(255,255,255,0.7)',
+    fontFamily: 'Roboto Mono',
     '& input': {
       borderRightWidth: 1,
       borderRightStyle: 'solid',
@@ -65,10 +66,11 @@ const useStyles = makeStyles((theme) => ({
   append: {
     display: 'flex',
     alignItems: 'center',
-    padding: theme.spacing(1),
+    fontFamily: 'Roboto Mono',
+    padding: '12px 8px 12px 8px',
     borderWidth: 1,
     borderStyle: 'solid',
-    borderColor: theme.palette.text.primary,
+    borderColor: 'rgba(255,255,255,0.7)',
     borderLeftWidth: 0,
   },
 }))
@@ -82,7 +84,7 @@ export interface TextFieldProps extends Omit<StandardTextFieldProps, 'variant' |
 export const TextField = ({ InputProps, InputLabelProps, label, append, AppendProps, ...props }: TextFieldProps) => {
   const classes = useStyles()
 
-  if (props.select || !append) {
+  if (props.select || append === undefined) {
     return (
       <StyledTextField
         focused={!props.disabled}
