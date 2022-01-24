@@ -1,12 +1,13 @@
 import { Button, CircularProgress, makeStyles, Paper, Typography } from '@material-ui/core'
 import { TextField } from '../commons/input/TextField'
 import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
-import { useRootDispatch } from '../../store'
-import { useState } from 'react'
-import { ethers } from 'ethers'
-import { setAccount } from '../../store/main'
+import { useRootDispatch, useRootSelector } from '../../store'
+import { useEffect, useState } from 'react'
+import { setAccount, setChainId } from '../../store/main'
 import { useWallet } from '../../hooks/useWallet'
 import { getExitModulesFromSafe } from '../../services/module'
+import { getAddress } from '../../utils/address'
+import { getChainId } from '../../store/main/selectors'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,20 +30,30 @@ const useStyles = makeStyles((theme) => ({
 
 export const AttachAccount = () => {
   const classes = useStyles()
-  const [invalidSafe, setInvalidSafe] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const dispatch = useRootDispatch()
   const { provider } = useWallet()
+  const dispatch = useRootDispatch()
+  const chainId = useRootSelector(getChainId)
+
   const [account, _setAccount] = useState('')
-  const isValid = ethers.utils.isAddress(account)
+  const [loading, setLoading] = useState(false)
+  const [invalidSafe, setInvalidSafe] = useState(false)
+
+  const address = getAddress(account)
+
+  useEffect(() => {
+    if (address && address[1] && address[1] !== chainId) {
+      dispatch(setChainId(address[1]))
+    }
+  }, [address, chainId, dispatch])
 
   const handleAttach = async () => {
-    if (ethers.utils.isAddress(account) && provider) {
+    if (address && provider) {
       setLoading(true)
       setInvalidSafe(false)
+      const [_address] = address
       try {
-        const exitModule = await getExitModulesFromSafe(provider, account)
-        dispatch(setAccount({ account, module: exitModule }))
+        const exitModule = await getExitModulesFromSafe(provider, _address)
+        dispatch(setAccount({ account: _address, module: exitModule }))
       } catch (err) {
         console.warn('attach error', err)
         setInvalidSafe(true)
@@ -75,7 +86,7 @@ export const AttachAccount = () => {
           color="secondary"
           variant="contained"
           onClick={handleAttach}
-          disabled={!isValid || loading}
+          disabled={!address || loading}
           startIcon={loading ? <CircularProgress size={18} color="primary" /> : <ArrowUp />}
         >
           {loading ? 'Attaching Gnosis Safe...' : 'Attach Account'}
