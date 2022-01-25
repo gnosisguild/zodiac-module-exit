@@ -47,7 +47,7 @@ export function EnhancedTableHead(props: EnhancedTableProps) {
           />
         </TableCell>
         {headCells.map((headCell) => {
-          const sortable = headCell.id === 'claimable'
+          const sortable = headCell.id === 'claimable' || headCell.id === 'holding'
           return (
             <React.Fragment key={headCell.id}>
               <TableCell

@@ -49,8 +49,8 @@ function descendingComparator(a: string, b: string) {
 
 function getComparator(order: Sort): (a: RowItem, b: RowItem) => number {
   return order === 'desc'
-    ? (a, b) => descendingComparator(a.claimable.fiat, b.claimable.fiat)
-    : (a, b) => -descendingComparator(a.claimable.fiat, b.claimable.fiat)
+    ? (a, b) => descendingComparator(a.holding.fiat, b.holding.fiat)
+    : (a, b) => -descendingComparator(a.holding.fiat, b.holding.fiat)
 }
 
 function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
