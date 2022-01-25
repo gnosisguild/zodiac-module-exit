@@ -73,7 +73,7 @@ function convertTxToSafeTx(tx: PopulatedTransaction): SafeTransaction {
 
 export const ExitCard = (): React.ReactElement => {
   const classes = useStyles()
-  const { provider, onboard } = useWallet()
+  const { signer, provider, onboard } = useWallet()
   const dispatch = useRootDispatch()
 
   const [balance, setBalance] = useState<BigNumber>()
@@ -90,9 +90,8 @@ export const ExitCard = (): React.ReactElement => {
   const claimRate = useClaimRate()
 
   const handleUserExit = async () => {
-    if (!provider || !wallet || !module || !token) return
+    if (!provider || !signer || !wallet || !module || !token) return
 
-    const signer = await provider.getSigner()
     const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
 
     const ERC20 = Erc20__factory.connect(token.address, signer)
@@ -119,9 +118,8 @@ export const ExitCard = (): React.ReactElement => {
   }
 
   const handleSafeExit = async () => {
-    if (!provider || !wallet || !module || !token) return
+    if (!signer || !wallet || !module || !token) return
 
-    const signer = await provider.getSigner()
     const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
 
     const claimTokens = sortBigNumberArray(selectedTokens)
@@ -173,7 +171,8 @@ export const ExitCard = (): React.ReactElement => {
   }, [module, dispatch, provider])
 
   const loader = <Skeleton className={classes.loader} variant="text" width={80} />
-  const tokenSymbol = token ? token.symbol : loader
+  const loading = !token || !circulatingSupply
+  const tokenSymbol = loading ? loader : token?.symbol
   const claimableAmount = fiatFormatter.format(parseFloat(assets.fiatTotal) * claimRate)
 
   return (
@@ -185,7 +184,7 @@ export const ExitCard = (): React.ReactElement => {
       <div className={classNames(classes.spacing, classes.content)}>
         <ValueLine
           label="Circulating Supply"
-          loading={!circulatingSupply}
+          loading={loading}
           value={
             circulatingSupply &&
             token && (
@@ -197,7 +196,7 @@ export const ExitCard = (): React.ReactElement => {
         />
         <ValueLine
           label="DAO Assets Value"
-          loading={!circulatingSupply}
+          loading={loading}
           value={<TextAmount>~${fiatFormatter.format(parseFloat(assets.fiatTotal))}</TextAmount>}
         />
       </div>
@@ -210,7 +209,7 @@ export const ExitCard = (): React.ReactElement => {
         <ValueLine
           label="Claimable Value"
           icon={<QuestionIcon />}
-          loading={!claimableAmount}
+          loading={loading}
           value={<TextAmount>~${claimableAmount}</TextAmount>}
         />
       </div>

@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { MainState, Network } from './models'
+import { MainState } from './models'
 import { fetchExitModuleData, fetchTokenAssets, getGasEstimationsForAssets } from './actions'
 import { BigNumber, ethers } from 'ethers'
-import { getNetworkName } from '../../utils/networks'
+import { getNetworkName, NETWORK } from '../../utils/networks'
 
 const ethereum = (window as any).ethereum
 let initialChainId
@@ -14,7 +14,8 @@ try {
 } catch (err) {}
 
 const initialModulesState: MainState = {
-  chainId: initialChainId || Network.MAINNET,
+  chainId: initialChainId || NETWORK.MAINNET,
+  loading: false,
   account: '',
   module: undefined,
   assets: {
@@ -34,6 +35,7 @@ export const mainSlice = createSlice({
     setAccount(state, action: PayloadAction<{ account: string; module?: string }>) {
       state.account = action.payload.account
       state.module = action.payload.module
+      state.loading = false
     },
     setWallet(state, action: PayloadAction<string>) {
       state.wallet = action.payload
@@ -43,6 +45,9 @@ export const mainSlice = createSlice({
     },
     setENS(state, action: PayloadAction<string>) {
       state.ens = action.payload
+    },
+    setLoading(state, action: PayloadAction<boolean>) {
+      state.loading = action.payload
     },
     resetWallet(state) {
       state.wallet = undefined
@@ -76,5 +81,5 @@ export const mainSlice = createSlice({
   },
 })
 
-export const { setAccount, setChainId, setENS, setWallet, resetWallet, setClaimAmount, setSelectedTokens } =
+export const { setAccount, setChainId, setENS, setWallet, setLoading, resetWallet, setClaimAmount, setSelectedTokens } =
   mainSlice.actions

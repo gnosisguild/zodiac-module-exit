@@ -1,10 +1,8 @@
-export enum Network {
-  MAINNET = 1,
-  RINKEBY = 4,
-}
+import { NETWORK } from '../../utils/networks'
 
 export interface MainState {
-  chainId: Network
+  chainId: NETWORK
+  loading: boolean
   account?: string
   module?: string
   wallet?: string

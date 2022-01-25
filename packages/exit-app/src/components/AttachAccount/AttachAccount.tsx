@@ -6,8 +6,10 @@ import { useEffect, useState } from 'react'
 import { setAccount, setChainId } from '../../store/main'
 import { useWallet } from '../../hooks/useWallet'
 import { getExitModulesFromSafe } from '../../services/module'
-import { getAddress } from '../../utils/address'
+import { getAddress, getEIP3770Prefix } from '../../utils/address'
 import { getChainId } from '../../store/main/selectors'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { NOT_A_SAFE_ERROR } from '../Dashboard/Dashboard'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -28,15 +30,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
+type AttachAccountLocationState = null | {
+  address: string
+  error: string
+}
+
 export const AttachAccount = () => {
   const classes = useStyles()
   const { provider } = useWallet()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const locationState = location.state as AttachAccountLocationState
+
   const dispatch = useRootDispatch()
   const chainId = useRootSelector(getChainId)
 
-  const [account, _setAccount] = useState('')
+  const [account, _setAccount] = useState(locationState?.address || '')
   const [loading, setLoading] = useState(false)
-  const [invalidSafe, setInvalidSafe] = useState(false)
+  const [invalidSafe, setInvalidSafe] = useState(locationState?.error === NOT_A_SAFE_ERROR)
 
   const address = getAddress(account)
 
@@ -50,10 +61,12 @@ export const AttachAccount = () => {
     if (address && provider) {
       setLoading(true)
       setInvalidSafe(false)
-      const [_address] = address
+      const [_address, _chainId] = address
+      const prefix = getEIP3770Prefix(_chainId || chainId)
       try {
         const exitModule = await getExitModulesFromSafe(provider, _address)
         dispatch(setAccount({ account: _address, module: exitModule }))
+        navigate(`/${prefix}:${_address}`)
       } catch (err) {
         console.warn('attach error', err)
         setInvalidSafe(true)
@@ -75,6 +88,7 @@ export const AttachAccount = () => {
         </Typography>
 
         <TextField
+          value={account}
           className={classes.spacing}
           onChange={(evt) => _setAccount(evt.target.value)}
           label="Account Address"

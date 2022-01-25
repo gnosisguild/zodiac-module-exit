@@ -3,15 +3,17 @@ import { ethers } from 'ethers'
 import { REDUX_STORE, useRootSelector } from '../store'
 import { resetWallet, setChainId, setENS, setWallet } from '../store/main'
 import { useEffect, useMemo, useState } from 'react'
-import { getChainId, getWalletAddress } from '../store/main/selectors'
+import { getChainId } from '../store/main/selectors'
 import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
 import { getNetworkRPC } from '../utils/networks'
 import memoize from 'lodash.memoize'
+import { useParams } from 'react-router-dom'
+import { getAddress } from '../utils/address'
 
 const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
 
-let _provider: ethers.providers.JsonRpcProvider | undefined
+let _signer: ethers.Signer
 
 const safeSDK = new SafeAppsSDK()
 safeSDK.getSafeInfo().then(async (safeInfo) => {
@@ -21,8 +23,6 @@ safeSDK.getSafeInfo().then(async (safeInfo) => {
 const configureOnboardJS = memoize(
   (networkId: number) => {
     const rpcUrl = getNetworkRPC(networkId)
-    _provider = new ethers.providers.JsonRpcProvider(rpcUrl, networkId)
-
     const wallets = [
       { walletName: 'metamask', preferred: true },
       { walletName: 'gnosis', preferred: true },
@@ -40,7 +40,8 @@ const configureOnboardJS = memoize(
       subscriptions: {
         wallet: (wallet) => {
           if (wallet.provider) {
-            _provider = new ethers.providers.Web3Provider(wallet.provider)
+            const provider = new ethers.providers.Web3Provider(wallet.provider)
+            _signer = provider.getSigner()
           }
         },
         address(address) {
@@ -71,25 +72,38 @@ const configureOnboardJS = memoize(
 )
 
 export const useWallet = () => {
-  const chainId = useRootSelector(getChainId)
-  const wallet = useRootSelector(getWalletAddress)
+  const _chainId = useRootSelector(getChainId)
+  const { account } = useParams()
+
+  const chainId = useMemo(() => {
+    if (account) {
+      const address = getAddress(account)
+      if (address && address[1]) return address[1]
+    }
+    return _chainId
+  }, [_chainId, account])
 
   const onboard = useMemo(() => configureOnboardJS(chainId), [chainId])
-  const [provider, setProvider] = useState(_provider)
+  const [provider, setProvider] = useState<ethers.providers.JsonRpcProvider>()
+  const [signer, setSigner] = useState<ethers.Signer>(_signer)
 
   const startOnboard = async () => {
     try {
       const selected = await onboard.walletSelect()
-      if (selected) await onboard.walletCheck()
-      setProvider(_provider)
+      if (selected) {
+        await onboard.walletCheck()
+        setSigner(_signer)
+      }
     } catch (err) {
       console.warn('startOnboard error', err)
     }
   }
 
   useEffect(() => {
-    if (_provider) setProvider(_provider)
-  }, [chainId, wallet])
+    const rpcUrl = getNetworkRPC(chainId)
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId)
+    setProvider(provider)
+  }, [chainId])
 
-  return { provider, onboard, startOnboard }
+  return { provider, signer, onboard, startOnboard }
 }

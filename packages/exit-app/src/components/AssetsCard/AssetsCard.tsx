@@ -10,7 +10,7 @@ import { TextField } from '../commons/input/TextField'
 import SearchIcon from '@material-ui/icons/Search'
 
 interface AssetsCardProps {
-  safe: string
+  safe?: string
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -34,7 +34,7 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
   const token = useRootSelector(getDesignatedToken)
 
   useEffect(() => {
-    if (provider) dispatch(fetchTokenAssets({ provider, safe }))
+    if (provider && safe) dispatch(fetchTokenAssets({ provider, safe }))
   }, [dispatch, provider, safe])
 
   return (

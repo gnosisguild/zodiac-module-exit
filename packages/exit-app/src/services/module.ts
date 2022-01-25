@@ -1,5 +1,5 @@
-import { BigNumber, ethers } from 'ethers'
 import { Call, Contract, Provider } from 'ethcall'
+import { ethers } from 'ethers'
 import { Token, TokenType } from '../store/main/models'
 import { fetchContractSourceCode } from './contract'
 import { getSafeModules } from './safe'
@@ -16,7 +16,7 @@ export async function getExitModule(provider: ethers.providers.BaseProvider, mod
   return {
     circulatingSupplyAddress: results[0] as string,
     designatedToken: results[1] as string,
-    circulatingSupply: results[2] as BigNumber,
+    circulatingSupply: results[2] as ethers.BigNumber,
   }
 }
 

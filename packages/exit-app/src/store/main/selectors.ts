@@ -13,3 +13,4 @@ export const getCirculatingSupply = createSelector(getMainState, (main) => main.
 export const getClaimAmount = createSelector(getMainState, (main) => main.claimAmount)
 export const getAssets = createSelector(getMainState, (main) => main.assets)
 export const getSelectedTokens = createSelector(getMainState, (main) => main.selectedTokens)
+export const getLoading = createSelector(getMainState, (main) => main.loading)
