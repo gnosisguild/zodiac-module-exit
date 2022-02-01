@@ -105,7 +105,7 @@ export const ZODIAC_THEME = createTheme({
         textTransform: 'none',
         position: 'relative',
         borderRadius: 0,
-        '&::before': {
+        '&:not(.MuiButton-text)::before': {
           content: '" "',
           position: 'absolute',
           zIndex: 1,
@@ -123,6 +123,12 @@ export const ZODIAC_THEME = createTheme({
       },
       containedSizeSmall: {
         padding: '4px 8px',
+      },
+      text: {
+        padding: 0,
+        '&:hover': {
+          backgroundColor: 'transparent !important',
+        },
       },
     },
     MuiInputBase: {
@@ -163,11 +169,6 @@ export const ZODIAC_THEME = createTheme({
       },
       footer: {
         color: '',
-      },
-    },
-    MuiLink: {
-      root: {
-        textDecoration: 'underline !important',
       },
     },
   },

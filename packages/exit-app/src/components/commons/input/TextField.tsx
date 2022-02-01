@@ -10,6 +10,8 @@ import {
   withStyles,
 } from '@material-ui/core'
 import classNames from 'classnames'
+import { Row } from '../layout/Row'
+import { Grow } from '../Grow'
 
 const StyledTextField = withStyles((theme) => ({
   root: {
@@ -40,8 +42,8 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'flex-end',
   },
   label: {
+    display: 'inline-block',
     color: theme.palette.text.primary,
-    marginBottom: theme.spacing(1),
   },
   inputContainer: {
     flexGrow: 1,
@@ -79,9 +81,18 @@ export interface TextFieldProps extends Omit<StandardTextFieldProps, 'variant' |
   label?: string
   append?: React.ReactElement | string
   AppendProps?: GridProps
+  ActionButton?: React.ReactElement
 }
 
-export const TextField = ({ InputProps, InputLabelProps, label, append, AppendProps, ...props }: TextFieldProps) => {
+export const TextField = ({
+  InputProps,
+  InputLabelProps,
+  label,
+  append,
+  AppendProps,
+  ActionButton,
+  ...props
+}: TextFieldProps) => {
   const classes = useStyles()
 
   if (props.select || append === undefined) {
@@ -105,9 +116,13 @@ export const TextField = ({ InputProps, InputLabelProps, label, append, AppendPr
 
   return (
     <div className={props.className}>
-      <InputLabel {...InputLabelProps} className={classes.label}>
-        {label}
-      </InputLabel>
+      <Row marginBottom={0.5}>
+        <InputLabel {...InputLabelProps} className={classes.label}>
+          {label}
+        </InputLabel>
+        <Grow />
+        {ActionButton}
+      </Row>
       <Grid container className={classes.root}>
         <Grid item className={classes.inputContainer}>
           <InputBase

@@ -203,7 +203,7 @@ export const ExitCard = (): React.ReactElement => {
 
       <WalletAssets className={classNames(classes.spacing, classes.content)} balance={balance} />
 
-      <ClaimAmountInput />
+      <ClaimAmountInput balance={balance} />
 
       <div className={classNames(classes.spacing, classes.content)}>
         <ValueLine

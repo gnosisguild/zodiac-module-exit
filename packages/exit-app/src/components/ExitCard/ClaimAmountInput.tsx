@@ -3,8 +3,10 @@ import React, { useState } from 'react'
 import { setClaimAmount } from '../../store/main'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { getDesignatedToken } from '../../store/main/selectors'
-import { makeStyles } from '@material-ui/core'
-import { ethers } from 'ethers'
+import { Button, makeStyles } from '@material-ui/core'
+import { BigNumber, ethers } from 'ethers'
+import { Token } from '../../store/main/models'
+import { balanceFormatter } from '../../utils/format'
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
@@ -13,9 +15,23 @@ const useStyles = makeStyles((theme) => ({
   claimInput: {
     fontSize: '16px !important',
   },
+  maxButton: {
+    fontSize: '16px !important',
+    lineHeight: '16px',
+    color: theme.palette.text.secondary,
+  },
 }))
 
-export const ClaimAmountInput = () => {
+interface ClaimAmountInputProps {
+  balance?: BigNumber
+}
+
+function formatBalance(balance?: BigNumber, token?: Token) {
+  if (!balance || !token) return null
+  return balanceFormatter.format(parseFloat(ethers.utils.formatUnits(balance, token.decimals)))
+}
+
+export const ClaimAmountInput = ({ balance }: ClaimAmountInputProps) => {
   const classes = useStyles()
   const dispatch = useRootDispatch()
   const token = useRootSelector(getDesignatedToken)
@@ -31,10 +47,32 @@ export const ClaimAmountInput = () => {
     } catch (err) {}
   }
 
+  const _balance = formatBalance(balance, token)
+
+  const handleMaxAmount = () => {
+    if (!_balance) return
+    setAmount(_balance)
+  }
+
   return (
     <TextField
       placeholder="0.0"
       color="secondary"
+      ActionButton={
+        _balance ? (
+          <Button
+            variant="text"
+            disableRipple
+            disableElevation
+            disableFocusRipple
+            disableTouchRipple
+            className={classes.maxButton}
+            onClick={handleMaxAmount}
+          >
+            Max ({_balance} {token?.symbol})
+          </Button>
+        ) : undefined
+      }
       label="Exit Amount"
       className={classes.spacing}
       InputProps={{

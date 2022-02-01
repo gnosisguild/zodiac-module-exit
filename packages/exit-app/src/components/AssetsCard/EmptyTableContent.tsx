@@ -10,6 +10,7 @@ const useStyles = makeStyles((theme: Theme) =>
       marginTop: theme.spacing(2),
     },
     cell: {
+      opacity: 0.8,
       backgroundColor: 'rgba(217, 212, 173, 0.1)',
     },
   }),
@@ -24,7 +25,11 @@ export function EmptyTableContent(): React.ReactElement {
         <TableCell colSpan={9} scope="row" align="center" className={classes.cell}>
           <Typography>No Assets Found</Typography>
           <Typography className={classes.detail}>
-            Expect to see a token here? You may need <br /> to <Link color="textPrimary">add a custom token</Link>.
+            Expect to see a token here? You may need <br /> to{' '}
+            <Link underline="always" color="textPrimary">
+              add a custom token
+            </Link>
+            .
           </Typography>
         </TableCell>
       </TableRow>
