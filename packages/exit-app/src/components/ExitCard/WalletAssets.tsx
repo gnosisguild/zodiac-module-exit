@@ -4,11 +4,11 @@ import { ReactComponent as ExternalIcon } from '../../assets/icons/external-icon
 import classNames from 'classnames'
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
 import { useWallet } from '../../hooks/useWallet'
-import { BigNumber, ethers } from 'ethers'
+import { BigNumber } from 'ethers'
 import { useRootSelector } from '../../store'
 import { getAssets, getDesignatedToken } from '../../store/main/selectors'
 import { TextAmount } from '../commons/text/TextAmount'
-import { balanceFormatter } from '../../utils/format'
+import { formatBalance } from '../../utils/format'
 import { getClaimableAmount } from '../../utils/math'
 
 interface WalletAssetsProps {
@@ -58,7 +58,7 @@ export const WalletAssets = ({ balance, className }: WalletAssetsProps) => {
   const token = useRootSelector(getDesignatedToken)
   const assets = useRootSelector(getAssets)
 
-  const balanceText = token && balance && ethers.utils.formatUnits(balance, token.decimals)
+  const balanceText = formatBalance(balance, token)
   const marketValue = getClaimableAmount(token, assets, balance)
 
   return (
@@ -66,14 +66,13 @@ export const WalletAssets = ({ balance, className }: WalletAssetsProps) => {
       {balance ? null : <ConnectWallet className={classes.connectWallet} onClick={startOnboard} />}
       <ValueLine
         label="Your Balance"
-        loading={!balance}
+        loading={!balanceText}
         value={
-          balanceText &&
-          token && (
+          balanceText ? (
             <TextAmount>
-              {balanceFormatter.format(parseFloat(balanceText))} {token.symbol}
+              {balanceText} {token?.symbol}
             </TextAmount>
-          )
+          ) : null
         }
       />
       <ValueLine

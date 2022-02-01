@@ -21,7 +21,7 @@ import { BigNumber, ethers, PopulatedTransaction } from 'ethers'
 import { getTokenBalance } from '../../services/module'
 import { fetchExitModuleData } from '../../store/main/actions'
 import { TextAmount } from '../commons/text/TextAmount'
-import { fiatFormatter, sortBigNumberArray } from '../../utils/format'
+import { fiatFormatter, formatBalance, sortBigNumberArray } from '../../utils/format'
 import { ClaimAmountInput } from './ClaimAmountInput'
 import { Erc20__factory, ExitErc20__factory } from '../../contracts/types'
 import { useClaimRate } from '../../hooks/useClaimRate'
@@ -189,7 +189,7 @@ export const ExitCard = (): React.ReactElement => {
             circulatingSupply &&
             token && (
               <TextAmount>
-                {ethers.utils.formatUnits(circulatingSupply.value, token.decimals)} {token.symbol}
+                {formatBalance(BigNumber.from(circulatingSupply.value), token)} {token.symbol}
               </TextAmount>
             )
           }

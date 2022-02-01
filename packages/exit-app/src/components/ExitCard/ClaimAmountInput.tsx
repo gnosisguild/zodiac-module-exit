@@ -5,8 +5,7 @@ import { useRootDispatch, useRootSelector } from '../../store'
 import { getDesignatedToken } from '../../store/main/selectors'
 import { Button, makeStyles } from '@material-ui/core'
 import { BigNumber, ethers } from 'ethers'
-import { Token } from '../../store/main/models'
-import { balanceFormatter } from '../../utils/format'
+import { formatBalance } from '../../utils/format'
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
@@ -24,11 +23,6 @@ const useStyles = makeStyles((theme) => ({
 
 interface ClaimAmountInputProps {
   balance?: BigNumber
-}
-
-function formatBalance(balance?: BigNumber, token?: Token) {
-  if (!balance || !token) return null
-  return balanceFormatter.format(parseFloat(ethers.utils.formatUnits(balance, token.decimals)))
 }
 
 export const ClaimAmountInput = ({ balance }: ClaimAmountInputProps) => {
@@ -51,7 +45,7 @@ export const ClaimAmountInput = ({ balance }: ClaimAmountInputProps) => {
 
   const handleMaxAmount = () => {
     if (!_balance) return
-    setAmount(_balance)
+    handleExitAmount(_balance)
   }
 
   return (
