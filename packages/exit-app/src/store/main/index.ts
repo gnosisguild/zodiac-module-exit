@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { MainState } from './models'
-import { fetchExitModuleData, fetchTokenAssets, getGasEstimationsForAssets } from './actions'
+import { fetchExitModuleData, fetchTokenAssets, getAvailableTokens, getGasEstimationsForAssets } from './actions'
 import { BigNumber, ethers } from 'ethers'
 import { getNetworkName, NETWORK } from '../../utils/networks'
 
@@ -23,9 +23,11 @@ const initialModulesState: MainState = {
     items: [],
   },
   claimAmount: '0',
+  claimToken: undefined,
   wallet: '',
   ens: '',
   selectedTokens: [],
+  availableTokens: [],
 }
 
 export const mainSlice = createSlice({
@@ -56,12 +58,17 @@ export const mainSlice = createSlice({
     setClaimAmount(state, action: PayloadAction<string>) {
       state.claimAmount = action.payload
     },
+    setClaimToken(state, action: PayloadAction<string>) {
+      state.claimToken = action.payload
+      state.claimAmount = '1'
+    },
     setSelectedTokens(state, action: PayloadAction<string[]>) {
       state.selectedTokens = action.payload
     },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchExitModuleData.fulfilled, (state, action) => {
+      state.type = action.payload.type
       state.token = action.payload.token
       state.circulatingSupply = {
         address: action.payload.CSContract,
@@ -78,8 +85,21 @@ export const mainSlice = createSlice({
     builder.addCase(getGasEstimationsForAssets.fulfilled, (state, action) => {
       state.assets.items = action.payload
     })
+    builder.addCase(getAvailableTokens.fulfilled, (state, action) => {
+      state.availableTokens = action.payload
+      state.claimToken = action.payload[0]
+    })
   },
 })
 
-export const { setAccount, setChainId, setENS, setWallet, setLoading, resetWallet, setClaimAmount, setSelectedTokens } =
-  mainSlice.actions
+export const {
+  setAccount,
+  setChainId,
+  setENS,
+  setWallet,
+  setLoading,
+  resetWallet,
+  setClaimAmount,
+  setClaimToken,
+  setSelectedTokens,
+} = mainSlice.actions

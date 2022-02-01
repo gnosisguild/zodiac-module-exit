@@ -3,6 +3,7 @@ import { NETWORK } from '../../utils/networks'
 export interface MainState {
   chainId: NETWORK
   loading: boolean
+  type?: ModuleType
   account?: string
   module?: string
   wallet?: string
@@ -10,11 +11,13 @@ export interface MainState {
   token?: Token
   assets: SafeAssets
   claimAmount: string
+  claimToken?: string
   circulatingSupply?: {
     address: string
     value: string
   }
   selectedTokens: string[]
+  availableTokens: string[]
 }
 export enum TokenType {
   NATIVE_TOKEN,
@@ -41,4 +44,9 @@ export interface TokenAsset {
   balance: string
   fiatBalance: string
   fiatConversion: string
+}
+
+export enum ModuleType {
+  ERC20,
+  ERC721,
 }

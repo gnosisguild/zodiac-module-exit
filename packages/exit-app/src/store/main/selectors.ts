@@ -14,3 +14,6 @@ export const getClaimAmount = createSelector(getMainState, (main) => main.claimA
 export const getAssets = createSelector(getMainState, (main) => main.assets)
 export const getSelectedTokens = createSelector(getMainState, (main) => main.selectedTokens)
 export const getLoading = createSelector(getMainState, (main) => main.loading)
+export const getModuleType = createSelector(getMainState, (main) => main.type)
+export const getClaimToken = createSelector(getMainState, (main) => main.claimToken)
+export const getTokens = createSelector(getMainState, (main) => main.availableTokens)

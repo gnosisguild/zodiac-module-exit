@@ -13,7 +13,7 @@ import { getAddress } from '../utils/address'
 const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
 
-let _signer: ethers.Signer
+export let _signer: ethers.providers.JsonRpcSigner
 
 const safeSDK = new SafeAppsSDK()
 safeSDK.getSafeInfo().then(async (safeInfo) => {
@@ -85,7 +85,7 @@ export const useWallet = () => {
 
   const onboard = useMemo(() => configureOnboardJS(chainId), [chainId])
   const [provider, setProvider] = useState<ethers.providers.JsonRpcProvider>()
-  const [signer, setSigner] = useState<ethers.Signer>(_signer)
+  const [signer, setSigner] = useState<ethers.Signer>()
 
   const startOnboard = async () => {
     try {

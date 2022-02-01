@@ -24,5 +24,6 @@ export function sortBigNumberArray(array: BigNumberish[]): BigNumber[] {
 
 export function formatBalance(balance?: BigNumber, token?: Token) {
   if (!balance || !token) return null
+  if (!token.decimals) return balance.toString()
   return balanceFormatter.format(parseFloat(ethers.utils.formatUnits(balance, token.decimals)))
 }

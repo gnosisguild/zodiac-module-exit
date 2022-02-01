@@ -1,18 +1,21 @@
 import { useRootSelector } from '../store'
-import { getCirculatingSupply, getClaimAmount, getDesignatedToken } from '../store/main/selectors'
+import { getCirculatingSupply, getClaimAmount, getDesignatedToken, getModuleType } from '../store/main/selectors'
 import { useMemo } from 'react'
 import { getClaimRate } from '../utils/math'
-import { ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
+import { ModuleType } from '../store/main/models'
 
 export function useClaimRate() {
   const token = useRootSelector(getDesignatedToken)
+  const type = useRootSelector(getModuleType)
   const claimAmount = useRootSelector(getClaimAmount)
   const circulatingSupply = useRootSelector(getCirculatingSupply)
 
   return useMemo<number>(() => {
     const totalSupply = circulatingSupply?.value
-    if (!token || !totalSupply) return 0
+    if (!token || !totalSupply || BigNumber.from(totalSupply).isZero()) return 0
     const amount = ethers.utils.parseUnits(claimAmount, token.decimals)
+    if (type === ModuleType.ERC721) return 1 / parseInt(totalSupply)
     return getClaimRate(amount, totalSupply)
-  }, [circulatingSupply?.value, claimAmount, token])
+  }, [circulatingSupply?.value, claimAmount, token, type])
 }

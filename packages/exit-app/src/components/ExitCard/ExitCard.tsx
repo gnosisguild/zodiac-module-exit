@@ -1,31 +1,27 @@
 import React, { useEffect, useState } from 'react'
-import { Button, CircularProgress, makeStyles, Typography } from '@material-ui/core'
+import { makeStyles, Typography } from '@material-ui/core'
 import { ValueLine } from '../commons/ValueLine'
 import classNames from 'classnames'
 import { ReactComponent as QuestionIcon } from '../../assets/icons/question-icon.svg'
 import { Skeleton } from '@material-ui/lab'
-import ArrowUpIcon from '../../assets/icons/arrow-up.svg'
 import { WalletAssets } from './WalletAssets'
 import { useRootDispatch, useRootSelector } from '../../store'
 import {
   getAssets,
   getCirculatingSupply,
-  getClaimAmount,
   getDesignatedToken,
   getModule,
-  getSelectedTokens,
   getWalletAddress,
 } from '../../store/main/selectors'
 import { useWallet } from '../../hooks/useWallet'
-import { BigNumber, ethers, PopulatedTransaction } from 'ethers'
+import { BigNumber } from 'ethers'
 import { getTokenBalance } from '../../services/module'
-import { fetchExitModuleData } from '../../store/main/actions'
+import { fetchExitModuleData, getAvailableTokens } from '../../store/main/actions'
 import { TextAmount } from '../commons/text/TextAmount'
-import { fiatFormatter, formatBalance, sortBigNumberArray } from '../../utils/format'
-import { ClaimAmountInput } from './ClaimAmountInput'
-import { Erc20__factory, ExitErc20__factory } from '../../contracts/types'
+import { fiatFormatter, formatBalance } from '../../utils/format'
 import { useClaimRate } from '../../hooks/useClaimRate'
-import SafeAppsSDK, { Transaction as SafeTransaction } from '@gnosis.pm/safe-apps-sdk'
+import { ClaimInput } from './input/ClaimInput'
+import { ExitButton } from './ExitButton'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -47,114 +43,20 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-enum EXIT_STEP {
-  EXIT,
-  APPROVE,
-  APPROVING,
-  WAITING,
-}
-
-const EXIT_STEP_MESSAGE: Record<EXIT_STEP, string> = {
-  [EXIT_STEP.EXIT]: 'Exit and Claim Assets',
-  [EXIT_STEP.APPROVE]: 'Approve token expense',
-  [EXIT_STEP.APPROVING]: 'Approving...',
-  [EXIT_STEP.WAITING]: 'Exiting...',
-}
-
-const MAX_UINT256_AMOUNT = BigNumber.from(2).pow(256).sub(1)
-
-function convertTxToSafeTx(tx: PopulatedTransaction): SafeTransaction {
-  return {
-    to: tx.to as string,
-    value: '0',
-    data: tx.data as string,
-  }
-}
-
 export const ExitCard = (): React.ReactElement => {
   const classes = useStyles()
-  const { signer, provider, onboard } = useWallet()
   const dispatch = useRootDispatch()
+  const { provider } = useWallet()
 
   const [balance, setBalance] = useState<BigNumber>()
-  const [step, setStep] = useState<EXIT_STEP>(EXIT_STEP.EXIT)
 
   const assets = useRootSelector(getAssets)
   const module = useRootSelector(getModule)
   const wallet = useRootSelector(getWalletAddress)
   const token = useRootSelector(getDesignatedToken)
-  const claimAmount = useRootSelector(getClaimAmount)
-  const selectedTokens = useRootSelector(getSelectedTokens)
   const circulatingSupply = useRootSelector(getCirculatingSupply)
 
   const claimRate = useClaimRate()
-
-  const handleUserExit = async () => {
-    if (!provider || !signer || !wallet || !module || !token) return
-
-    const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
-
-    const ERC20 = Erc20__factory.connect(token.address, signer)
-    const allowance = await ERC20.allowance(wallet, module)
-
-    if (allowance.lt(weiAmount)) {
-      setStep(EXIT_STEP.APPROVE)
-      const tx = await ERC20.approve(module, MAX_UINT256_AMOUNT)
-      setStep(EXIT_STEP.APPROVING)
-      await tx.wait(2)
-    }
-
-    const claimTokens = sortBigNumberArray(selectedTokens)
-      .filter((token) => !token.isZero())
-      .map((token) => token.toHexString())
-
-    const exitModule = ExitErc20__factory.connect(module, signer)
-    setStep(EXIT_STEP.WAITING)
-    const exitTx = await exitModule.exit(weiAmount, claimTokens)
-    await exitTx.wait(2)
-
-    // Update Token Balance
-    setBalance(await getTokenBalance(provider, token.address, wallet))
-  }
-
-  const handleSafeExit = async () => {
-    if (!signer || !wallet || !module || !token) return
-
-    const weiAmount = ethers.utils.parseUnits(claimAmount, token.decimals)
-
-    const claimTokens = sortBigNumberArray(selectedTokens)
-      .filter((token) => !token.isZero())
-      .map((token) => token.toHexString())
-
-    const ERC20 = Erc20__factory.connect(token.address, signer)
-    const exitModule = ExitErc20__factory.connect(module, signer)
-
-    const allowance = await ERC20.allowance(wallet, module)
-
-    const txs: PopulatedTransaction[] = []
-    if (allowance.lt(weiAmount)) {
-      txs.push(await ERC20.populateTransaction.approve(module, MAX_UINT256_AMOUNT))
-    }
-    txs.push(await exitModule.populateTransaction.exit(weiAmount, claimTokens))
-
-    const safeSDK = new SafeAppsSDK()
-    await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
-  }
-
-  const handleExit = async () => {
-    try {
-      const { wallet } = onboard.getState()
-      if (wallet.type === 'sdk' && wallet.name === 'Gnosis Safe') {
-        await handleSafeExit()
-      } else {
-        await handleUserExit()
-      }
-    } catch (err) {
-      console.warn('error exiting', err)
-    } finally {
-      setStep(EXIT_STEP.EXIT)
-    }
-  }
 
   useEffect(() => {
     if (wallet && token && provider) {
@@ -174,6 +76,14 @@ export const ExitCard = (): React.ReactElement => {
   const loading = !token || !circulatingSupply
   const tokenSymbol = loading ? loader : token?.symbol
   const claimableAmount = fiatFormatter.format(parseFloat(assets.fiatTotal) * claimRate)
+
+  const handleExit = async () => {
+    if (!provider || !token || !wallet || !module) return
+    // Update Token Balance
+    setBalance(await getTokenBalance(provider, token.address, wallet))
+    dispatch(fetchExitModuleData({ provider, module }))
+    dispatch(getAvailableTokens({ token: token.address, wallet }))
+  }
 
   return (
     <div className={classes.root}>
@@ -203,7 +113,7 @@ export const ExitCard = (): React.ReactElement => {
 
       <WalletAssets className={classNames(classes.spacing, classes.content)} balance={balance} />
 
-      <ClaimAmountInput balance={balance} />
+      <ClaimInput balance={balance} />
 
       <div className={classNames(classes.spacing, classes.content)}>
         <ValueLine
@@ -214,24 +124,8 @@ export const ExitCard = (): React.ReactElement => {
         />
       </div>
 
-      <Button
-        fullWidth
-        disabled={step !== EXIT_STEP.EXIT}
-        size="large"
-        color="secondary"
-        variant="contained"
-        className={classes.spacing}
-        startIcon={
-          step === EXIT_STEP.EXIT ? (
-            <img src={ArrowUpIcon} alt="arrow up" />
-          ) : (
-            <CircularProgress size={20} color="inherit" />
-          )
-        }
-        onClick={handleExit}
-      >
-        {EXIT_STEP_MESSAGE[step]}
-      </Button>
+      <div className={classes.spacing} />
+      <ExitButton onExit={handleExit} />
     </div>
   )
 }

@@ -11,7 +11,9 @@ export function getClaimableAmount(token?: Token, assets?: SafeAssets, balance?:
 }
 
 export function getClaimRate(amount: BigNumber, totalSupply: BigNumberish) {
+  console.log({ amount, totalSupply, g: amount.gt(totalSupply) })
   if (amount.gt(totalSupply)) return 1
+  if (BigNumber.from(totalSupply).isZero()) return 0
   const fnAmount = ethers.FixedNumber.fromValue(amount, 18)
   const fnCS = ethers.FixedNumber.fromValue(BigNumber.from(totalSupply), 18)
   return fnAmount.divUnsafe(fnCS).toUnsafeFloat()

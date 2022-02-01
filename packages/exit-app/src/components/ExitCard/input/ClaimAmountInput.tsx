@@ -1,11 +1,11 @@
-import { TextField } from '../commons/input/TextField'
+import { TextField } from '../../commons/input/TextField'
 import React, { useState } from 'react'
-import { setClaimAmount } from '../../store/main'
-import { useRootDispatch, useRootSelector } from '../../store'
-import { getDesignatedToken } from '../../store/main/selectors'
+import { setClaimAmount } from '../../../store/main'
+import { useRootDispatch, useRootSelector } from '../../../store'
+import { getDesignatedToken } from '../../../store/main/selectors'
 import { Button, makeStyles } from '@material-ui/core'
 import { BigNumber, ethers } from 'ethers'
-import { formatBalance } from '../../utils/format'
+import { formatBalance } from '../../../utils/format'
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
