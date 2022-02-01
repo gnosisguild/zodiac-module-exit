@@ -31,6 +31,7 @@ interface RowAmount {
 
 interface RowItem {
   address: string
+  name?: string
   symbol: string
   symbolLogoUrl?: string
   gas: RowAmount
@@ -151,6 +152,7 @@ const useStyles = makeStyles((theme: Theme) =>
 interface AssetsTableProps {
   assets: SafeAssets
   token?: Token
+  query?: string
 }
 
 function getFiatAmount(token: TokenAsset, amount?: BigNumberish): number {
@@ -263,7 +265,7 @@ function AssetsTableContent({ rows, classes, selected }: AssetsTableContentProps
   return <TableBody>{items}</TableBody>
 }
 
-export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactElement {
+export function AssetsTable({ assets, token, query }: AssetsTableProps): React.ReactElement {
   const classes = useStyles()
   const [sort, setSort] = React.useState<Sort>('asc')
 
@@ -281,6 +283,7 @@ export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactEle
         const claimable = ethers.BigNumber.from(token.balance).mul(claimRateAmount).div(BigNumber.from(10).pow(18))
         return {
           address: token.tokenInfo.address,
+          name: token.tokenInfo.name,
           symbol: token.tokenInfo.symbol,
           symbolLogoUrl: token.tokenInfo.logoUri,
           claimable: formatRowAmount(token, claimable),
@@ -316,6 +319,8 @@ export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactEle
     dispatch(setSelectedTokens(addresses))
   }
 
+  const filteredRows = !query ? rows : rows.filter((row) => row.symbol.includes(query) || row.name?.includes(query))
+
   return (
     <TableContainer className={classes.root}>
       <Table className={classes.table} aria-labelledby="tableTitle" aria-label="enhanced table">
@@ -327,7 +332,11 @@ export function AssetsTable({ assets, token }: AssetsTableProps): React.ReactEle
           onRequestSort={handleRequestSort}
           rowCount={rows.length}
         />
-        <AssetsTableContent classes={classes} rows={stableSort(rows, getComparator(sort))} selected={selected} />
+        <AssetsTableContent
+          classes={classes}
+          rows={stableSort(filteredRows, getComparator(sort))}
+          selected={selected}
+        />
         <TableFooter>
           <TableRow role="checkbox" tabIndex={-1}>
             <TableScrollSpacer className={classes.startScrollSpacer} />

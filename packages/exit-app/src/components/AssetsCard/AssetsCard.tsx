@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { InputAdornment, makeStyles, Typography } from '@material-ui/core'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { fetchTokenAssets } from '../../store/main/actions'
@@ -30,8 +30,11 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
   const classes = useStyles()
   const dispatch = useRootDispatch()
   const { provider } = useWallet()
+
   const assets = useRootSelector(getAssets)
   const token = useRootSelector(getDesignatedToken)
+
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     if (provider && safe) dispatch(fetchTokenAssets({ provider, safe }))
@@ -51,9 +54,11 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
               </InputAdornment>
             ),
           }}
+          value={query}
+          onChange={(evt) => setQuery(evt.target.value)}
         />
       </Row>
-      <AssetsTable assets={assets} token={token} />
+      <AssetsTable assets={assets} token={token} query={query} />
     </div>
   )
 }
