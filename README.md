@@ -44,9 +44,9 @@ Created under the [LGPL-3.0+ license](LICENSE).
 
 An audit has been performed by the [G0 group](https://github.com/g0-group).
 
-All issues and notes of the audit have been addressed in commit [4e7029acf8c71727f484ca0b1873de021964d3c7](https://github.com/gnosis/zodiac-module-exit/commit/4e7029acf8c71727f484ca0b1873de021964d3c7).
+All issues and notes of the audit have been addressed in commit [2341cf0375b8f78b0dc3bd4d0d7ee864e1a6f804](https://github.com/gnosis/zodiac-module-exit/commit/2341cf0375b8f78b0dc3bd4d0d7ee864e1a6f804).
 
-The audit results are available as a pdf in [this repo](audits/ZodiacExitModuleSep2021.pdf) or on the [g0-group repo](https://github.com/g0-group/Audits/blob/e11752abb010f74e32a6fc61142032a10deed578/ZodiacExitModuleSep2021.pdf).
+The audit results are available as a pdf in [this repo](packages/contracts/audits/ZodiacExitModuleJan2022.pdf).
 
 ### Security and Liability
 
