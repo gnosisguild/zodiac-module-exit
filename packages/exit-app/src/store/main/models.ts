@@ -19,6 +19,7 @@ export interface MainState {
   }
   selectedTokens: string[]
   availableTokens: AvailableToken[]
+  step: EXIT_STEP
 }
 
 export enum TokenType {
@@ -58,4 +59,14 @@ export interface TokenAsset {
 export enum ModuleType {
   ERC20,
   ERC721,
+}
+
+export enum EXIT_STEP {
+  EXIT,
+  APPROVE,
+  APPROVING,
+  WAITING,
+  EXITED,
+  TX_CREATED,
+  ERROR,
 }

@@ -9,6 +9,7 @@ import { getNetworkRPC } from '../utils/networks'
 import memoize from 'lodash.memoize'
 import { useParams } from 'react-router-dom'
 import { getAddress } from '../utils/address'
+import { ExternalProvider } from '@ethersproject/providers'
 
 const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
@@ -40,8 +41,7 @@ const configureOnboardJS = memoize(
       subscriptions: {
         wallet: (wallet) => {
           if (wallet.provider) {
-            const provider = new ethers.providers.Web3Provider(wallet.provider)
-            _signer = provider.getSigner()
+            setProvider(wallet.provider)
           }
         },
         address(address) {
@@ -106,4 +106,10 @@ export const useWallet = () => {
   }, [chainId])
 
   return { provider, signer, onboard, startOnboard }
+}
+
+export function setProvider(provider: ExternalProvider) {
+  const web3Provider = new ethers.providers.Web3Provider(provider)
+  _signer = web3Provider.getSigner()
+  return _signer
 }

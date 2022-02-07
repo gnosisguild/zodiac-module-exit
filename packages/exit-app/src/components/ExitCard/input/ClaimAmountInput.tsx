@@ -22,10 +22,11 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 interface ClaimAmountInputProps {
+  disabled?: boolean
   balance?: string
 }
 
-export const ClaimAmountInput = ({ balance }: ClaimAmountInputProps) => {
+export const ClaimAmountInput = ({ balance, disabled }: ClaimAmountInputProps) => {
   const classes = useStyles()
   const dispatch = useRootDispatch()
   const token = useRootSelector(getDesignatedToken)
@@ -70,6 +71,7 @@ export const ClaimAmountInput = ({ balance }: ClaimAmountInputProps) => {
       label="Exit Amount"
       className={classes.spacing}
       InputProps={{
+        disabled,
         classes: { input: classes.claimInput },
         inputMode: 'decimal',
         autoComplete: 'off',

@@ -1,4 +1,6 @@
 import { WalletInitOptions } from 'bnc-onboard/dist/src/interfaces'
+import { _signer, setProvider } from '../hooks/useWallet'
+import { BigNumber } from 'ethers'
 
 const PORTIS_ID = process.env.REACT_APP_PORTIS_ID ?? '852b763d-f28b-4463-80cb-846d7ec5806b'
 const FORTMATIC_KEY = process.env.REACT_APP_FORTMATIC_KEY ?? 'pk_test_CAD437AA29BE0A40'
@@ -75,4 +77,32 @@ export function getWallets(networkId: number, rpcUrl: string): Wallet[] {
     { walletName: WALLETS.OPERA, desktop: false },
     { walletName: WALLETS.OPERA_TOUCH, desktop: false },
   ]
+}
+
+function stripLeadingZeros(hex: string) {
+  if (hex.startsWith('0x0') && hex.length > 3) {
+    return '0x' + hex.substr(3)
+  }
+  return hex
+}
+
+export async function checkWalletNetwork(network: number) {
+  const currentNetwork = await _signer.getChainId()
+
+  if (currentNetwork === network) return true
+  const ethereum = (window as any).ethereum
+  if (!ethereum) return false
+
+  try {
+    await ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: stripLeadingZeros(BigNumber.from(network).toHexString()) }],
+    })
+    setProvider(ethereum)
+    const newNetwork = await _signer.getChainId()
+    return newNetwork === network
+  } catch (err) {
+    console.warn('[changing network]', err.message)
+  }
+  return false
 }

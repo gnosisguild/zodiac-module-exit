@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { MainState } from './models'
+import { EXIT_STEP, MainState } from './models'
 import { fetchExitModuleData, fetchTokenAssets, getAvailableTokens, getGasEstimationsForAssets } from './actions'
 import { BigNumber, ethers } from 'ethers'
 import { getNetworkName, NETWORK } from '../../utils/networks'
@@ -28,6 +28,7 @@ const initialModulesState: MainState = {
   ens: '',
   selectedTokens: [],
   availableTokens: [],
+  step: EXIT_STEP.EXIT,
 }
 
 export const mainSlice = createSlice({
@@ -57,16 +58,21 @@ export const mainSlice = createSlice({
     },
     setClaimAmount(state, action: PayloadAction<string>) {
       state.claimAmount = action.payload
+      state.step = EXIT_STEP.EXIT
     },
     setClaimToken(state, action: PayloadAction<string>) {
       state.claimToken = action.payload
       state.claimAmount = '1'
+      state.step = EXIT_STEP.EXIT
     },
     setSelectedTokens(state, action: PayloadAction<string[]>) {
       state.selectedTokens = action.payload
     },
     setBalance(state, action: PayloadAction<string>) {
       state.balance = action.payload
+    },
+    setExitStep(state, action: PayloadAction<EXIT_STEP>) {
+      state.step = action.payload
     },
   },
   extraReducers: (builder) => {
@@ -91,6 +97,7 @@ export const mainSlice = createSlice({
     builder.addCase(getAvailableTokens.fulfilled, (state, action) => {
       state.availableTokens = action.payload
       state.claimToken = action.payload[0]?.tokenId
+      state.claimAmount = '1'
     })
   },
 })
@@ -106,4 +113,5 @@ export const {
   setClaimToken,
   setSelectedTokens,
   setBalance,
+  setExitStep,
 } = mainSlice.actions

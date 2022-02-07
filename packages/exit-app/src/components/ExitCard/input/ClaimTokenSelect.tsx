@@ -5,6 +5,10 @@ import { useRootDispatch, useRootSelector } from '../../../store'
 import { setClaimToken } from '../../../store/main'
 import { getClaimToken, getDesignatedToken, getTokens } from '../../../store/main/selectors'
 
+interface ClaimTokenSelectProps {
+  disabled?: boolean
+}
+
 const useStyles = makeStyles((theme) => ({
   spacing: {
     marginTop: theme.spacing(2.5),
@@ -31,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export const ClaimTokenSelect = () => {
+export const ClaimTokenSelect = ({ disabled }: ClaimTokenSelectProps) => {
   const classes = useStyles()
   const dispatch = useRootDispatch()
 
@@ -45,7 +49,7 @@ export const ClaimTokenSelect = () => {
     <TextField
       select
       className={classes.spacing}
-      InputProps={{ disabled: !token, classes: { root: classes.select } }}
+      InputProps={{ disabled: !token || disabled, classes: { root: classes.select } }}
       onChange={(evt) => handleTokenChange(evt.target.value)}
       value={token || 'none'}
       label="Exit Token"
