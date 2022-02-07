@@ -10,6 +10,7 @@ export function getClaimableAmount(
 ) {
   if (!assets || !token || !balance || !circulatingSupply) return
   if (token.type === TokenType.ERC721) {
+    if (BigNumber.from(circulatingSupply).isZero()) return '0'
     // ERC-721
     return fiatFormatter.format(
       (parseFloat(assets.fiatTotal) * BigNumber.from(balance).toNumber()) /

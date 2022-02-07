@@ -83,7 +83,7 @@ export const mainSlice = createSlice({
         address: action.payload.CSContract,
         value: action.payload.circulatingSupply,
       }
-      state.selectedTokens = state.selectedTokens.filter((token) => token !== action.payload.token.address)
+      state.selectedTokens = state.selectedTokens.filter((token) => token !== action.payload.token?.address)
     })
     builder.addCase(fetchTokenAssets.fulfilled, (state, action) => {
       state.assets = action.payload

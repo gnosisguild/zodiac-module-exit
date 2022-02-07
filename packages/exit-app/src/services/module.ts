@@ -55,7 +55,7 @@ export async function getERC20Token(provider: ethers.providers.BaseProvider, add
   const cacheHash = getCacheHash(CACHE_TYPE.ERC20, address)
 
   const cache = await readCache(cacheHash)
-  if (cache !== undefined) return cache as Token
+  if (cache !== null) return cache as Token
 
   const ethcallProvider = new Provider()
   await ethcallProvider.init(provider)
@@ -78,7 +78,7 @@ export async function getERC721Token(provider: ethers.providers.BaseProvider, ad
   const cacheHash = getCacheHash(CACHE_TYPE.ERC721, address)
 
   const cache = await readCache(cacheHash)
-  if (cache !== undefined) return cache as Token
+  if (cache !== null) return cache as Token
 
   const contractERC721 = Erc721__factory.connect(address, provider)
 
@@ -100,7 +100,7 @@ export async function getTokenBalance(provider: ethers.providers.BaseProvider, t
 export async function isExitModule(provider: ethers.providers.BaseProvider, address: string): Promise<boolean> {
   const cacheHash = getCacheHash(CACHE_TYPE.IS_EXIT_MODULE, address)
   const cache = await readCache(cacheHash)
-  if (cache !== undefined) return cache as boolean
+  if (cache !== null) return cache as boolean
 
   const exitModule = ExitErc20__factory.connect(address, provider)
   try {
