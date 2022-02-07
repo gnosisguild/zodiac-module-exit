@@ -4,16 +4,14 @@ import { ReactComponent as ExternalIcon } from '../../assets/icons/external-icon
 import classNames from 'classnames'
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
 import { useWallet } from '../../hooks/useWallet'
-import { BigNumber } from 'ethers'
 import { useRootSelector } from '../../store'
-import { getAssets, getDesignatedToken } from '../../store/main/selectors'
+import { getAssets, getBalance, getCirculatingSupply, getDesignatedToken } from '../../store/main/selectors'
 import { TextAmount } from '../commons/text/TextAmount'
 import { formatBalance } from '../../utils/format'
 import { getClaimableAmount } from '../../utils/math'
 
 interface WalletAssetsProps {
   className?: string
-  balance?: BigNumber
 }
 
 interface ConnectWalletProps {
@@ -51,15 +49,17 @@ const ConnectWallet = ({ className, onClick }: ConnectWalletProps) => {
   )
 }
 
-export const WalletAssets = ({ balance, className }: WalletAssetsProps) => {
+export const WalletAssets = ({ className }: WalletAssetsProps) => {
   const classes = useStyles()
 
   const { startOnboard } = useWallet()
   const token = useRootSelector(getDesignatedToken)
   const assets = useRootSelector(getAssets)
+  const balance = useRootSelector(getBalance)
+  const circulatingSupply = useRootSelector(getCirculatingSupply)
 
   const balanceText = formatBalance(balance, token)
-  const marketValue = getClaimableAmount(token, assets, balance)
+  const marketValue = getClaimableAmount(token, assets, balance, circulatingSupply?.value)
 
   return (
     <div className={classNames(className, classes.root)}>

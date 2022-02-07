@@ -3,7 +3,8 @@ import { ethers } from 'ethers'
 import { ModuleType, Token, TokenType } from '../store/main/models'
 import { fetchContractSourceCode } from './contract'
 import { getSafeModules } from './safe'
-import { Erc20__factory, ExitErc20__factory, ExitErc721__factory } from '../contracts/types'
+import { Erc20__factory, Erc721__factory, ExitErc20__factory, ExitErc721__factory } from '../contracts/types'
+import { CACHE_TYPE, getCacheHash, readCache, writeCache } from './cache'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
   try {
@@ -45,33 +46,68 @@ export async function getExitERC721Module(provider: ethers.providers.BaseProvide
   }
 }
 
-export async function getToken(provider: ethers.providers.BaseProvider, token: string): Promise<Token> {
+export function getToken(provider: ethers.providers.BaseProvider, type: ModuleType, token: string): Promise<Token> {
+  if (type === ModuleType.ERC721) return getERC721Token(provider, token)
+  return getERC20Token(provider, token)
+}
+
+export async function getERC20Token(provider: ethers.providers.BaseProvider, address: string): Promise<Token> {
+  const cacheHash = getCacheHash(CACHE_TYPE.ERC20, address)
+
+  const cache = await readCache(cacheHash)
+  if (cache !== undefined) return cache as Token
+
   const ethcallProvider = new Provider()
   await ethcallProvider.init(provider)
 
-  const cs = new Contract(token, Erc20__factory.abi)
+  const cs = new Contract(address, Erc20__factory.abi)
   const txs: Call[] = [cs.symbol(), cs.decimals()]
   const results = await ethcallProvider.tryAll(txs)
 
-  return {
+  const token = {
     type: TokenType.ERC20,
-    address: token,
+    address,
     symbol: results[0] as string,
     decimals: results[1] as number,
   }
+  writeCache(cacheHash, token)
+  return token
+}
+
+export async function getERC721Token(provider: ethers.providers.BaseProvider, address: string): Promise<Token> {
+  const cacheHash = getCacheHash(CACHE_TYPE.ERC721, address)
+
+  const cache = await readCache(cacheHash)
+  if (cache !== undefined) return cache as Token
+
+  const contractERC721 = Erc721__factory.connect(address, provider)
+
+  const token = {
+    type: TokenType.ERC721,
+    address,
+    symbol: await contractERC721.symbol(),
+    decimals: 1,
+  }
+  writeCache(cacheHash, token)
+  return token
 }
 
 export async function getTokenBalance(provider: ethers.providers.BaseProvider, token: string, wallet: string) {
   const contract = Erc20__factory.connect(token, provider)
-  return contract.balanceOf(wallet)
+  return (await contract.balanceOf(wallet)).toString()
 }
 
 export async function isExitModule(provider: ethers.providers.BaseProvider, address: string): Promise<boolean> {
-  const exitModule = ExitErc20__factory.connect(address, provider)
+  const cacheHash = getCacheHash(CACHE_TYPE.IS_EXIT_MODULE, address)
+  const cache = await readCache(cacheHash)
+  if (cache !== undefined) return cache as boolean
 
+  const exitModule = ExitErc20__factory.connect(address, provider)
   try {
     // 0xaf20af8a == IExitBase interface ID
-    return await exitModule.supportsInterface('0xaf20af8a')
+    const response = await exitModule.supportsInterface('0xaf20af8a')
+    writeCache(cacheHash, response)
+    return response
   } catch (err) {
     console.warn('error determining exit module using EIP-165', err)
   }

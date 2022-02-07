@@ -65,6 +65,9 @@ export const mainSlice = createSlice({
     setSelectedTokens(state, action: PayloadAction<string[]>) {
       state.selectedTokens = action.payload
     },
+    setBalance(state, action: PayloadAction<string>) {
+      state.balance = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchExitModuleData.fulfilled, (state, action) => {
@@ -87,7 +90,7 @@ export const mainSlice = createSlice({
     })
     builder.addCase(getAvailableTokens.fulfilled, (state, action) => {
       state.availableTokens = action.payload
-      state.claimToken = action.payload[0]
+      state.claimToken = action.payload[0]?.tokenId
     })
   },
 })
@@ -102,4 +105,5 @@ export const {
   setClaimAmount,
   setClaimToken,
   setSelectedTokens,
+  setBalance,
 } = mainSlice.actions

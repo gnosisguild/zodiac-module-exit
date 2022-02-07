@@ -5,19 +5,29 @@ import { useRootDispatch, useRootSelector } from '../../../store'
 import { setClaimToken } from '../../../store/main'
 import { getClaimToken, getDesignatedToken, getTokens } from '../../../store/main/selectors'
 
-// import NFTImage1 from '../../../assets/images/nft-test.png'
-// import NFTImage2 from '../../../assets/images/nft-test-2.png'
-
 const useStyles = makeStyles((theme) => ({
   spacing: {
     marginTop: theme.spacing(2.5),
   },
   nft: {
-    padding: theme.spacing(0.5),
+    boxSizing: 'border-box',
     border: '1px solid grey',
     verticalAlign: 'middle',
+    padding: theme.spacing(0.5),
     marginRight: theme.spacing(1),
-    maxHeight: '100%',
+    maxHeight: 72,
+    maxWidth: 180,
+  },
+  select: {
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: theme.palette.common.white,
+    '&:after': {
+      content: 'none',
+    },
+  },
+  item: {
+    maxHeight: 80,
   },
 }))
 
@@ -29,33 +39,35 @@ export const ClaimTokenSelect = () => {
   const token = useRootSelector(getClaimToken)
   const availableTokens = useRootSelector(getTokens)
 
-  const handleTokenChange = (value: string) => {
-    dispatch(setClaimToken(value))
-  }
+  const handleTokenChange = (value: string) => dispatch(setClaimToken(value))
 
   return (
     <TextField
       select
       className={classes.spacing}
-      value={token}
+      InputProps={{ disabled: !token, classes: { root: classes.select } }}
       onChange={(evt) => handleTokenChange(evt.target.value)}
+      value={token || 'none'}
       label="Exit Token"
     >
       {!availableTokens.length ? (
-        <MenuItem value={undefined} disabled>
-          No available tokens
+        <MenuItem value="none" disabled>
+          - No tokens -
         </MenuItem>
       ) : null}
-      {availableTokens.map((tokenId) => (
-        <MenuItem key={tokenId} value={tokenId} selected={tokenId === token}>
-          {/*<img src={NFTImage1} alt="NFTImage1" className={classes.nft} />*/}
-          {designatedToken?.symbol} #{tokenId}
+      {availableTokens.map((availableToken) => (
+        <MenuItem
+          className={classes.item}
+          key={availableToken.tokenId}
+          value={availableToken.tokenId}
+          selected={availableToken.tokenId === token}
+        >
+          {availableToken.imgUrl ? (
+            <img src={availableToken.imgUrl} alt={availableToken.tokenId} className={classes.nft} />
+          ) : null}
+          {designatedToken?.name || designatedToken?.symbol} #{availableToken.tokenId}
         </MenuItem>
       ))}
-      {/*<MenuItem value="4">*/}
-      {/*  <img src={NFTImage2} alt="NFTImage1" className={classes.nft} />*/}
-      {/*  NFT #2*/}
-      {/*</MenuItem>*/}
     </TextField>
   )
 }

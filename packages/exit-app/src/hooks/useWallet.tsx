@@ -101,7 +101,7 @@ export const useWallet = () => {
 
   useEffect(() => {
     const rpcUrl = getNetworkRPC(chainId)
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId)
+    const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, chainId)
     setProvider(provider)
   }, [chainId])
 

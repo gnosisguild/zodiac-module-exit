@@ -10,6 +10,7 @@ export interface MainState {
   ens?: string
   token?: Token
   assets: SafeAssets
+  balance?: string
   claimAmount: string
   claimToken?: string
   circulatingSupply?: {
@@ -17,11 +18,19 @@ export interface MainState {
     value: string
   }
   selectedTokens: string[]
-  availableTokens: string[]
+  availableTokens: AvailableToken[]
 }
+
 export enum TokenType {
   NATIVE_TOKEN,
   ERC20,
+  ERC721,
+}
+
+export interface AvailableToken {
+  tokenId: string
+  tokenUri: string
+  imgUrl?: string
 }
 
 export interface Token {

@@ -15,7 +15,7 @@ export function useClaimRate() {
     const totalSupply = circulatingSupply?.value
     if (!token || !totalSupply || BigNumber.from(totalSupply).isZero()) return 0
     const amount = ethers.utils.parseUnits(claimAmount, token.decimals)
-    if (type === ModuleType.ERC721) return 1 / parseInt(totalSupply)
+    if (type === ModuleType.ERC721) return parseInt(claimAmount) / parseInt(totalSupply)
     return getClaimRate(amount, totalSupply)
   }, [circulatingSupply?.value, claimAmount, token, type])
 }

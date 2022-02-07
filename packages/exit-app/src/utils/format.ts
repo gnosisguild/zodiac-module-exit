@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers'
-import { Token } from '../store/main/models'
+import { Token, TokenType } from '../store/main/models'
 
 export const fiatFormatter = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 2,
@@ -22,8 +22,8 @@ export function sortBigNumberArray(array: BigNumberish[]): BigNumber[] {
     })
 }
 
-export function formatBalance(balance?: BigNumber, token?: Token) {
+export function formatBalance(balance?: BigNumberish, token?: Token) {
   if (!balance || !token) return null
-  if (!token.decimals) return balance.toString()
+  if (token.type === TokenType.ERC721) return balance.toString()
   return balanceFormatter.format(parseFloat(ethers.utils.formatUnits(balance, token.decimals)))
 }

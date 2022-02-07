@@ -2,24 +2,25 @@ import { BigNumber, BigNumberish, ethers } from 'ethers'
 import { getExitModule, getToken } from '../../services/module'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { SafeTransactionApi } from '../../services/safeTransactionApi'
-import { SafeAssets, TokenAsset } from './models'
+import { AvailableToken, SafeAssets, TokenAsset } from './models'
 import { getGasEstimationForToken } from '../../services/erc20'
 import { getAccount } from './selectors'
 import { RootState } from '../index'
 import { Erc721__factory } from '../../contracts/types/factories/Erc721__factory'
 import { Contract, Provider } from 'ethcall'
-import { _signer } from '../../hooks/useWallet'
+import { getTokenImage } from '../../services/erc721'
+import { getNetworkRPC, NETWORK } from '../../utils/networks'
 
 export const fetchExitModuleData = createAsyncThunk(
   'main/fetchExitModuleData',
   async ({ provider, module }: { module: string; provider: ethers.providers.BaseProvider }) => {
-    const response = await getExitModule(provider, module)
-    const tokenResponse = await getToken(provider, response.designatedToken)
+    const exitModule = await getExitModule(provider, module)
+    const tokenResponse = await getToken(provider, exitModule.type, exitModule.designatedToken)
 
     return {
-      type: response.type,
-      CSContract: response.circulatingSupplyAddress,
-      circulatingSupply: response.circulatingSupply.toString(),
+      type: exitModule.type,
+      CSContract: exitModule.circulatingSupplyAddress,
+      circulatingSupply: exitModule.circulatingSupply.toString(),
       token: tokenResponse,
     }
   },
@@ -71,11 +72,22 @@ export const getGasEstimationsForAssets = createAsyncThunk(
 
 export const getAvailableTokens = createAsyncThunk(
   'main/getAvailableTokens',
-  async ({ wallet, token }: { wallet: string; token: string }): Promise<string[]> => {
-    const ERC721_contract = Erc721__factory.connect(token, _signer)
+  async ({
+    wallet,
+    token,
+    network,
+  }: {
+    wallet: string
+    token: string
+    network: NETWORK
+  }): Promise<AvailableToken[]> => {
+    const rpcUrl = getNetworkRPC(network)
+    const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, network)
+
+    const ERC721_contract = Erc721__factory.connect(token, provider)
     const balance = await ERC721_contract.balanceOf(wallet)
 
-    if (!balance.toNumber) return []
+    if (BigNumber.from(balance).isZero()) return []
 
     const ERC721_multicall = new Contract(token, Erc721__factory.abi)
     const txs = []
@@ -83,9 +95,23 @@ export const getAvailableTokens = createAsyncThunk(
       txs.push(ERC721_multicall.tokenOfOwnerByIndex(wallet, i))
     }
     const ethcallProvider = new Provider()
-    await ethcallProvider.init(_signer.provider)
-    const results: BigNumberish[] = await ethcallProvider.tryAll(txs)
+    await ethcallProvider.init(provider)
 
-    return results.map((tokenId) => BigNumber.from(tokenId).toString())
+    const results: BigNumberish[] = await ethcallProvider.tryAll(txs)
+    try {
+      const tokenUriTxs = results.map((tokenId) => ERC721_multicall.tokenURI(tokenId))
+      const tokenURIs: string[] = await ethcallProvider.tryAll(tokenUriTxs)
+
+      const imgUrls = await Promise.all(tokenURIs.map(getTokenImage))
+
+      return results.map((tokenId, index) => ({
+        tokenId: tokenId.toString(),
+        tokenUri: tokenURIs[index],
+        imgUrl: imgUrls[index],
+      }))
+    } catch (err) {
+      console.log('err', err)
+    }
+    return []
   },
 )

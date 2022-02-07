@@ -3,10 +3,9 @@ import { getModuleType } from '../../../store/main/selectors'
 import { ModuleType } from '../../../store/main/models'
 import { ClaimAmountInput } from './ClaimAmountInput'
 import { ClaimTokenSelect } from './ClaimTokenSelect'
-import { BigNumber } from 'ethers'
 
 interface ClaimInputProps {
-  balance?: BigNumber
+  balance?: string
 }
 
 export const ClaimInput = (props: ClaimInputProps) => {

@@ -4,7 +4,7 @@ import { setClaimAmount } from '../../../store/main'
 import { useRootDispatch, useRootSelector } from '../../../store'
 import { getDesignatedToken } from '../../../store/main/selectors'
 import { Button, makeStyles } from '@material-ui/core'
-import { BigNumber, ethers } from 'ethers'
+import { ethers } from 'ethers'
 import { formatBalance } from '../../../utils/format'
 
 const useStyles = makeStyles((theme) => ({
@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 interface ClaimAmountInputProps {
-  balance?: BigNumber
+  balance?: string
 }
 
 export const ClaimAmountInput = ({ balance }: ClaimAmountInputProps) => {

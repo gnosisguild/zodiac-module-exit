@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { makeStyles, Typography } from '@material-ui/core'
 import { ValueLine } from '../commons/ValueLine'
 import classNames from 'classnames'
-import { ReactComponent as QuestionIcon } from '../../assets/icons/question-icon.svg'
 import { Skeleton } from '@material-ui/lab'
 import { WalletAssets } from './WalletAssets'
 import { useRootDispatch, useRootSelector } from '../../store'
@@ -16,12 +15,11 @@ import {
 import { useWallet } from '../../hooks/useWallet'
 import { BigNumber } from 'ethers'
 import { getTokenBalance } from '../../services/module'
-import { fetchExitModuleData, getAvailableTokens } from '../../store/main/actions'
+import { fetchExitModuleData } from '../../store/main/actions'
 import { TextAmount } from '../commons/text/TextAmount'
 import { fiatFormatter, formatBalance } from '../../utils/format'
-import { useClaimRate } from '../../hooks/useClaimRate'
-import { ClaimInput } from './input/ClaimInput'
-import { ExitButton } from './ExitButton'
+import { ExitForm } from './ExitForm'
+import { setBalance } from '../../store/main'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -46,9 +44,8 @@ const useStyles = makeStyles((theme) => ({
 export const ExitCard = (): React.ReactElement => {
   const classes = useStyles()
   const dispatch = useRootDispatch()
-  const { provider } = useWallet()
 
-  const [balance, setBalance] = useState<BigNumber>()
+  const { provider } = useWallet()
 
   const assets = useRootSelector(getAssets)
   const module = useRootSelector(getModule)
@@ -56,15 +53,13 @@ export const ExitCard = (): React.ReactElement => {
   const token = useRootSelector(getDesignatedToken)
   const circulatingSupply = useRootSelector(getCirculatingSupply)
 
-  const claimRate = useClaimRate()
-
   useEffect(() => {
     if (wallet && token && provider) {
       getTokenBalance(provider, token.address, wallet)
-        .then((_balance) => setBalance(_balance))
+        .then((_balance) => dispatch(setBalance(_balance)))
         .catch((err) => console.error('getTokenBalance:', err))
     }
-  }, [wallet, token, provider])
+  }, [wallet, token, provider, dispatch])
 
   useEffect(() => {
     if (provider && module) {
@@ -75,15 +70,6 @@ export const ExitCard = (): React.ReactElement => {
   const loader = <Skeleton className={classes.loader} variant="text" width={80} />
   const loading = !token || !circulatingSupply
   const tokenSymbol = loading ? loader : token?.symbol
-  const claimableAmount = fiatFormatter.format(parseFloat(assets.fiatTotal) * claimRate)
-
-  const handleExit = async () => {
-    if (!provider || !token || !wallet || !module) return
-    // Update Token Balance
-    setBalance(await getTokenBalance(provider, token.address, wallet))
-    dispatch(fetchExitModuleData({ provider, module }))
-    dispatch(getAvailableTokens({ token: token.address, wallet }))
-  }
 
   return (
     <div className={classes.root}>
@@ -111,21 +97,9 @@ export const ExitCard = (): React.ReactElement => {
         />
       </div>
 
-      <WalletAssets className={classNames(classes.spacing, classes.content)} balance={balance} />
+      <WalletAssets className={classNames(classes.spacing, classes.content)} />
 
-      <ClaimInput balance={balance} />
-
-      <div className={classNames(classes.spacing, classes.content)}>
-        <ValueLine
-          label="Claimable Value"
-          icon={<QuestionIcon />}
-          loading={loading}
-          value={<TextAmount>~${claimableAmount}</TextAmount>}
-        />
-      </div>
-
-      <div className={classes.spacing} />
-      <ExitButton onExit={handleExit} />
+      <ExitForm loading={loading} />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import retry from 'async-retry'
 import memoize from 'lodash.memoize'
 import { getNetworkExplorerInfo } from '../utils/explorers'
+import { httpCacheClient } from './http'
 
 export const fetchContractSourceCode = memoize(
   (chainId: number, contractAddress: string) =>
@@ -28,15 +29,9 @@ export const fetchContractSourceCode = memoize(
 
         const params = new URLSearchParams(urlParams)
 
-        const response = await fetch(`${apiUrl}?${params}`)
+        const response = await httpCacheClient.get(`${apiUrl}?${params}`)
+        const { status, result } = response.data
 
-        if (!response.ok) {
-          const error = new Error('Could not fetch contract source code')
-          bail(error)
-          throw error
-        }
-
-        const { status, result } = await response.json()
         if (status === '0') {
           const error = new Error('Could not fetch contract source code')
           bail(error)
