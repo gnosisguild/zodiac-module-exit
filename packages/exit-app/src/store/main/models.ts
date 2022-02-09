@@ -21,6 +21,7 @@ export interface MainState {
   availableTokens: AvailableToken[]
   customTokens: Token[]
   step: EXIT_STEP
+  customTokenModalOpen: boolean
 }
 
 export enum TokenType {

@@ -20,3 +20,4 @@ export const getClaimToken = createSelector(getMainState, (main) => main.claimTo
 export const getTokens = createSelector(getMainState, (main) => main.availableTokens)
 export const getBalance = createSelector(getMainState, (main) => main.balance)
 export const getExitStep = createSelector(getMainState, (main) => main.step)
+export const getCustomTokenModalOpen = createSelector(getMainState, (main) => main.customTokenModalOpen)

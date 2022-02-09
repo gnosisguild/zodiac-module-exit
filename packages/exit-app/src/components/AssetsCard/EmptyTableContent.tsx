@@ -3,6 +3,8 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
 import { Link, TableBody, Typography } from '@material-ui/core'
+import { useRootDispatch } from '../../store'
+import { setCustomTokenModalOpen } from '../../store/main'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -18,6 +20,8 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export function EmptyTableContent(): React.ReactElement {
   const classes = useStyles()
+  const dispatch = useRootDispatch()
+  const handleOpen = () => dispatch(setCustomTokenModalOpen(true))
 
   return (
     <TableBody>
@@ -26,7 +30,7 @@ export function EmptyTableContent(): React.ReactElement {
           <Typography>No Assets Found</Typography>
           <Typography className={classes.detail}>
             Expect to see a token here? You may need <br /> to{' '}
-            <Link underline="always" color="textPrimary">
+            <Link underline="always" color="textPrimary" onClick={handleOpen}>
               add a custom token
             </Link>
             .

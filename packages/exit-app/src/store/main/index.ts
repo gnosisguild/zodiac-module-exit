@@ -30,6 +30,7 @@ const initialModulesState: MainState = {
   availableTokens: [],
   customTokens: [],
   step: EXIT_STEP.EXIT,
+  customTokenModalOpen: false,
 }
 
 export const mainSlice = createSlice({
@@ -79,6 +80,9 @@ export const mainSlice = createSlice({
       state.customTokens.push(action.payload)
       state.selectedTokens.push(action.payload.address)
     },
+    setCustomTokenModalOpen(state, action: PayloadAction<boolean>) {
+      state.customTokenModalOpen = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchExitModuleData.fulfilled, (state, action) => {
@@ -120,4 +124,5 @@ export const {
   setBalance,
   setExitStep,
   addCustomToken,
+  setCustomTokenModalOpen,
 } = mainSlice.actions
