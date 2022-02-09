@@ -8,7 +8,7 @@ import { CACHE_TYPE, getCacheHash, readCache, writeCache } from './cache'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
   try {
-    return getExitERC721Module(provider, module)
+    return getExitERC20Module(provider, module)
   } catch (err) {
     return getExitERC721Module(provider, module)
   }
@@ -114,7 +114,9 @@ export async function isExitModule(provider: ethers.providers.BaseProvider, addr
 
   try {
     const { ContractName } = await fetchContractSourceCode(provider.network.chainId, address)
-    return ContractName === 'Exit'
+    const response = ContractName === 'Exit'
+    writeCache(cacheHash, response)
+    return response
   } catch (err) {
     console.warn('error determining exit module using Etherscan', err)
   }

@@ -1,7 +1,7 @@
 import EIP3770List from './data/eip3770.json'
 import { ethers } from 'ethers'
 
-const EIP3770Names = Object.values(EIP3770List)
+const EIP3770Names = Object.values(EIP3770List).map((name) => name.toLowerCase())
 const EIP3770ChainIds = Object.keys(EIP3770List)
 
 export function formatAddressEIP3770(chainId: number, address: string) {
@@ -16,7 +16,7 @@ export function getEIP3770Prefix(chainId: number): string | undefined {
 }
 
 export function getEIP3770ChainId(name: string): number | undefined {
-  const index = EIP3770Names.indexOf(name)
+  const index = EIP3770Names.indexOf(name.toLowerCase())
   if (index >= 0) {
     return parseInt(EIP3770ChainIds[index])
   }
