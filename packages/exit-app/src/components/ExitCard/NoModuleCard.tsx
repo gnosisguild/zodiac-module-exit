@@ -4,6 +4,7 @@ import ArrowUpIcon from '../../assets/icons/arrow-up.svg'
 import { getSafeAppsLink } from '../../utils/safe'
 import { useRootSelector } from '../../store'
 import { getAccount, getChainId } from '../../store/main/selectors'
+import { useWallet } from '../../hooks/useWallet'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -32,31 +33,40 @@ const useStyles = makeStyles((theme) => ({
 
 export const NoModuleCard = () => {
   const classes = useStyles()
+  const { isGnosisSafe } = useWallet()
   const account = useRootSelector(getAccount)
   const chainId = useRootSelector(getChainId)
   const link = account && getSafeAppsLink(chainId, account)
+  const target = isGnosisSafe ? '_parent' : '_blank'
 
   return (
     <div className={classes.root}>
       <div className={classes.item}>
         <p className={classes.text}>This account does not have the Exit module enabled.</p>
         <span>
-          <a className={classes.link} href="https://github.com/gnosis/zodiac-module-exit">
+          <a
+            className={classes.link}
+            rel="noreferrer"
+            target={target}
+            href="https://github.com/gnosis/zodiac-module-exit"
+          >
             Read more about Safe Exit here
           </a>
         </span>
       </div>
-      <Button
-        fullWidth
-        size="large"
-        color="secondary"
-        variant="contained"
-        className={classes.button}
-        href={link}
-        startIcon={<img src={ArrowUpIcon} alt="arrow up" />}
-      >
-        Add Exit Module
-      </Button>
+
+      <a rel="noreferrer" target={target} href={link}>
+        <Button
+          fullWidth
+          size="large"
+          color="secondary"
+          variant="contained"
+          className={classes.button}
+          startIcon={<img src={ArrowUpIcon} alt="arrow up" />}
+        >
+          Add Exit Module
+        </Button>
+      </a>
     </div>
   )
 }

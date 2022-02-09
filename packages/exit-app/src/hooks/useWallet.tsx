@@ -105,7 +105,9 @@ export const useWallet = () => {
     setProvider(provider)
   }, [chainId])
 
-  return { provider, signer, onboard, startOnboard }
+  const isGnosisSafe = onboard.getState().wallet.name === 'Gnosis Safe'
+
+  return { provider, signer, onboard, startOnboard, isGnosisSafe }
 }
 
 export function setProvider(provider: ExternalProvider) {
