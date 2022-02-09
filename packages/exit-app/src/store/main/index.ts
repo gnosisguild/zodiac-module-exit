@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { EXIT_STEP, MainState } from './models'
+import { EXIT_STEP, MainState, Token } from './models'
 import { fetchExitModuleData, fetchTokenAssets, getAvailableTokens, getGasEstimationsForAssets } from './actions'
 import { BigNumber, ethers } from 'ethers'
 import { getNetworkName, NETWORK } from '../../utils/networks'
@@ -28,6 +28,7 @@ const initialModulesState: MainState = {
   ens: '',
   selectedTokens: [],
   availableTokens: [],
+  customTokens: [],
   step: EXIT_STEP.EXIT,
 }
 
@@ -74,6 +75,10 @@ export const mainSlice = createSlice({
     setExitStep(state, action: PayloadAction<EXIT_STEP>) {
       state.step = action.payload
     },
+    addCustomToken(state, action: PayloadAction<Token>) {
+      state.customTokens.push(action.payload)
+      state.selectedTokens.push(action.payload.address)
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchExitModuleData.fulfilled, (state, action) => {
@@ -114,4 +119,5 @@ export const {
   setSelectedTokens,
   setBalance,
   setExitStep,
+  addCustomToken,
 } = mainSlice.actions

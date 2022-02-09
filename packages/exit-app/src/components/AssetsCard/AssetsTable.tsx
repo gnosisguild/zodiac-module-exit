@@ -3,18 +3,18 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import classNames from 'classnames'
 import { Checkbox } from '../commons/input/Checkbox'
 import { BigNumber, BigNumberish, ethers } from 'ethers'
-import { SafeAssets, Token, TokenAsset } from '../../store/main/models'
+import { Token, TokenAsset } from '../../store/main/models'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { getSelectedTokens } from '../../store/main/selectors'
 import {
   Table,
   TableBody,
   TableCell,
+  TableCellProps,
   TableContainer,
   TableFooter,
   TableRow,
   Typography,
-  TableCellProps,
 } from '@material-ui/core'
 import { Row } from '../commons/layout/Row'
 import { TextAmount } from '../commons/text/TextAmount'
@@ -150,7 +150,8 @@ const useStyles = makeStyles((theme: Theme) =>
 )
 
 interface AssetsTableProps {
-  assets: SafeAssets
+  fiat: string
+  assets: TokenAsset[]
   token?: Token
   query?: string
 }
@@ -275,8 +276,8 @@ export function AssetsTable({ assets, token, query }: AssetsTableProps): React.R
   const claimRate = useClaimRate()
 
   const rows = useMemo((): RowItem[] => {
-    const ethToken = assets.items.find((asset) => asset.tokenInfo.symbol === 'ETH')
-    return assets.items
+    const ethToken = assets.find((asset) => asset.tokenInfo.symbol === 'ETH')
+    return assets
       .filter((assetToken) => token?.address !== assetToken.tokenInfo.address)
       .map((token): RowItem => {
         const claimRateAmount = ethers.utils.parseUnits(claimRate.toString(), 18)
@@ -291,13 +292,13 @@ export function AssetsTable({ assets, token, query }: AssetsTableProps): React.R
           holding: formatRowAmount(token, token.balance),
         }
       })
-  }, [assets.items, claimRate, token?.address])
+  }, [assets, claimRate, token?.address])
 
   const totals = useMemo(() => {
-    const tokenAsset = assets.items.find((asset) => asset.tokenInfo.symbol === 'ETH')
+    const tokenAsset = assets.find((asset) => asset.tokenInfo.symbol === 'ETH')
     const tokens = selected
       .map((address) => {
-        return assets.items.find((tokenAsset) => tokenAsset.tokenInfo.address === address)
+        return assets.find((tokenAsset) => tokenAsset.tokenInfo.address === address)
       })
       .filter((token): token is TokenAsset => token !== undefined)
 
@@ -310,7 +311,7 @@ export function AssetsTable({ assets, token, query }: AssetsTableProps): React.R
       holding: formatRowFiatAmount(tokenAsset, holdingTotal),
       claimable: formatRowFiatAmount(tokenAsset, claimableTotal),
     }
-  }, [assets.items, claimRate, selected])
+  }, [assets, claimRate, selected])
 
   const handleRequestSort = () => setSort(sort === 'asc' ? 'desc' : 'asc')
 

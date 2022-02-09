@@ -12,6 +12,7 @@ import { ExitERC20 } from '../services/ExitERC20'
 import { ModuleType } from '../store/main/models'
 import { ExitERC721 } from '../services/ExitERC721'
 import { IExit } from '../services/interface/IExit'
+import { useMemo } from 'react'
 
 export const useExit = (): undefined | IExit => {
   const type = useRootSelector(getModuleType)
@@ -22,12 +23,13 @@ export const useExit = (): undefined | IExit => {
   const claimToken = useRootSelector(getClaimToken)
   const selectedTokens = useRootSelector(getSelectedTokens)
 
-  if (!module || !wallet || !token) return
+  return useMemo(() => {
+    if (!module || !wallet || !token) return
+    if (type === ModuleType.ERC721) {
+      if (!claimToken) return
+      return new ExitERC721({ module, wallet, token, claimToken, selectedTokens })
+    }
 
-  if (type === ModuleType.ERC721) {
-    if (!claimToken) return
-    return new ExitERC721({ module, wallet, token, claimToken, selectedTokens })
-  }
-
-  return new ExitERC20({ module, wallet, token, claimAmount, selectedTokens })
+    return new ExitERC20({ module, wallet, token, claimAmount, selectedTokens })
+  }, [claimAmount, claimToken, module, selectedTokens, token, type, wallet])
 }

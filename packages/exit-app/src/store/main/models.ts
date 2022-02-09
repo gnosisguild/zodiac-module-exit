@@ -19,6 +19,7 @@ export interface MainState {
   }
   selectedTokens: string[]
   availableTokens: AvailableToken[]
+  customTokens: Token[]
   step: EXIT_STEP
 }
 

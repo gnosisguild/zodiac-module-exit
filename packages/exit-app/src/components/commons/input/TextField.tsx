@@ -18,8 +18,10 @@ const StyledTextField = withStyles((theme) => ({
     '& label.Mui-focused': {
       position: 'relative',
       transform: 'none',
-      color: theme.palette.text.primary,
       marginBottom: theme.spacing(1),
+    },
+    '& label:not(.Mui-error).Mui-focused': {
+      color: theme.palette.text.primary,
     },
     '& .MuiInputBase-root': {
       marginTop: 0,

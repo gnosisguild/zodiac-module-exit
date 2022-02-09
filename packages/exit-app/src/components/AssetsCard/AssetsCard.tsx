@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import { InputAdornment, makeStyles, Typography } from '@material-ui/core'
+import React, { useEffect, useMemo, useState } from 'react'
+import { InputAdornment, Link, makeStyles, Typography } from '@material-ui/core'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { fetchTokenAssets } from '../../store/main/actions'
 import { useWallet } from '../../hooks/useWallet'
-import { getAssets, getDesignatedToken } from '../../store/main/selectors'
+import { getAssets, getCustomTokens, getDesignatedToken } from '../../store/main/selectors'
 import { AssetsTable } from './AssetsTable'
 import { Row } from '../commons/layout/Row'
 import { TextField } from '../commons/input/TextField'
 import SearchIcon from '@material-ui/icons/Search'
+import { Grow } from '../commons/Grow'
+import { CustomTokenModal } from '../CustomTokenModal/CustomTokenModal'
+import { TokenAsset } from '../../store/main/models'
 
 interface AssetsCardProps {
   safe?: string
@@ -20,9 +23,15 @@ const useStyles = makeStyles((theme) => ({
   },
   controls: {
     marginTop: theme.spacing(2.5),
+    paddingRight: theme.spacing(2),
+    alignItems: 'center',
   },
   search: {
     maxWidth: 240,
+  },
+  link: {
+    color: '#D9D4AD',
+    fontSize: 16,
   },
 }))
 
@@ -31,10 +40,20 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
   const dispatch = useRootDispatch()
   const { provider } = useWallet()
 
+  const [open, setOpen] = useState(false)
+
   const assets = useRootSelector(getAssets)
+  const customTokens = useRootSelector(getCustomTokens)
   const token = useRootSelector(getDesignatedToken)
 
   const [query, setQuery] = useState('')
+
+  const tokens: TokenAsset[] = useMemo(() => {
+    const customAssets = customTokens.map((token): TokenAsset => {
+      return { tokenInfo: token, gas: '0', fiatConversion: '0', fiatBalance: '0', balance: '0' }
+    })
+    return [...customAssets, ...assets.items]
+  }, [assets, customTokens])
 
   useEffect(() => {
     if (provider && safe) dispatch(fetchTokenAssets({ provider, safe }))
@@ -57,8 +76,13 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
           value={query}
           onChange={(evt) => setQuery(evt.target.value)}
         />
+        <Grow />
+        <Link className={classes.link} onClick={() => setOpen(true)}>
+          Add Custom token
+        </Link>
       </Row>
-      <AssetsTable assets={assets} token={token} query={query} />
+      <AssetsTable fiat={assets.fiatTotal} assets={tokens} token={token} query={query} />
+      <CustomTokenModal open={open} onClose={() => setOpen(false)} />
     </div>
   )
 }

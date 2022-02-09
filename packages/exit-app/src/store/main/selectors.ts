@@ -12,6 +12,7 @@ export const getDesignatedToken = createSelector(getMainState, (main) => main.to
 export const getCirculatingSupply = createSelector(getMainState, (main) => main.circulatingSupply)
 export const getClaimAmount = createSelector(getMainState, (main) => main.claimAmount)
 export const getAssets = createSelector(getMainState, (main) => main.assets)
+export const getCustomTokens = createSelector(getMainState, (main) => main.customTokens)
 export const getSelectedTokens = createSelector(getMainState, (main) => main.selectedTokens)
 export const getLoading = createSelector(getMainState, (main) => main.loading)
 export const getModuleType = createSelector(getMainState, (main) => main.type)
