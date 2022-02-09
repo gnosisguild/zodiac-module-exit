@@ -7,42 +7,36 @@ import { Erc20__factory, Erc721__factory, ExitErc20__factory, ExitErc721__factor
 import { CACHE_TYPE, getCacheHash, readCache, writeCache } from './cache'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
-  try {
-    return getExitERC20Module(provider, module)
-  } catch (err) {
-    return getExitERC721Module(provider, module)
-  }
-}
-
-export async function getExitERC20Module(provider: ethers.providers.BaseProvider, module: string) {
   const ethcallProvider = new Provider()
   await ethcallProvider.init(provider)
 
-  const exit = new Contract(module, ExitErc20__factory.abi)
-  const txs: Call[] = [exit.circulatingSupply(), exit.designatedToken(), exit.getCirculatingSupply()]
+  const exitERC20 = new Contract(module, ExitErc20__factory.abi)
+  const exitERC721 = new Contract(module, ExitErc721__factory.abi)
+  const txs: Call[] = [
+    exitERC20.circulatingSupply(),
+    exitERC20.designatedToken(),
+    exitERC20.getCirculatingSupply(),
+    exitERC721.collection(),
+  ]
   const results = await ethcallProvider.tryAll(txs)
+
+  const circulatingSupplyAddress = results[0] as string
+  const circulatingSupply = results[2] as ethers.BigNumber
+
+  if (results[3]) {
+    return {
+      type: ModuleType.ERC721,
+      designatedToken: results[3] as string,
+      circulatingSupplyAddress,
+      circulatingSupply,
+    }
+  }
 
   return {
     type: ModuleType.ERC20,
-    circulatingSupplyAddress: results[0] as string,
     designatedToken: results[1] as string,
-    circulatingSupply: results[2] as ethers.BigNumber,
-  }
-}
-
-export async function getExitERC721Module(provider: ethers.providers.BaseProvider, module: string) {
-  const ethcallProvider = new Provider()
-  await ethcallProvider.init(provider)
-
-  const exit = new Contract(module, ExitErc721__factory.abi)
-  const txs: Call[] = [exit.circulatingSupply(), exit.collection(), exit.getCirculatingSupply()]
-  const results = await ethcallProvider.tryAll(txs)
-
-  return {
-    type: ModuleType.ERC721,
-    circulatingSupplyAddress: results[0] as string,
-    designatedToken: results[1] as string,
-    circulatingSupply: results[2] as ethers.BigNumber,
+    circulatingSupplyAddress,
+    circulatingSupply,
   }
 }
 
