@@ -23,8 +23,3 @@ export function getClaimableAmount(
   const _balance = ethers.utils.formatUnits(balance, token.decimals)
   return fiatFormatter.format(parseFloat(tokenAsset.fiatConversion) * parseFloat(_balance))
 }
-
-export function getTotalSupply(amount: BigNumber, totalSupply: BigNumberish) {
-  if (BigNumber.from(totalSupply).isZero()) return 0
-  return totalSupply
-}
