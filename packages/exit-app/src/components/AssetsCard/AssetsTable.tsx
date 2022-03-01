@@ -22,7 +22,7 @@ import { balanceFormatter, fiatFormatter, integerFormatter } from '../../utils/f
 import { setSelectedTokens } from '../../store/main'
 import { EnhancedTableHead } from './EnhancedTableHead'
 import { EmptyTableContent } from './EmptyTableContent'
-import { useClaimRate } from '../../hooks/useClaimRate'
+import { useAmountRate } from '../../hooks/useAmountRate'
 
 interface RowAmount {
   value: string
@@ -273,15 +273,15 @@ export function AssetsTable({ assets, token, query }: AssetsTableProps): React.R
   const dispatch = useRootDispatch()
   const selected = useRootSelector(getSelectedTokens)
 
-  const claimRate = useClaimRate()
+  const getClaimAmount = useAmountRate()
 
   const rows = useMemo((): RowItem[] => {
     const ethToken = assets.find((asset) => asset.tokenInfo.symbol === 'ETH')
     return assets
       .filter((assetToken) => token?.address !== assetToken.tokenInfo.address)
       .map((token): RowItem => {
-        const claimRateAmount = ethers.utils.parseUnits(claimRate.toString(), 18)
-        const claimable = ethers.BigNumber.from(token.balance).mul(claimRateAmount).div(BigNumber.from(10).pow(18))
+        const claimable = getClaimAmount(ethers.BigNumber.from(token.balance))
+
         return {
           address: token.tokenInfo.address,
           name: token.tokenInfo.name,
@@ -292,7 +292,7 @@ export function AssetsTable({ assets, token, query }: AssetsTableProps): React.R
           holding: formatRowAmount(token, token.balance),
         }
       })
-  }, [assets, claimRate, token?.address])
+  }, [assets, getClaimAmount, token?.address])
 
   const totals = useMemo(() => {
     const tokenAsset = assets.find((asset) => asset.tokenInfo.symbol === 'ETH')
@@ -304,6 +304,7 @@ export function AssetsTable({ assets, token, query }: AssetsTableProps): React.R
 
     const gasTotal = tokens.reduce((acc, token) => acc.add(token.gas), BigNumber.from(0))
     const holdingTotal = tokens.reduce((acc, token) => acc + getFiatAmount(token), 0)
+    const claimRate = parseFloat(ethers.utils.formatUnits(getClaimAmount(BigNumber.from(10).pow(18)), 18))
     const claimableTotal = tokens.reduce((acc, token) => acc + claimRate * getFiatAmount(token), 0)
 
     return {
@@ -311,7 +312,7 @@ export function AssetsTable({ assets, token, query }: AssetsTableProps): React.R
       holding: formatRowFiatAmount(tokenAsset, holdingTotal),
       claimable: formatRowFiatAmount(tokenAsset, claimableTotal),
     }
-  }, [assets, claimRate, selected])
+  }, [assets, getClaimAmount, selected])
 
   const handleRequestSort = () => setSort(sort === 'asc' ? 'desc' : 'asc')
 

@@ -24,10 +24,7 @@ export function getClaimableAmount(
   return fiatFormatter.format(parseFloat(tokenAsset.fiatConversion) * parseFloat(_balance))
 }
 
-export function getClaimRate(amount: BigNumber, totalSupply: BigNumberish) {
-  if (amount.gt(totalSupply)) return 1
+export function getTotalSupply(amount: BigNumber, totalSupply: BigNumberish) {
   if (BigNumber.from(totalSupply).isZero()) return 0
-  const fnAmount = ethers.FixedNumber.fromValue(amount, 18)
-  const fnCS = ethers.FixedNumber.fromValue(BigNumber.from(totalSupply), 18)
-  return fnAmount.divUnsafe(fnCS).toUnsafeFloat()
+  return totalSupply
 }

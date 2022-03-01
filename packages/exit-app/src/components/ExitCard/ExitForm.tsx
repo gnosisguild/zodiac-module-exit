@@ -8,7 +8,7 @@ import React from 'react'
 import { fiatFormatter } from '../../utils/format'
 import { getTokenBalance } from '../../services/module'
 import { fetchExitModuleData, fetchTokenAssets, getAvailableTokens } from '../../store/main/actions'
-import { useClaimRate } from '../../hooks/useClaimRate'
+import { useAmountRate } from '../../hooks/useAmountRate'
 import { useRootDispatch, useRootSelector } from '../../store'
 import {
   getAccount,
@@ -24,6 +24,7 @@ import { useWallet } from '../../hooks/useWallet'
 import { setBalance } from '../../store/main'
 import { makeStyles } from '@material-ui/core'
 import { EXIT_STEP } from '../../store/main/models'
+import { BigNumber, ethers } from 'ethers'
 
 interface ExitFormProps {
   loading?: boolean
@@ -40,7 +41,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 export const ExitForm = ({ loading }: ExitFormProps) => {
-  const claimRate = useClaimRate()
+  const getClaimAmount = useAmountRate()
   const { provider } = useWallet()
 
   const dispatch = useRootDispatch()
@@ -55,6 +56,7 @@ export const ExitForm = ({ loading }: ExitFormProps) => {
   const network = useRootSelector(getChainId)
   const step = useRootSelector(getExitStep)
 
+  const claimRate = parseFloat(ethers.utils.formatUnits(getClaimAmount(BigNumber.from(10).pow(18)), 18))
   const claimableAmount = fiatFormatter.format(parseFloat(assets.fiatTotal) * claimRate)
 
   const handleExit = async () => {
