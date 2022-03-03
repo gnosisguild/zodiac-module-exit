@@ -1,60 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.6;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-contract CirculatingSupply is OwnableUpgradeable {
+contract ExclusionList {
     event ExclusionAdded(address indexed excludedAddress);
     event ExclusionRemoved(address indexed RemovedAddress);
-    event TokenSet(address indexed newToken);
 
-    address public token;
     address internal constant SENTINEL_EXCLUSIONS = address(0x1);
 
     // Mapping of excluded addresses
     mapping(address => address) internal exclusions;
-
-    constructor(
-        address _owner,
-        address _token,
-        address[] memory _exclusions
-    ) {
-        bytes memory initParams = abi.encode(_owner, _token, _exclusions);
-        setUp(initParams);
-    }
-
-    function setUp(bytes memory initializeParams) public {
-        (address _owner, address _token, address[] memory _exclusions) = abi
-            .decode(initializeParams, (address, address, address[]));
-        __Ownable_init();
-        transferOwnership(_owner);
-        setupExclusions();
-        token = _token;
-        for (uint256 i = 0; i < _exclusions.length; i++) {
-            excludeAddress(_exclusions[i]);
-        }
-    }
-
-    function get() public view returns (uint256 circulatingSupply) {
-        circulatingSupply = ERC20(token).totalSupply();
-        if (exclusions[SENTINEL_EXCLUSIONS] != SENTINEL_EXCLUSIONS) {
-            address exclusion = exclusions[SENTINEL_EXCLUSIONS];
-            while (exclusion != SENTINEL_EXCLUSIONS) {
-                circulatingSupply -= ERC20(token).balanceOf(exclusion);
-                exclusion = exclusions[exclusion];
-            }
-        }
-        return circulatingSupply;
-    }
-
-    /// @dev Sets the token to calculate circulating supply of
-    /// @param _token token to calculate circulating supply of
-    /// @notice This can only be called by the owner
-    function setToken(address _token) public onlyOwner {
-        token = _token;
-        emit TokenSet(_token);
-    }
 
     function setupExclusions() internal {
         require(
@@ -68,9 +22,8 @@ contract CirculatingSupply is OwnableUpgradeable {
     /// @param prevExclusion Exclusion that pointed to the exclusion to be removed in the linked list
     /// @param exclusion Exclusion to be removed
     /// @notice This can only be called by the owner
-    function removeExclusion(address prevExclusion, address exclusion)
-        public
-        onlyOwner
+    function _removeExclusion(address prevExclusion, address exclusion)
+        internal
     {
         require(
             exclusion != address(0) && exclusion != SENTINEL_EXCLUSIONS,
@@ -85,14 +38,7 @@ contract CirculatingSupply is OwnableUpgradeable {
         emit ExclusionRemoved(exclusion);
     }
 
-    /// @dev Enables the balance of an address from the circulatingSupply calculation
-    /// @param exclusion Address to be excluded
-    /// @notice This can only be called by the owner
-    function exclude(address exclusion) public onlyOwner {
-        excludeAddress(exclusion);
-    }
-
-    function excludeAddress(address exclusion) private {
+    function _excludeAddress(address exclusion) internal {
         require(
             exclusion != address(0) && exclusion != SENTINEL_EXCLUSIONS,
             "Invalid exclusion"
