@@ -25,7 +25,7 @@ This module is intended to be used with the [Gnosis Safe](https://github.com/gno
 ### Flow
 
 - Make sure the Gnosis Safe has any ERC20 compatible token assets available to redeem.
-- Execute the `exit` function with a signer that owns designated tokens, passing the available ERC20 tokens held by the Gnosis Safe as a parameter.
+- Execute the `exit` function with an address that owns designated tokens, passing the available ERC20 tokens held by the Gnosis Safe as a parameter.
 
 ### Solidity Compiler
 
