@@ -1,5 +1,4 @@
 import { TextField } from '../../commons/input/TextField'
-
 import { makeStyles, MenuItem } from '@material-ui/core'
 import { useRootDispatch, useRootSelector } from '../../../store'
 import { setClaimToken } from '../../../store/main'
@@ -25,13 +24,24 @@ const useStyles = makeStyles((theme) => ({
   select: {
     borderWidth: 1,
     borderStyle: 'solid',
-    borderColor: theme.palette.common.white,
+    borderColor: 'rgba(217, 212, 173, 0.7)',
+    padding: 8,
     '&:after': {
       content: 'none',
+    },
+    '&:hover': {
+      borderColor: theme.palette.common.white,
+    },
+    '&:disabled:hover': {
+      borderColor: theme.palette.common.white,
     },
   },
   item: {
     maxHeight: 80,
+    padding: '8px 4px',
+  },
+  list: {
+    padding: 3,
   },
 }))
 
@@ -51,6 +61,11 @@ export const ClaimTokenSelect = ({ disabled }: ClaimTokenSelectProps) => {
       className={classes.spacing}
       InputProps={{ disabled: !token || disabled, classes: { root: classes.select } }}
       onChange={(evt) => handleTokenChange(evt.target.value)}
+      SelectProps={{
+        MenuProps: {
+          classes: { list: classes.list },
+        },
+      }}
       value={token || 'none'}
       label="Exit Token"
     >
