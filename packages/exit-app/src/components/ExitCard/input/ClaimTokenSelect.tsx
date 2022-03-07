@@ -32,9 +32,6 @@ const useStyles = makeStyles((theme) => ({
     '&:hover': {
       borderColor: theme.palette.common.white,
     },
-    '&:disabled:hover': {
-      borderColor: theme.palette.common.white,
-    },
   },
   item: {
     maxHeight: 80,
