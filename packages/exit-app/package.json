@@ -1,0 +1,80 @@
+{
+  "name": "safe-exit-ui",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "./",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/types ./src/contracts/abis/*.json",
+    "postinstall": "yarn build:types"
+  },
+  "dependencies": {
+    "@gnosis.pm/safe-react-components": "^0.8.0",
+    "@material-ui/core": "^4.12.3",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.60",
+    "@reduxjs/toolkit": "^1.6.2",
+    "async-retry": "^1.3.3",
+    "axios": "^0.24.0",
+    "axios-cache-adapter": "^2.7.3",
+    "bnc-onboard": "^1.35.4",
+    "classnames": "^2.3.1",
+    "ethcall": "^4.0.7",
+    "ethers": "^5.4.7",
+    "localforage": "^1.10.0",
+    "localforage-memoryStorageDriver": "^0.9.2",
+    "lodash.memoize": "^4.1.2",
+    "material-ui": "^0.20.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-hook-form": "^7.26.1",
+    "react-redux": "^7.2.6",
+    "react-router-dom": "^6.2.1",
+    "react-scripts": "4.0.3",
+    "styled-components": "^5.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.2.2",
+    "@testing-library/user-event": "^13.1.9",
+    "@typechain/ethers-v5": "^7.1.0",
+    "@types/async-retry": "^1.4.3",
+    "@types/jest": "^26.0.10",
+    "@types/lodash.memoize": "^4.1.6",
+    "@types/node": "^16.7.1",
+    "@types/react": "^17.0.19",
+    "@types/react-dom": "^17.0.9",
+    "@types/styled-components": "^5.1.12",
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-react-app": "^6.0.0",
+    "eslint-plugin-flowtype": "^5.7.2",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-react": "^7.23.2",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "prettier": "2.3.2",
+    "typechain": "^5.1.2",
+    "typescript": "~4.3.5"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

@@ -8,7 +8,9 @@
     "contracts:test": "cd packages/contracts && yarn coverage",
     "contracts:build": "cd packages/contracts && yarn build",
     "contracts:install": "cd packages/contracts && yarn install",
-    "preinstall": "yarn contracts:install"
+    "app:build": "cd packages/exit-app && yarn build",
+    "app:install": "cd packages/exit-app && yarn install",
+    "preinstall": "yarn contracts:install && yarn app:install"
   },
   "repository": {
     "type": "git",
