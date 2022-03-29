@@ -1,0 +1,30 @@
+name: Dev Continuous Deployment
+
+on:
+  push:
+    branches: master
+
+env:
+  REACT_APP_ETHERSCAN_KEY: ${{ secrets.REACT_APP_ETHERSCAN_KEY }}
+  REACT_APP_INFURA_ID: ${{ secrets.REACT_APP_INFURA_ID }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Dev
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - run: npm install -g yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - name: Setup fleek config file
+        run: cp ./.fleek.dev.json ./.fleek.json
+      - name: Deploy site
+        id: deploy
+        uses: fleekhq/action-deploy@v1
+        with:
+          apiKey: ${{ secrets.FLEEK_API_KEY }}
+      - name: Get the output url
+        run: echo "Deploy url is ${{ steps.deploy.outputs.deployUrl }}"

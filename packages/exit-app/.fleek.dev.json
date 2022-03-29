@@ -1,0 +1,14 @@
+{
+  "site": {
+    "id": "45e6aca2-c66f-421a-a70e-2265cf098b5f",
+    "team": "ae342e76-2b64-47fd-80f2-cf0274e932f7",
+    "platform": "ipfs",
+    "source": "ipfs",
+    "name": "exit-app-dev"
+  },
+  "build": {
+    "baseDir": "",
+    "publicDir": "build",
+    "rootDir": ""
+  }
+}
