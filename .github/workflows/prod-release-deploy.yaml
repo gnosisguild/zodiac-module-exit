@@ -7,6 +7,7 @@ on:
 env:
   REACT_APP_ETHERSCAN_KEY: ${{ secrets.REACT_APP_ETHERSCAN_KEY }}
   REACT_APP_INFURA_ID: ${{ secrets.REACT_APP_INFURA_ID }}
+  REACT_APP_ONBOARD_JS_DAPP_ID: ${{ secrets.REACT_APP_ONBOARD_JS_DAPP_ID }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
