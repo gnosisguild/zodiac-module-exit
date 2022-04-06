@@ -4,6 +4,8 @@ import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { useEffect, useState } from 'react'
 import { setAccount, setChainId } from '../../store/main'
+import { REDUX_STORE } from '../../store'
+import { getAccount } from '../../store/main/selectors'
 import { useWallet } from '../../hooks/useWallet'
 import { getExitModulesFromSafe } from '../../services/module'
 import { getAddress, getEIP3770Prefix } from '../../utils/address'
@@ -45,7 +47,7 @@ export const AttachAccount = () => {
   const dispatch = useRootDispatch()
   const chainId = useRootSelector(getChainId)
 
-  const [account, _setAccount] = useState(locationState?.address || '')
+  const [account, _setAccount] = useState(locationState?.address || getAccount(REDUX_STORE.getState()) || '')
   const [loading, setLoading] = useState(false)
   const [invalidSafe, setInvalidSafe] = useState(locationState?.error === NOT_A_SAFE_ERROR)
 
@@ -70,6 +72,7 @@ export const AttachAccount = () => {
       } catch (err) {
         console.warn('attach error', err)
         setInvalidSafe(true)
+        dispatch(setAccount({ account: '', module: undefined }))
       } finally {
         setLoading(false)
       }
