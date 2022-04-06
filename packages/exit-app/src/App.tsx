@@ -2,7 +2,7 @@ import React from 'react'
 import { makeStyles } from '@material-ui/core'
 import { Header } from './components/Header/Header'
 import { AttachAccount } from './components/AttachAccount/AttachAccount'
-import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
+import { HashRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { Dashboard } from './components/Dashboard/Dashboard'
 
 const useStyles = makeStyles((theme) => ({
@@ -18,7 +18,7 @@ export const App = (): React.ReactElement => {
   const classes = useStyles()
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route
           path="/"
@@ -35,6 +35,6 @@ export const App = (): React.ReactElement => {
           <Route path="/" element={<AttachAccount />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
