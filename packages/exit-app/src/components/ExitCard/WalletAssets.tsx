@@ -1,6 +1,5 @@
 import React from 'react'
 import { ValueLine } from '../commons/ValueLine'
-import { ReactComponent as ExternalIcon } from '../../assets/icons/external-icon.svg'
 import classNames from 'classnames'
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
 import { useWallet } from '../../hooks/useWallet'
@@ -77,7 +76,6 @@ export const WalletAssets = ({ className }: WalletAssetsProps) => {
       />
       <ValueLine
         label="Market Value"
-        icon={<ExternalIcon />}
         loading={!marketValue}
         value={marketValue && <TextAmount>~${marketValue}</TextAmount>}
       />
