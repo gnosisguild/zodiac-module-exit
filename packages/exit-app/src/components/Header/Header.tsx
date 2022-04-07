@@ -207,7 +207,7 @@ export const Header = () => {
           </Typography>
         ) : (
           <Typography variant="body1" className={classNames(classes.title, classes.notSet)}>
-            No Wallet Connected
+            No wallet connected
           </Typography>
         )}
       </div>
