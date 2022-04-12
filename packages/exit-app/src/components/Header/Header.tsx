@@ -141,7 +141,7 @@ export const Header = () => {
           <img src={ExitModuleLogo} alt="Zodiac App Logo" className={classes.img} />
         </div>
         <Typography variant="h5" className={classes.title}>
-          Exit
+          Exit App
         </Typography>
       </div>
       <div className={classes.banner} />

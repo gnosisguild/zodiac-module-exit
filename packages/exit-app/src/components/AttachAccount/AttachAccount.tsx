@@ -12,6 +12,7 @@ import { getAddress, getEIP3770Prefix } from '../../utils/address'
 import { getChainId } from '../../store/main/selectors'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { NOT_A_SAFE_ERROR } from '../Dashboard/Dashboard'
+import { NETWORK_NAME } from '../../utils/networks'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -58,6 +59,10 @@ export const AttachAccount = () => {
       dispatch(setChainId(address[1]))
     }
   }, [address, chainId, dispatch])
+
+  useEffect(() => {
+    setInvalidSafe(false)
+  }, [chainId])
 
   const handleAttach = async () => {
     if (address && provider) {
@@ -110,7 +115,8 @@ export const AttachAccount = () => {
 
         {invalidSafe ? (
           <Typography align="center" color="error" className={classes.errorSpacing}>
-            The address you entered is not a Gnosis Safe
+            The account address entered is not a Safe on {NETWORK_NAME[chainId]}. Please confirm it's correct, or use
+            the dropdown above to attach a Safe deployed on a different network.
           </Typography>
         ) : null}
       </Paper>

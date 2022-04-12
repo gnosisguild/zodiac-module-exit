@@ -6,7 +6,7 @@ on:
 
 env:
   REACT_APP_ETHERSCAN_KEY: ${{ secrets.REACT_APP_ETHERSCAN_KEY }}
-  REACT_APP_INFURA_ID: ${{ secrets.REACT_APP_INFURA_ID }}
+  REACT_APP_INFURA_KEY: ${{ secrets.REACT_APP_INFURA_KEY }}
   REACT_APP_ONBOARD_JS_DAPP_ID: ${{ secrets.REACT_APP_ONBOARD_JS_DAPP_ID }}
 jobs:
   deploy:
@@ -28,7 +28,7 @@ jobs:
         uses: anantaramdas/ipfs-pinata-deploy-action@39bbda1ce1fe24c69c6f57861b8038278d53688d
         with:
           pin-name: Zodiac Exit App - Latest — ${ GITHUB_SHA }
-          path: './packages/exit-app/build'
+          path: "./packages/exit-app/build"
           pinata-api-key: ${{ secrets.PINATA_API_KEY }}
           pinata-secret-api-key: ${{ secrets.PINATA_API_SECRET_KEY }}
 
@@ -41,8 +41,8 @@ jobs:
       - name: Update DNS with new IPFS hash
         env:
           CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
-          RECORD_DOMAIN: 'gnosisguild.org'
-          RECORD_NAME: '_dnslink.exit.dev'
+          RECORD_DOMAIN: "gnosisguild.org"
+          RECORD_NAME: "_dnslink.exit.dev"
           CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
         uses: textileio/cloudflare-update-dnslink@0fe7b7a1ffc865db3a4da9773f0f987447ad5848
         with:
@@ -50,4 +50,3 @@ jobs:
 
       - name: Get IPFS url
         run: echo "IPFS gateways — https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.dweb.link/ or https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.cf-ipfs.com/"
-
