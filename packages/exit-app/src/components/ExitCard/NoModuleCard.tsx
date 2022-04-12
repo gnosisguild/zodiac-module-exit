@@ -20,6 +20,7 @@ const useStyles = makeStyles((theme) => ({
   },
   link: {
     display: 'inline-block',
+    color: 'white',
     fontSize: 16,
     marginTop: 16,
     '&:visited': {
@@ -29,6 +30,9 @@ const useStyles = makeStyles((theme) => ({
   button: {
     marginTop: theme.spacing(2),
   },
+  buttonLink: {
+    textDecoration: 'none'
+  }
 }))
 
 export const NoModuleCard = () => {
@@ -55,7 +59,7 @@ export const NoModuleCard = () => {
         </span>
       </div>
 
-      <a rel="noreferrer" target={target} href={link}>
+      <a rel="noreferrer" target={target} href={link} className={classes.buttonLink}>
         <Button
           fullWidth
           size="large"

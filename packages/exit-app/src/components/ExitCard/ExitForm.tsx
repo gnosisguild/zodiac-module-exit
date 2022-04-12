@@ -1,7 +1,6 @@
 import { ClaimInput } from './input/ClaimInput'
 import classNames from 'classnames'
 import { ValueLine } from '../commons/ValueLine'
-import { ReactComponent as QuestionIcon } from '../../assets/icons/question-icon.svg'
 import { TextAmount } from '../commons/text/TextAmount'
 import { ExitButton } from './ExitButton'
 import React from 'react'
@@ -76,7 +75,6 @@ export const ExitForm = ({ loading }: ExitFormProps) => {
       <div className={classNames(classes.spacing, classes.content)}>
         <ValueLine
           label="Claimable Value"
-          icon={<QuestionIcon />}
           loading={loading}
           value={<TextAmount>~${claimableAmount}</TextAmount>}
         />

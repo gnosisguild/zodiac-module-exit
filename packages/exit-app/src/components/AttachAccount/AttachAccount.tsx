@@ -4,6 +4,8 @@ import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { useEffect, useState } from 'react'
 import { setAccount, setChainId } from '../../store/main'
+import { REDUX_STORE } from '../../store'
+import { getAccount } from '../../store/main/selectors'
 import { useWallet } from '../../hooks/useWallet'
 import { getExitModulesFromSafe } from '../../services/module'
 import { getAddress, getEIP3770Prefix } from '../../utils/address'
@@ -45,7 +47,7 @@ export const AttachAccount = () => {
   const dispatch = useRootDispatch()
   const chainId = useRootSelector(getChainId)
 
-  const [account, _setAccount] = useState(locationState?.address || '')
+  const [account, _setAccount] = useState(locationState?.address || getAccount(REDUX_STORE.getState()) || '')
   const [loading, setLoading] = useState(false)
   const [invalidSafe, setInvalidSafe] = useState(locationState?.error === NOT_A_SAFE_ERROR)
 
@@ -70,6 +72,7 @@ export const AttachAccount = () => {
       } catch (err) {
         console.warn('attach error', err)
         setInvalidSafe(true)
+        dispatch(setAccount({ account: '', module: undefined }))
       } finally {
         setLoading(false)
       }
@@ -80,11 +83,10 @@ export const AttachAccount = () => {
     <div className={classes.root}>
       <Paper classes={{ root: classes.card }}>
         <Typography className={classes.spacing} variant="h4">
-          Attach an Exit enabled Safe
+          Attach a Safe to Exit
         </Typography>
         <Typography className={classes.spacing} variant="body1">
-          Once a Safe is attached, you will be able to select the assets to claim, and pull them from the safe (in
-          proportion to the amount of a designated token you hold).
+          Enter the account address of a Safe that has the Zodiac Exit Mod enabled. If you hold assets redeemable from the Safe, you will be able to claim a proportional share of the digital assets the Safe holds.
         </Typography>
 
         <TextField

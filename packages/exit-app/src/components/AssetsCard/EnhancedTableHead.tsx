@@ -27,7 +27,7 @@ interface HeadCell {
 const headCells: HeadCell[] = [
   { id: 'token', label: 'Token', width: '15%' },
   { id: 'gas', label: 'Gas Cost to Claim', width: '20%' },
-  { id: 'holding', label: 'Dao Holdings', width: '30%' },
+  { id: 'holding', label: 'Asset Value', width: '30%' },
   { id: 'claimable', label: 'Claimable Value', width: '30%' },
 ]
 
