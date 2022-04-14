@@ -1,0 +1,52 @@
+name: Dev Continuous Deployment
+
+on:
+  push:
+    branches: master
+
+env:
+  REACT_APP_ETHERSCAN_KEY: ${{ secrets.REACT_APP_ETHERSCAN_KEY }}
+  REACT_APP_INFURA_KEY: ${{ secrets.REACT_APP_INFURA_KEY }}
+  REACT_APP_ONBOARD_JS_DAPP_ID: ${{ secrets.REACT_APP_ONBOARD_JS_DAPP_ID }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Dev
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - run: npm install -g yarn
+      - run: yarn install --frozen-lockfile
+        working-directory: packages/exit-app
+      - run: yarn build
+        working-directory: packages/exit-app
+
+      - name: Pin to IPFS
+        id: upload
+        uses: anantaramdas/ipfs-pinata-deploy-action@39bbda1ce1fe24c69c6f57861b8038278d53688d
+        with:
+          pin-name: Zodiac Exit App - Latest — ${ GITHUB_SHA }
+          path: "./packages/exit-app/build"
+          pinata-api-key: ${{ secrets.PINATA_API_KEY }}
+          pinata-secret-api-key: ${{ secrets.PINATA_API_SECRET_KEY }}
+
+      - name: Convert CIDv0 to CIDv1
+        id: convert_cidv0
+        uses: uniswap/convert-cidv0-cidv1@v1.0.0
+        with:
+          cidv0: ${{ steps.upload.outputs.hash }}
+
+      - name: Update DNS with new IPFS hash
+        env:
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+          RECORD_DOMAIN: "gnosisguild.org"
+          RECORD_NAME: "_dnslink.exit.dev"
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        uses: textileio/cloudflare-update-dnslink@0fe7b7a1ffc865db3a4da9773f0f987447ad5848
+        with:
+          cid: ${{ steps.upload.outputs.hash }}
+
+      - name: Get IPFS url
+        run: echo "IPFS gateways — https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.dweb.link/ or https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.cf-ipfs.com/"

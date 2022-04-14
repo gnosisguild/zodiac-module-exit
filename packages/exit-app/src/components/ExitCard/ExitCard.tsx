@@ -28,9 +28,6 @@ const useStyles = makeStyles((theme) => ({
   spacing: {
     marginTop: theme.spacing(2.5),
   },
-  description: {
-    maxWidth: 300,
-  },
   content: {
     border: '1px solid rgba(217, 212, 173, 0.3)',
     padding: theme.spacing(1.5),
@@ -73,8 +70,8 @@ export const ExitCard = (): React.ReactElement => {
 
   return (
     <div className={classes.root}>
-      <Typography variant="body1" className={classes.description}>
-        Redeem your {tokenSymbol} tokens for a share of the DAOs assets.
+      <Typography variant="body1" >
+        Redeem your {tokenSymbol} tokens for a share of the Safe's assets.
       </Typography>
 
       <div className={classNames(classes.spacing, classes.content)}>
@@ -91,7 +88,7 @@ export const ExitCard = (): React.ReactElement => {
           }
         />
         <ValueLine
-          label="DAO Assets Value"
+          label="Safe Assets Value"
           loading={loading}
           value={<TextAmount>~${fiatFormatter.format(parseFloat(assets.fiatTotal))}</TextAmount>}
         />

@@ -33,6 +33,7 @@ const useStyles = makeStyles((theme) => ({
   link: {
     color: '#D9D4AD',
     fontSize: 16,
+    cursor: 'pointer',
   },
 }))
 
@@ -82,7 +83,7 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
         />
         <Grow />
         <Link className={classes.link} onClick={() => handleCustomTokenModalOpen(true)}>
-          Add Custom token
+          Add Custom Token
         </Link>
       </Row>
       <AssetsTable fiat={assets.fiatTotal} assets={tokens} token={token} query={query} />

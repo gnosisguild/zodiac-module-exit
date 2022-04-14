@@ -1,6 +1,7 @@
 import React from 'react'
 import { InputLabel, makeStyles, MenuItem, Select, Typography } from '@material-ui/core'
 import classNames from 'classnames'
+import { Link } from 'react-router-dom'
 import { Row } from '../commons/layout/Row'
 import ExitModuleLogo from '../../assets/images/exit-module-logo.png'
 import { useRootDispatch, useRootSelector } from '../../store'
@@ -112,6 +113,12 @@ const useStyles = makeStyles((theme) => ({
       display: 'none',
     },
   },
+  accountReset: {
+    display: 'flex',
+    alignItems: 'center',
+    color: 'white',
+    textDecoration: 'none',
+  }
 }))
 
 export const Header = () => {
@@ -134,12 +141,12 @@ export const Header = () => {
           <img src={ExitModuleLogo} alt="Zodiac App Logo" className={classes.img} />
         </div>
         <Typography variant="h5" className={classes.title}>
-          Exit
+          Exit App
         </Typography>
       </div>
       <div className={classes.banner} />
       <div className={classNames(classes.banner, classes.networkPickerContainer)}>
-        <InputLabel shrink>Chain</InputLabel>
+        <InputLabel shrink>Network</InputLabel>
         <Select
           disableUnderline
           className={classes.networkPicker}
@@ -155,6 +162,8 @@ export const Header = () => {
         </Select>
       </div>
       <div className={classNames(classes.container, classes.header, classes.leftHeader)}>
+
+      <Link to='/' className={classes.accountReset}>
         <div className={classes.circleIconContainer}>
           {account ? (
             <EthHashInfo
@@ -168,6 +177,7 @@ export const Header = () => {
           ) : null}
         </div>
         {account ? (
+          
           <Typography variant="body1" className={classNames(classes.title, classes.robotoText)}>
             {shortAddress(account)}
           </Typography>
@@ -176,6 +186,7 @@ export const Header = () => {
             No Safe Attached
           </Typography>
         )}
+        </Link>
       </div>
       <div className={classNames(classes.container, classes.header, classes.leftHeader)}>
         <div className={classes.circleIconContainer}>
@@ -196,7 +207,7 @@ export const Header = () => {
           </Typography>
         ) : (
           <Typography variant="body1" className={classNames(classes.title, classes.notSet)}>
-            No Wallet Connected
+            No wallet connected
           </Typography>
         )}
       </div>
