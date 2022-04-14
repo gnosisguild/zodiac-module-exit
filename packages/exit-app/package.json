@@ -35,7 +35,7 @@
     "react-router-dom": "^6.2.1",
     "react-scripts": "4.0.3",
     "styled-components": "^5.3.0",
-    "zodiac-ui-components": "^0.0.21"
+    "zodiac-ui-components": "^0.0.28"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.4",

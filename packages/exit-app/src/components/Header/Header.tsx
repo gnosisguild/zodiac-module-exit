@@ -10,6 +10,7 @@ import { EthHashInfo } from '@gnosis.pm/safe-react-components'
 import { shortAddress } from '../../utils/strings'
 import { setChainId } from '../../store/main'
 import { NETWORK_NAME } from '../../utils/networks'
+import { colors } from 'zodiac-ui-components'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -106,6 +107,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(0.5, 0.5),
   },
   networkPicker: {
+    borderColor: colors.tan[300],
     marginTop: theme.spacing(0.5),
     padding: theme.spacing(0.5),
     fontSize: 12,

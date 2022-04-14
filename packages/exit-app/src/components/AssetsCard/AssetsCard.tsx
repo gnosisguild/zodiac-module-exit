@@ -6,8 +6,8 @@ import { useWallet } from '../../hooks/useWallet'
 import { getAssets, getCustomTokenModalOpen, getCustomTokens, getDesignatedToken } from '../../store/main/selectors'
 import { AssetsTable } from './AssetsTable'
 import { Row } from '../commons/layout/Row'
-import { TextField } from '../commons/input/TextField'
 import SearchIcon from '@material-ui/icons/Search'
+import { colors, doubleBorder, ZodiacTextField } from 'zodiac-ui-components'
 import { Grow } from '../commons/Grow'
 import { CustomTokenModal } from '../CustomTokenModal/CustomTokenModal'
 import { TokenAsset } from '../../store/main/models'
@@ -29,6 +29,14 @@ const useStyles = makeStyles((theme) => ({
   },
   search: {
     maxWidth: 240,
+    "& .MuiInputBase-root": {
+      borderColor: colors.tan[300],
+      minHeight: 37,
+      "&::before": doubleBorder(-4, colors.tan[300]),
+      "& input": {
+        fontSize: 14,
+      }
+    }
   },
   link: {
     color: '#D9D4AD',
@@ -68,8 +76,9 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
     <div className={classes.root}>
       <Typography variant="h4">Select assets to claim</Typography>
       <Row className={classes.controls}>
-        <TextField
+        <ZodiacTextField
           placeholder="Filter token list"
+          borderStyle="double"
           className={classes.search}
           InputProps={{
             startAdornment: (
