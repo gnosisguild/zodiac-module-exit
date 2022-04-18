@@ -118,7 +118,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     color: 'white',
     textDecoration: 'none',
-  }
+  },
 }))
 
 export const Header = () => {
@@ -162,30 +162,28 @@ export const Header = () => {
         </Select>
       </div>
       <div className={classNames(classes.container, classes.header, classes.leftHeader)}>
-
-      <Link to='/' className={classes.accountReset}>
-        <div className={classes.circleIconContainer}>
+        <Link to="/" className={classes.accountReset}>
+          <div className={classes.circleIconContainer}>
+            {account ? (
+              <EthHashInfo
+                className={classes.avatar}
+                hash={account}
+                showAvatar
+                showCopyBtn={false}
+                showHash={false}
+                avatarSize="md"
+              />
+            ) : null}
+          </div>
           {account ? (
-            <EthHashInfo
-              className={classes.avatar}
-              hash={account}
-              showAvatar
-              showCopyBtn={false}
-              showHash={false}
-              avatarSize="md"
-            />
-          ) : null}
-        </div>
-        {account ? (
-          
-          <Typography variant="body1" className={classNames(classes.title, classes.robotoText)}>
-            {shortAddress(account)}
-          </Typography>
-        ) : (
-          <Typography variant="body1" className={classNames(classes.title, classes.notSet)}>
-            No Safe Attached
-          </Typography>
-        )}
+            <Typography variant="body1" className={classNames(classes.title, classes.robotoText)}>
+              {shortAddress(account)}
+            </Typography>
+          ) : (
+            <Typography variant="body1" className={classNames(classes.title, classes.notSet)}>
+              No Safe attached
+            </Typography>
+          )}
         </Link>
       </div>
       <div className={classNames(classes.container, classes.header, classes.leftHeader)}>
