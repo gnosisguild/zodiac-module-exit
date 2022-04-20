@@ -1,4 +1,5 @@
-import { Button, CircularProgress, makeStyles, Paper, Typography } from '@material-ui/core'
+import { Button, CircularProgress, makeStyles, Paper, Typography, Link } from '@material-ui/core'
+import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined'
 import { TextField } from '../commons/input/TextField'
 import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
 import { useRootDispatch, useRootSelector } from '../../store'
@@ -88,10 +89,14 @@ export const AttachAccount = () => {
     <div className={classes.root}>
       <Paper classes={{ root: classes.card }}>
         <Typography className={classes.spacing} variant="h4">
-          Attach a Safe to Exit
+          Attach a Safe to Exit{' '}
+          <Link href="https://gnosis.github.io/zodiac/docs/tutorial-module-exit-app/get-started" target="_blank">
+            <InfoOutlinedIcon style={{ color: 'rgba(217, 212, 173, 0.7)' }} />
+          </Link>
         </Typography>
         <Typography className={classes.spacing} variant="body1">
-          Enter the account address of a Safe that has the Zodiac Exit Mod enabled. If you hold assets redeemable from the Safe, you will be able to claim a proportional share of the digital assets the Safe holds.
+          Enter the account address of a Safe that has the Zodiac Exit Mod enabled. If you hold assets redeemable from
+          the Safe, you will be able to claim a proportional share of the digital assets the Safe holds.
         </Typography>
 
         <TextField

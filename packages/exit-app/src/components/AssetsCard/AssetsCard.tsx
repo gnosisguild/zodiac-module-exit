@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { InputAdornment, Link, makeStyles, Typography } from '@material-ui/core'
+import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { fetchTokenAssets } from '../../store/main/actions'
 import { useWallet } from '../../hooks/useWallet'
@@ -66,7 +67,12 @@ export const AssetsCard = ({ safe }: AssetsCardProps) => {
 
   return (
     <div className={classes.root}>
-      <Typography variant="h4">Select assets to claim</Typography>
+      <Typography variant="h4">
+        Select assets to claim{' '}
+        <Link href="https://gnosis.github.io/zodiac/docs/tutorial-module-exit-app/redeemable-assets" target="_blank">
+          <InfoOutlinedIcon style={{ color: 'rgba(217, 212, 173, 0.7)' }} />
+        </Link>
+      </Typography>
       <Row className={classes.controls}>
         <TextField
           placeholder="Filter token list"
