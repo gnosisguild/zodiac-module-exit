@@ -96,7 +96,7 @@ export const AttachAccount = () => {
         </Typography>
         <Typography className={classes.spacing} variant="body1">
           Enter the account address of a Safe that has the Zodiac Exit Mod enabled. If you hold assets redeemable from
-          the Safe, you will be able to claim a proportional share of the digital assets the Safe holds.
+          the Safe, you will be able to claim a proportion of the Safe's assets.
         </Typography>
 
         <TextField
