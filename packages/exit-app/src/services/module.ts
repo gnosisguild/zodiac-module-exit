@@ -1,5 +1,5 @@
-import { Call, Contract, Provider } from 'ethcall'
-import { ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
+import { Multicall, ContractCallResults, ContractCallContext } from 'ethereum-multicall'
 import { ModuleType, Token, TokenType } from '../store/main/models'
 import { fetchContractSourceCode } from './contract'
 import { getSafeModules } from './safe'
@@ -7,36 +7,67 @@ import { Erc20__factory, Erc721__factory, ExitErc20__factory, ExitErc721__factor
 import { CACHE_TYPE, getCacheHash, readCache, writeCache } from './cache'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
-  const ethcallProvider = new Provider()
-  await ethcallProvider.init(provider)
+  const multicall = new Multicall({ ethersProvider: provider as any, tryAggregate: true })
 
-  const exitERC20 = new Contract(module, ExitErc20__factory.abi)
-  const exitERC721 = new Contract(module, ExitErc721__factory.abi)
-  const txs: Call[] = [
-    exitERC20.circulatingSupply(),
-    exitERC20.designatedToken(),
-    exitERC20.getCirculatingSupply(),
-    exitERC721.collection(),
+  const callContext: ContractCallContext[] = [
+    {
+      contractAddress: module,
+      reference: 'ExitErc20',
+      abi: ExitErc20__factory.abi,
+      calls: [
+        {
+          reference: 'circulatingSupply',
+          methodName: 'circulatingSupply',
+          methodParameters: [],
+        },
+        {
+          reference: 'designatedToken',
+          methodName: 'designatedToken',
+          methodParameters: [],
+        },
+        {
+          reference: 'getCirculatingSupply',
+          methodName: 'getCirculatingSupply',
+          methodParameters: [],
+        },
+      ],
+    },
+    {
+      contractAddress: module,
+      reference: 'ExitErc721',
+      abi: ExitErc721__factory.abi,
+      calls: [
+        {
+          reference: 'collection',
+          methodName: 'collection',
+          methodParameters: [],
+        },
+      ],
+    },
   ]
-  const results = await ethcallProvider.tryAll(txs)
 
-  const circulatingSupplyAddress = results[0] as string
-  const circulatingSupply = results[2] as ethers.BigNumber
+  const callResults: ContractCallResults = await multicall.call(callContext)
+  const results = {
+    circulatingSupply: callResults.results.ExitErc20.callsReturnContext[0].returnValues[0] as string,
+    getCirculatingSupply: BigNumber.from(callResults.results.ExitErc20.callsReturnContext[2].returnValues[0] || 0),
+    designatedToken: callResults.results.ExitErc20.callsReturnContext[1].returnValues[0] as string | undefined,
+    collection: callResults.results.ExitErc721.callsReturnContext[0].returnValues[0] as string | undefined,
+  }
 
-  if (results[3]) {
+  if (results.collection) {
     return {
       type: ModuleType.ERC721,
-      designatedToken: results[3] as string,
-      circulatingSupplyAddress,
-      circulatingSupply,
+      designatedToken: results.collection,
+      circulatingSupplyAddress: results.circulatingSupply,
+      circulatingSupply: results.getCirculatingSupply,
     }
   }
 
   return {
     type: ModuleType.ERC20,
-    designatedToken: results[1] as string,
-    circulatingSupplyAddress,
-    circulatingSupply,
+    designatedToken: results.designatedToken as string,
+    circulatingSupplyAddress: results.circulatingSupply,
+    circulatingSupply: results.getCirculatingSupply,
   }
 }
 
@@ -51,18 +82,37 @@ export async function getERC20Token(provider: ethers.providers.BaseProvider, add
   const cache = await readCache(cacheHash)
   if (cache !== null) return cache as Token
 
-  const ethcallProvider = new Provider()
-  await ethcallProvider.init(provider)
-
-  const cs = new Contract(address, Erc20__factory.abi)
-  const txs: Call[] = [cs.symbol(), cs.decimals()]
-  const results = await ethcallProvider.tryAll(txs)
+  const multicall = new Multicall({ ethersProvider: provider as any, tryAggregate: true })
+  const callContext: ContractCallContext[] = [
+    {
+      contractAddress: address,
+      reference: 'ERC20',
+      abi: Erc20__factory.abi,
+      calls: [
+        {
+          reference: 'symbol',
+          methodName: 'symbol',
+          methodParameters: [],
+        },
+        {
+          reference: 'decimals',
+          methodName: 'decimals',
+          methodParameters: [],
+        },
+      ],
+    },
+  ]
+  const callResults: ContractCallResults = await multicall.call(callContext)
+  const results = {
+    symbol: callResults.results.ERC20.callsReturnContext[0].returnValues[0] as string,
+    decimals: callResults.results.ERC20.callsReturnContext[1].returnValues[0] as number,
+  }
 
   const token = {
     type: TokenType.ERC20,
     address,
-    symbol: results[0] as string,
-    decimals: results[1] as number,
+    symbol: results.symbol,
+    decimals: results.decimals,
   }
   writeCache(cacheHash, token)
   return token

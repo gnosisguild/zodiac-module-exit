@@ -22,7 +22,7 @@
     "axios-cache-adapter": "^2.7.3",
     "bnc-onboard": "^1.35.4",
     "classnames": "^2.3.1",
-    "ethcall": "^4.0.7",
+    "ethereum-multicall": "^2.10.0",
     "ethers": "^5.4.7",
     "localforage": "^1.10.0",
     "localforage-memoryStorageDriver": "^0.9.2",
