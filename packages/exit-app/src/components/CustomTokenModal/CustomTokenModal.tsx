@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { Button, makeStyles, Modal, ModalProps, Paper, Typography } from '@material-ui/core'
-import { TextField } from '../commons/input/TextField'
+import { ZodiacTextField } from 'zodiac-ui-components'
 import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
 import { useForm } from 'react-hook-form'
 import { Token, TokenType } from '../../store/main/models'
@@ -27,15 +27,7 @@ const useStyles = makeStyles((theme) => ({
     backdropFilter: 'blur(4px)',
   },
   input: {
-    border: '1px solid #fff',
     padding: theme.spacing(1.5, 0, 1.5, 1),
-    '&:after': {
-      content: 'none',
-    },
-    '& input': {
-      fontSize: '16px !important',
-      fontFamily: 'Averta !important',
-    },
     '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
       '-webkit-appearance': 'none',
       margin: 0,
@@ -107,7 +99,7 @@ export const CustomTokenModal = (props: Omit<ModalProps, 'children'>) => {
       <Paper className={classes.container}>
         <Typography variant="h5">Add Custom Token</Typography>
         <Typography variant="subtitle1">This will add the token to the list of claimable assets.</Typography>
-        <TextField
+        <ZodiacTextField
           className={classes.spacing}
           InputProps={{ className: classes.input }}
           label="Token Contract Address"
@@ -117,7 +109,7 @@ export const CustomTokenModal = (props: Omit<ModalProps, 'children'>) => {
           helperText={errors.address?.message}
           onChange={(evt) => setValue('address', evt.target.value)}
         />
-        <TextField
+        <ZodiacTextField
           className={classes.spacing}
           InputProps={{ className: classes.input }}
           label="Token Symbol"
@@ -127,7 +119,7 @@ export const CustomTokenModal = (props: Omit<ModalProps, 'children'>) => {
           value={symbol}
           onChange={(evt) => setValue('symbol', evt.target.value)}
         />
-        <TextField
+        <ZodiacTextField
           type="number"
           className={classes.spacing}
           InputProps={{ className: classes.input }}

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import classNames from 'classnames'
-import { Checkbox } from '../commons/input/Checkbox'
+import { ZodiacCheckbox } from 'zodiac-ui-components'
 import { BigNumber, BigNumberish, ethers } from 'ethers'
 import { Token, TokenAsset } from '../../store/main/models'
 import { useRootDispatch, useRootSelector } from '../../store'
@@ -137,6 +137,9 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     checkCell: {
       padding: theme.spacing(1.5, 1, 1.5, 0.5),
+      '& .MuiCheckbox-root': {
+        padding: 0,
+      }
     },
     startScrollSpacer: {
       background: '#0e1418',
@@ -233,7 +236,7 @@ function AssetsTableContent({ rows, classes, selected }: AssetsTableContentProps
       >
         <TableScrollSpacer className={classes.startScrollSpacer} />
         <TableCell className={classNames(classes.bodyCell, classes.checkCell)} padding="checkbox">
-          <Checkbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
+          <ZodiacCheckbox checked={isItemSelected} inputProps={{ 'aria-labelledby': labelId }} />
         </TableCell>
         <TableCell className={classes.bodyCell} id={labelId} scope="row" align="right">
           <Row justifyContent="end" alignItems="center">

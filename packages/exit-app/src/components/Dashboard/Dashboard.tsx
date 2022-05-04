@@ -11,6 +11,7 @@ import { getExitModulesFromSafe } from '../../services/module'
 import { setAccount, setChainId, setLoading } from '../../store/main'
 import { useDispatch } from 'react-redux'
 import { useWallet } from '../../hooks/useWallet'
+import { colors, doubleBorder } from 'zodiac-ui-components'
 
 export const NOT_A_SAFE_ERROR = 'NOT_A_SAFE_ERROR'
 
@@ -20,17 +21,7 @@ const useStyles = makeStyles((theme) => ({
   },
   container: {
     position: 'relative',
-    '&::before': {
-      content: '" "',
-      position: 'absolute',
-      zIndex: 1,
-      top: '0px',
-      left: '0px',
-      right: '0px',
-      bottom: '0px',
-      border: '1px solid rgba(217, 212, 173, 0.3)',
-      pointerEvents: 'none',
-    },
+    '&::before': doubleBorder(0, colors.tan[300])
   },
   item: {
     border: '1px solid rgba(217, 212, 173, 0.3)',
