@@ -2,7 +2,7 @@ import React from 'react'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableCell from '@material-ui/core/TableCell'
-import { Checkbox } from '../commons/input/Checkbox'
+import { ZodiacCheckbox } from 'zodiac-ui-components'
 import classNames from 'classnames'
 import TableSortLabel from '@material-ui/core/TableSortLabel'
 import { Sort, TableScrollSpacer } from './AssetsTable'
@@ -39,11 +39,12 @@ export function EnhancedTableHead(props: EnhancedTableProps) {
       <TableRow>
         <TableScrollSpacer className={classes.startScrollSpacer} />
         <TableCell padding="checkbox" className={classes.headerBorder}>
-          <Checkbox
+          <ZodiacCheckbox
             indeterminate={numSelected > 0 && numSelected < rowCount}
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
             inputProps={{ 'aria-label': 'select all desserts' }}
+            style={{ paddingLeft: '0' }}
           />
         </TableCell>
         {headCells.map((headCell) => {
