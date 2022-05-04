@@ -1,81 +1,60 @@
-import Onboard from 'bnc-onboard'
-import { ethers } from 'ethers'
-import { REDUX_STORE, useRootSelector } from '../store'
+import { BigNumber, ethers } from 'ethers'
+import { REDUX_STORE, useRootDispatch, useRootSelector } from '../store'
 import { resetWallet, setChainId, setENS, setWallet } from '../store/main'
 import { useEffect, useMemo, useState } from 'react'
-import { getChainId } from '../store/main/selectors'
+import { getChainId, getWalletAddress } from '../store/main/selectors'
 import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
-import { getNetworkRPC } from '../utils/networks'
-import memoize from 'lodash.memoize'
+import { CHAIN_CONFIG, getNetworkRPC, NETWORK, NETWORK_CHAIN_ID } from '../utils/networks'
 import { useParams } from 'react-router-dom'
 import { getAddress } from '../utils/address'
 import { ExternalProvider } from '@ethersproject/providers'
 
-const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
-const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
+import { init, useConnectWallet, useSetChain } from '@web3-onboard/react'
+import injectedModule from '@web3-onboard/injected-wallets'
+import ledgerModule from '@web3-onboard/ledger'
+import walletConnectModule from '@web3-onboard/walletconnect'
+import walletLinkModule from '@web3-onboard/walletlink'
+import torusModule from '@web3-onboard/torus'
+import gnosisModule from '@web3-onboard/gnosis'
 
 export let _signer: ethers.providers.JsonRpcSigner
 
+const injected = injectedModule()
+const walletLink = walletLinkModule()
+const walletConnect = walletConnectModule()
+const torus = torusModule()
+const ledger = ledgerModule()
+const gnosis = gnosisModule()
+
+const onboard = init({
+  accountCenter: {
+    desktop: {
+      enabled: false,
+    },
+  },
+  wallets: [gnosis, ledger, walletConnect, walletLink, injected, torus],
+  chains: CHAIN_CONFIG,
+})
+
 const safeSDK = new SafeAppsSDK()
-safeSDK.getSafeInfo().then(async (safeInfo) => {
+safeSDK.safe.getInfo().then(async (safeInfo) => {
+  await onboard.connectWallet({ autoSelect: { label: 'Gnosis Safe', disableModals: true } })
   REDUX_STORE.dispatch(setChainId(safeInfo.chainId))
 })
 
-const configureOnboardJS = memoize(
-  (networkId: number) => {
-    const rpcUrl = getNetworkRPC(networkId)
-    const wallets = [
-      { walletName: 'metamask', preferred: true },
-      { walletName: 'gnosis', preferred: true },
-      { walletName: 'coinbase', preferred: true },
-      { walletName: 'ledger', rpcUrl: rpcUrl, preferred: true },
-      { walletName: 'walletConnect', infuraKey: INFURA_KEY, preferred: true },
-      { walletName: 'opera' },
-      { walletName: 'operaTouch' },
-    ]
-
-    return Onboard({
-      networkId,
-      dappId: ONBOARD_JS_DAPP_ID,
-      darkMode: true,
-      subscriptions: {
-        wallet: (wallet) => {
-          if (wallet.provider) {
-            setProvider(wallet.provider)
-          }
-        },
-        address(address) {
-          if (address) {
-            REDUX_STORE.dispatch(setWallet(address))
-          } else {
-            REDUX_STORE.dispatch(resetWallet())
-          }
-        },
-        ens(ens) {
-          if (ens && ens.name) {
-            REDUX_STORE.dispatch(setENS(ens.name))
-          }
-        },
-      },
-      walletSelect: {
-        wallets,
-      },
-      walletCheck: [
-        { checkName: 'derivationPath' },
-        { checkName: 'accounts' },
-        { checkName: 'connect' },
-        { checkName: 'network' },
-      ],
-    })
-  },
-  (chainId) => chainId.toString(),
-)
-
 export const useWallet = () => {
-  const _chainId = useRootSelector(getChainId)
   const { account } = useParams()
+  const [, setChain] = useSetChain()
+  const [walletConfig, connect] = useConnectWallet()
+  const dispatch = useRootDispatch()
+  const walletAddress = useRootSelector(getWalletAddress)
 
-  const chainId = useMemo(() => {
+  const _chainId = useRootSelector(getChainId)
+
+  const [provider, setProvider] = useState<ethers.providers.JsonRpcProvider>()
+  const [signer, setStateSinger] = useState<ethers.Signer>()
+
+  const chainId = useMemo((): NETWORK => {
     if (account) {
       const address = getAddress(account)
       if (address && address[1]) return address[1]
@@ -83,20 +62,27 @@ export const useWallet = () => {
     return _chainId
   }, [_chainId, account])
 
-  const onboard = useMemo(() => configureOnboardJS(chainId), [chainId])
-  const [provider, setProvider] = useState<ethers.providers.JsonRpcProvider>()
-  const [signer, setSigner] = useState<ethers.Signer>()
+  useEffect(() => {
+    if (walletConfig.wallet) {
+      const { accounts, chains, provider } = walletConfig.wallet
+      const { ens, address } = accounts[0]
+      dispatch(setWallet(address))
+      setSigner(provider)
+      setStateSinger(_signer)
+      if (ens) dispatch(setENS(ens.name))
 
-  const startOnboard = async () => {
-    try {
-      const selected = await onboard.walletSelect()
-      if (selected) {
-        await onboard.walletCheck()
-        setSigner(_signer)
+      // Check current network
+      const checkConnectedChain = chains.some((chain) => BigNumber.from(chain.id).toNumber() === chainId)
+      if (!checkConnectedChain) {
+        setChain({ chainId: NETWORK_CHAIN_ID[chainId] })
       }
-    } catch (err) {
-      console.warn('startOnboard error', err)
+    } else if (walletAddress) {
+      dispatch(resetWallet())
     }
+  }, [chainId, dispatch, setChain, walletAddress, walletConfig.wallet])
+
+  const startOnboard = () => {
+    return connect({})
   }
 
   useEffect(() => {
@@ -105,12 +91,10 @@ export const useWallet = () => {
     setProvider(provider)
   }, [chainId])
 
-  const isGnosisSafe = onboard.getState().wallet.name === 'Gnosis Safe'
-
-  return { provider, signer, onboard, startOnboard, isGnosisSafe }
+  return { provider, signer, onboard, startOnboard }
 }
 
-export function setProvider(provider: ExternalProvider) {
+export function setSigner(provider: ExternalProvider) {
   const web3Provider = new ethers.providers.Web3Provider(provider)
   _signer = web3Provider.getSigner()
   return _signer

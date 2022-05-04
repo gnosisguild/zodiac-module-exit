@@ -8,7 +8,7 @@ import { CACHE_TYPE, getCacheHash, readCache, writeCache } from './cache'
 
 export async function getExitModule(provider: ethers.providers.BaseProvider, module: string) {
   const ethcallProvider = new Provider()
-  await ethcallProvider.init(provider)
+  await ethcallProvider.init(provider as any)
 
   const exitERC20 = new Contract(module, ExitErc20__factory.abi)
   const exitERC721 = new Contract(module, ExitErc721__factory.abi)
@@ -52,7 +52,7 @@ export async function getERC20Token(provider: ethers.providers.BaseProvider, add
   if (cache !== null) return cache as Token
 
   const ethcallProvider = new Provider()
-  await ethcallProvider.init(provider)
+  await ethcallProvider.init(provider as any)
 
   const cs = new Contract(address, Erc20__factory.abi)
   const txs: Call[] = [cs.symbol(), cs.decimals()]

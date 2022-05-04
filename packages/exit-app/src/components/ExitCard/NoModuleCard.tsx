@@ -4,7 +4,7 @@ import ArrowUpIcon from '../../assets/icons/arrow-up.svg'
 import { getSafeAppsLink } from '../../utils/safe'
 import { useRootSelector } from '../../store'
 import { getAccount, getChainId } from '../../store/main/selectors'
-import { useWallet } from '../../hooks/useWallet'
+import { useConnectWallet } from '@web3-onboard/react'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -31,17 +31,19 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
   },
   buttonLink: {
-    textDecoration: 'none'
-  }
+    textDecoration: 'none',
+  },
 }))
 
 export const NoModuleCard = () => {
   const classes = useStyles()
-  const { isGnosisSafe } = useWallet()
+  const [{ wallet }] = useConnectWallet()
+
   const account = useRootSelector(getAccount)
   const chainId = useRootSelector(getChainId)
+
   const link = account && getSafeAppsLink(chainId, account)
-  const target = isGnosisSafe ? '_parent' : '_blank'
+  const target = wallet?.label === 'Gnosis Safe' ? '_parent' : '_blank'
 
   return (
     <div className={classes.root}>

@@ -2,11 +2,10 @@ import ArrowUpIcon from '../../assets/icons/arrow-up.svg'
 import { Button, CircularProgress, makeStyles } from '@material-ui/core'
 import React, { useState } from 'react'
 import { PopulatedTransaction } from 'ethers'
-import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
+import SafeAppsSDK, { BaseTransaction } from '@gnosis.pm/safe-apps-sdk'
 import { useRootDispatch, useRootSelector } from '../../store'
 import { getChainId, getClaimAmount, getExitStep, getWalletAddress } from '../../store/main/selectors'
-import { _signer, useWallet } from '../../hooks/useWallet'
-import { Transaction as SafeTransaction } from '@gnosis.pm/safe-apps-sdk/dist/src/types'
+import { _signer } from '../../hooks/useWallet'
 import { useExit } from '../../hooks/useExit'
 import { ErrorBox } from './ErrorBox'
 import { EXIT_STEP } from '../../store/main/models'
@@ -15,6 +14,7 @@ import { ReactComponent as CheckMark } from '../../assets/icons/check-mark.svg'
 import classNames from 'classnames'
 import { checkWalletNetwork } from '../../services/wallet'
 import { getNetworkName } from '../../utils/networks'
+import { useConnectWallet } from '@web3-onboard/react'
 
 const EXIT_STEP_MESSAGE: Record<EXIT_STEP, string> = {
   [EXIT_STEP.EXIT]: 'Exit and Claim Assets',
@@ -26,7 +26,7 @@ const EXIT_STEP_MESSAGE: Record<EXIT_STEP, string> = {
   [EXIT_STEP.ERROR]: 'Exit and Claim Assets',
 }
 
-function convertTxToSafeTx(tx: PopulatedTransaction): SafeTransaction {
+function convertTxToSafeTx(tx: PopulatedTransaction): BaseTransaction {
   return {
     to: tx.to as string,
     value: '0',
@@ -60,7 +60,7 @@ const ExitButtonIcon = ({ step }: { step: EXIT_STEP }) => {
 
 export const ExitButton = ({ onExit }: ExitButtonProps) => {
   const classes = useStyles()
-  const { onboard } = useWallet()
+  const [{ wallet: connectedWallet }] = useConnectWallet()
   const dispatch = useRootDispatch()
   const exit = useExit()
 
@@ -111,8 +111,7 @@ export const ExitButton = ({ onExit }: ExitButtonProps) => {
         return
       }
 
-      const { wallet } = onboard.getState()
-      if (wallet.type === 'sdk' && wallet.name === 'Gnosis Safe') {
+      if (connectedWallet && connectedWallet.label === 'Gnosis Safe') {
         await handleSafeExit()
       } else {
         await handleUserExit()

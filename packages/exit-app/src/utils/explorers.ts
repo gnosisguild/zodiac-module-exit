@@ -31,7 +31,7 @@ export const EXPLORERS_CONFIG: Record<NETWORK, ExplorerData> = {
     verifyContractUrl: 'https://rinkeby.etherscan.io/verifyContract',
     explorerApiKey: REACT_APP_ETHERSCAN_KEY,
   },
-  [NETWORK.XDAI]: {
+  [NETWORK.GNOSIS_CHAIN]: {
     networkExplorerName: 'Blockscout',
     networkExplorerUrl: 'https://blockscout.com/poa/xdai',
     networkExplorerApiUrl: 'https://blockscout.com/xdai/mainnet/api',

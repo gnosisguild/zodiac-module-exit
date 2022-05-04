@@ -95,7 +95,7 @@ export const getAvailableTokens = createAsyncThunk(
       txs.push(ERC721_multicall.tokenOfOwnerByIndex(wallet, i))
     }
     const ethcallProvider = new Provider()
-    await ethcallProvider.init(provider)
+    await ethcallProvider.init(provider as any)
 
     const results: BigNumberish[] = await ethcallProvider.tryAll(txs)
     try {
