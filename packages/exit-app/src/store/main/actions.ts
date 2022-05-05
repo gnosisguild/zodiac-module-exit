@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import { getExitModule, getToken } from '../../services/module'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { SafeTransactionApi } from '../../services/safeTransactionApi'
@@ -7,9 +7,9 @@ import { getGasEstimationForToken } from '../../services/erc20'
 import { getAccount } from './selectors'
 import { RootState } from '../index'
 import { Erc721__factory } from '../../contracts/types/factories/Erc721__factory'
-import { Contract, Provider } from 'ethcall'
 import { getTokenImage } from '../../services/erc721'
 import { getNetworkRPC, NETWORK } from '../../utils/networks'
+import { ContractCallContext, ContractCallResults, Multicall } from 'ethereum-multicall'
 
 export const fetchExitModuleData = createAsyncThunk(
   'main/fetchExitModuleData',
@@ -84,34 +84,53 @@ export const getAvailableTokens = createAsyncThunk(
     const rpcUrl = getNetworkRPC(network)
     const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, network)
 
-    const ERC721_contract = Erc721__factory.connect(token, provider)
+    const ERC721_contract = Erc721__factory.connect(token, provider as any)
     const balance = await ERC721_contract.balanceOf(wallet)
 
     if (BigNumber.from(balance).isZero()) return []
 
-    const ERC721_multicall = new Contract(token, Erc721__factory.abi)
-    const txs = []
+    const multicall = new Multicall({ ethersProvider: provider as any, tryAggregate: true })
+    const tokensCallContext: ContractCallContext = {
+      contractAddress: token,
+      reference: 'Erc721',
+      abi: Erc721__factory.abi,
+      calls: [],
+    }
+
     for (let i = 0; i < balance.toNumber(); i++) {
-      txs.push(ERC721_multicall.tokenOfOwnerByIndex(wallet, i))
+      tokensCallContext.calls.push({
+        methodName: 'tokenOfOwnerByIndex',
+        methodParameters: [wallet, i],
+        reference: i.toString(),
+      })
     }
-    const ethcallProvider = new Provider()
-    await ethcallProvider.init(provider)
 
-    const results: BigNumberish[] = await ethcallProvider.tryAll(txs)
-    try {
-      const tokenUriTxs = results.map((tokenId) => ERC721_multicall.tokenURI(tokenId))
-      const tokenURIs: string[] = await ethcallProvider.tryAll(tokenUriTxs)
+    const tokenCallResults: ContractCallResults = await multicall.call(tokensCallContext)
+    const tokenResults: BigNumber[] = tokenCallResults.results.Erc721.callsReturnContext.map((returnContext) =>
+      BigNumber.from(returnContext.returnValues[0]),
+    )
 
-      const imgUrls = await Promise.all(tokenURIs.map(getTokenImage))
-
-      return results.map((tokenId, index) => ({
-        tokenId: tokenId.toString(),
-        tokenUri: tokenURIs[index],
-        imgUrl: imgUrls[index],
-      }))
-    } catch (err) {
-      console.log('err', err)
+    const uriCallContext: ContractCallContext = {
+      contractAddress: token,
+      reference: 'Erc721',
+      abi: Erc721__factory.abi,
+      calls: tokenResults.map((tokenId) => ({
+        methodName: 'tokenURI',
+        methodParameters: [tokenId],
+        reference: tokenId.toString(),
+      })),
     }
-    return []
+
+    const uriCallResults: ContractCallResults = await multicall.call(uriCallContext)
+    const tokenURIs: string[] = uriCallResults.results.Erc721.callsReturnContext.map(
+      (returnContext) => returnContext.returnValues[0],
+    )
+    const imgUrls = await Promise.all(tokenURIs.map(getTokenImage))
+
+    return tokenResults.map((tokenId, index) => ({
+      tokenId: tokenId.toString(),
+      tokenUri: tokenURIs[index],
+      imgUrl: imgUrls[index],
+    }))
   },
 )

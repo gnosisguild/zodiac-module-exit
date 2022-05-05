@@ -4,7 +4,13 @@ import classNames from 'classnames'
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
 import { useWallet } from '../../hooks/useWallet'
 import { useRootSelector } from '../../store'
-import { getAssets, getBalance, getCirculatingSupply, getDesignatedToken } from '../../store/main/selectors'
+import {
+  getAssets,
+  getBalance,
+  getCirculatingSupply,
+  getDesignatedToken,
+  getWalletAddress,
+} from '../../store/main/selectors'
 import { TextAmount } from '../commons/text/TextAmount'
 import { formatBalance } from '../../utils/format'
 import { getClaimableAmount } from '../../utils/math'
@@ -56,13 +62,14 @@ export const WalletAssets = ({ className }: WalletAssetsProps) => {
   const assets = useRootSelector(getAssets)
   const balance = useRootSelector(getBalance)
   const circulatingSupply = useRootSelector(getCirculatingSupply)
+  const wallet = useRootSelector(getWalletAddress)
 
   const balanceText = formatBalance(balance, token)
   const marketValue = getClaimableAmount(token, assets, balance, circulatingSupply?.value)
 
   return (
     <div className={classNames(className, classes.root)}>
-      {balance ? null : <ConnectWallet className={classes.connectWallet} onClick={startOnboard} />}
+      {wallet ? null : <ConnectWallet className={classes.connectWallet} onClick={startOnboard} />}
       <ValueLine
         label="Your Balance"
         loading={!balanceText}
