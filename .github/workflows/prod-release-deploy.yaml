@@ -74,3 +74,9 @@ jobs:
             IPFS gateways:
               - https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.dweb.link/
               - https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.cf-ipfs.com/
+
+      - name: Deploy to Github Pages
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages
+          folder: build
