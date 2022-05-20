@@ -1,0 +1,22 @@
+{
+  "short_name": "Zodiac Exit App",
+  "name": "Zodiac Exit App",
+  "description": "Redeem a designated token for a proportional share of a Safe's assets",
+  "iconPath": "exit-module-logo.png",
+  "icons": [
+    {
+      "src": "exit-module-logo.png",
+      "sizes": "64x64 32x32 24x24 16x16 ",
+      "type": "image/png"
+    },
+    {
+      "src": "exit-module-logo.png",
+      "type": "image/png",
+      "sizes": "256x256"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
