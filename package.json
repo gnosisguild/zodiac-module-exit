@@ -5,7 +5,9 @@
   "scripts": {
     "build": "yarn contracts:build",
     "test": "yarn contracts:test",
-    "contracts:test": "cd packages/contracts && yarn coverage",
+    "coverage": "yarn coverage",
+    "contracts:coverage": "cd packages/contracts && yarn coverage",
+    "contracts:test": "cd packages/contracts && yarn test",
     "contracts:build": "cd packages/contracts && yarn build",
     "contracts:install": "cd packages/contracts && yarn install",
     "app:build": "cd packages/exit-app && yarn build",
