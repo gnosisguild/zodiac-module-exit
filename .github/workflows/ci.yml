@@ -1,4 +1,4 @@
-name: Test
+name: build
 on: [push]
 
 jobs:
@@ -14,11 +14,11 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
-      - run: yarn contracts:build
-      - run: yarn contracts:test
+      - run: yarn build
+      - run: yarn test
+      - run: yarn coverage
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "./packages/contracts/coverage/lcov.info"
-          base-path: "./packages/contracts"
+          path-to-lcov: packages/contracts/coverage/lcov.info

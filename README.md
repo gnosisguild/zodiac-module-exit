@@ -1,7 +1,7 @@
 # Exit Module
 
 [![Build Status](https://github.com/gnosis/zodiac-module-exit/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/zodiac-module-exit/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/gnosis/zodiac-module-exit/badge.svg?branch=master)](https://coveralls.io/github/gnosis/zodiac-module-exit?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/gnosis/zodiac-module-exit/badge.svg?branch=master&cache_bust=1)](https://coveralls.io/github/gnosis/zodiac-module-exit?branch=master)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/gnosis/CODE_OF_CONDUCT)
 
 
