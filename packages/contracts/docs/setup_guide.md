@@ -33,13 +33,13 @@ There are more optional parameters. For more information on these, run `yarn har
 
 ## Deploying the module
 
-The module has three attributes:
+The module has three variables which must be set:
 
 - `Owner`: Address that can call setter functions
 - `Avatar`: Address of the DAO (e.g. a Gnosis Safe)
 - `Target`: Address on which the module will call `execModuleTransaction()`
 
-Hardhat tasks can be used to deploy a Exit Module instance. There are two different ways to deploy the module. The first one is through a normal deployment and passing arguments to the constructor (without the `proxied` flag), or to deploy the Module through a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) with the `proxied` flag to save on gas costs.
+Hardhat tasks can be used to deploy a Exit Module instance. There are two different ways to deploy the module. Via a normal deployment, passing arguments to the constructor (without the `proxied` flag), or by deploying a proxy via a [Minimal Proxy Factory](https://eips.ethereum.org/EIPS/eip-1167) with the `proxied` flag to save on gas costs.
 
 The master copy and factory address can be found in the [Zodiac repository](https://github.com/gnosis/zodiac/blob/master/src/factory/constants.ts) and these are the addresses that are going to be used when deploying the module through factory.
 
@@ -73,10 +73,10 @@ yarn hardhat --network rinkeby verifyEtherscan --module 0x9797979797979797979797
 
 ## Enabling the module
 
-To allow the Exit Module to actually execute transactions, you must enable it on the Gnosis Safe to which it is connected. For this, it is possible to use the Bundle Transactions tab on [https://rinkeby.gnosis-safe.io](https://rinkeby.gnosis-safe.io), which is accompanied by the tutorial on [adding a module](https://help.gnosis-safe.io/en/articles/4934427-add-a-module).
+To allow the Exit Module to actually execute transactions, you must enable it on the Gnosis Safe to which it is connected. For this, you can use the Zodiac Safe app in the [Gnosis Safe UI](https://gnosis-safe.io/app/) to add a "custom module".
 
 
-## Executing the Exit
+## Executing an Exit
 
 In order to test the Exit Module execution on Rinkeby, you will need some ERC20 tokens. If you don't have any to test, you can get some at https://app.compound.finance/ with the following steps (**make sure you are on Rinkeby testnetwork**): 1) Connect wallet, and click on any token in the supply markets list. 2) A modal will appear. Select the tab "Withdraw" and click on "Faucet". 3) This will trigger a transaction that will send the Rinkeby network tokens you selected to your account.
 
@@ -89,6 +89,6 @@ To execute the Exit, call the `exit(uint256 amountToRedeem, address[] tokens)` f
 - Amount to redeem: `1000000000000000`
 - Tokens: `["0xa0533da0743a5517736beb1309ec0bdaa3e960b9", "0x14796a730446112eb5cbc234db9f116ea0e9bbdb"]`
 
-### Deploy a master copy
+## Deploy a master copy
 
 The master copy contracts can be deployed through the `yarn deploy` command. Note that this only should be done if the Bridge Module contracts are updated. The ones referred to on the [Zodiac repository](https://github.com/gnosis/zodiac/blob/master/src/factory/constants.ts) should be used.
