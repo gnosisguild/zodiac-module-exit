@@ -38,7 +38,7 @@ export const NETWORK_DEFAULT_RPC: Record<NETWORK, string> = {
   [NETWORK.MAINNET]: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
   [NETWORK.RINKEBY]: 'https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
   [NETWORK.BSC]: 'https://bsc-dataseed.binance.org',
-  [NETWORK.XDAI]: 'https://rpc.xdaichain.com',
+  [NETWORK.XDAI]: 'https://rpc.gnosischain.com',
   [NETWORK.POLYGON]: 'https://polygon-rpc.com',
 }
 
