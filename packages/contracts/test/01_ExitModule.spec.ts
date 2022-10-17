@@ -426,7 +426,7 @@ describe("ExitERC20", async () => {
       );
     });
 
-    it("throws because user haven't approve designated tokens", async () => {
+    it("throws because user hasn't approve designated tokens", async () => {
       const { avatar, module, tokenOne, tokenTwo } =
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
@@ -436,7 +436,7 @@ describe("ExitERC20", async () => {
           tokenOne.address,
           tokenTwo.address,
         ])
-      ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+      ).to.be.revertedWith("Transfer amount exceeds allowance");
     });
   });
 

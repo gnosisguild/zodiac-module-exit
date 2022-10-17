@@ -25,4 +25,19 @@ contract TestToken is ERC20 {
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
     }
+
+    // Does not revert on failure
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        uint256 allowance = allowance(owner, _msgSender());
+        if (allowance != type(uint256).max && allowance >= amount) {
+            _transfer(from, to, amount);
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

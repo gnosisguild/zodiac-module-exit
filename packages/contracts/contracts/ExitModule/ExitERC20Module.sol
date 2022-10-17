@@ -43,9 +43,9 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
             address _designatedToken,
             address _circulatingSupply
         ) = abi.decode(
-            initParams,
-            (address, address, address, address, address)
-        );
+                initParams,
+                (address, address, address, address, address)
+            );
         __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         require(_target != address(0), "Target can not be zero address");
@@ -86,7 +86,12 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
             getCirculatingSupply()
         );
 
-        designatedToken.transferFrom(msg.sender, avatar, amountToRedeem);
+        bool success = designatedToken.transferFrom(
+            msg.sender,
+            avatar,
+            amountToRedeem
+        );
+        require(success, "Transfer amount exceeds allowance");
 
         _exit(tokens, params);
     }
