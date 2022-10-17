@@ -436,7 +436,7 @@ describe("ExitERC20", async () => {
           tokenOne.address,
           tokenTwo.address,
         ])
-      ).to.be.revertedWith("Transfer amount exceeds allowance");
+      ).to.be.revertedWith("SafeERC20: ERC20 operation did not succeed");
     });
   });
 
