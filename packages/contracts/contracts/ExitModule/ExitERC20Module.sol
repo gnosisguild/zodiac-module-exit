@@ -2,12 +2,15 @@
 pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./ExitBase.sol";
 import "../CirculatingSupply/CirculatingSupplyERC20.sol";
 
 contract ExitERC20 is ExitBase, ReentrancyGuard {
+    using SafeERC20 for ERC20;
+
     ERC20 public designatedToken;
     CirculatingSupplyERC20 public circulatingSupply;
 
@@ -86,12 +89,7 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
             getCirculatingSupply()
         );
 
-        bool success = designatedToken.transferFrom(
-            msg.sender,
-            avatar,
-            amountToRedeem
-        );
-        require(success, "Transfer amount exceeds allowance");
+        designatedToken.safeTransferFrom(msg.sender, avatar, amountToRedeem);
 
         _exit(tokens, params);
     }
