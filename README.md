@@ -28,6 +28,10 @@ This module is intended to be used with the [Gnosis Safe](https://github.com/gno
 - Make sure the Gnosis Safe has any ERC20 compatible token assets available to redeem.
 - Execute the `exit` function with an address that owns designated tokens, passing the available ERC20 tokens held by the Gnosis Safe as a parameter.
 
+### Warnings
+
+The exit module should not be used in conjunction with any token vending machine-like contract in which designated tokens are sold in exchange for valuable tokens that are forwarded immediately to the safe. This could potentially enable a re-entry scenario where an attacker could exploit users with pending deposits to the vending machine.
+
 ### Solidity Compiler
 
 The contracts have been developed with [Solidity 0.8.4](https://github.com/ethereum/solidity/releases/tag/v0.8.4) in mind. This version of Solidity made all arithmetic checked by default, therefore eliminating the need for explicit overflow or underflow (or other arithmetic) checks.
