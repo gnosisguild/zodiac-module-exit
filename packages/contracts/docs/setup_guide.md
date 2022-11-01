@@ -1,19 +1,19 @@
 # Zodiac Exit Module Setup Guide
 
-This guide shows how to setup the Exit module with a Gnosis Safe on the Rinkeby testnetwork.
+This guide shows how to setup the Exit module with a Gnosis Safe on the Goerli testnetwork.
 
 The Exit Module belongs to the [Zodiac](https://github.com/gnosis/zodiac) collection of tools. If you have any questions about Zodiac, join the [Gnosis Guild Discord](https://discord.gg/wwmBWTgyEq). Follow [@GnosisGuild](https://twitter.com/gnosisguild) on Twitter for updates. 
 
 ## Prerequisites
 
-To start the process you need to create a Safe on the Rinkeby test network (e.g. via https://rinkeby.gnosis-safe.io).
+To start the process you need to create a Safe on the Goerli test network (e.g. via https://goerli.gnosis-safe.io).
 
 For the hardhat tasks to work, the environment needs to be properly configured. See the [sample env file](../.env.sample) for more information. In order to deploy the Exit Module, two contracts are needed: a designated token and circulating supply.
 
 First, deployment of the designated token can be done using the following hardhat command:
 
 ```bash
-yarn hardhat deployDesignatedToken --user 0xRECEIVER_OF_TOKENS --network rinkeby
+yarn hardhat deployDesignatedToken --user 0xRECEIVER_OF_TOKENS --network goerli
 ```
 
 Note: In this script, one (1) token is minted to the address passed as the user parameter. If no user parameter is given, then the signer of transaction will receive the minted token by default.
@@ -54,10 +54,10 @@ These setup tasks require the following parameters (also mentioned above):
 
 There are more optional parameters. For more information on these optional paramters, run `yarn hardhat setup --help`.
 
-An example for this on Rinkeby would be:
+An example for this on Goerli would be:
 
 ```bash
-yarn hardhat --network rinkeby setup --owner <owner_address> --avatar <avatar_address> --target <target_address> --token 0x0000000000000000000000000000000000000100 --supply 0x1230000000000000000000000000000000000900 --proxied true`
+yarn hardhat --network goerli setup --owner <owner_address> --avatar <avatar_address> --target <target_address> --token 0x0000000000000000000000000000000000000100 --supply 0x1230000000000000000000000000000000000900 --proxied true`
 ```
 
 This should return the address of the deployed Exit Module. For this guide we assume this to be `0x9797979797979797979797979797979797979797`.
@@ -66,9 +66,9 @@ Once the module has been deployed, you should verify the source code. (Note: It 
 
 Please note that the supply argument above must be the address of the  circulating supply contract that was deployed through the setup scripts. You can check the setup script logs to obtain the address.
 
-An example for this on Rinkeby would be:
+An example for this on Goerli would be:
 ```bash
-yarn hardhat --network rinkeby verifyEtherscan --module 0x9797979797979797979797979797979797979797 --owner <owner_address> --avatar <avatar_address> --target <target_address> --token 0x0000000000000000000000000000000000000100 --supply 0x1230000000000000000000000000000000000900`
+yarn hardhat --network goerli verifyEtherscan --module 0x9797979797979797979797979797979797979797 --owner <owner_address> --avatar <avatar_address> --target <target_address> --token 0x0000000000000000000000000000000000000100 --supply 0x1230000000000000000000000000000000000900`
 ```
 
 ## Enabling the module
@@ -78,7 +78,7 @@ To allow the Exit Module to actually execute transactions, you must enable it on
 
 ## Executing an Exit
 
-In order to test the Exit Module execution on Rinkeby, you will need some ERC20 tokens. If you don't have any to test, you can get some at https://app.compound.finance/ with the following steps (**make sure you are on Rinkeby testnetwork**): 1) Connect wallet, and click on any token in the supply markets list. 2) A modal will appear. Select the tab "Withdraw" and click on "Faucet". 3) This will trigger a transaction that will send the Rinkeby network tokens you selected to your account.
+In order to test the Exit Module execution on Goerli, you will need some ERC20 tokens. If you don't have any to test, you can get some at https://app.compound.finance/ with the following steps (**make sure you are on Goerli testnetwork**): 1) Connect wallet, and click on any token in the supply markets list. 2) A modal will appear. Select the tab "Withdraw" and click on "Faucet". 3) This will trigger a transaction that will send the Goerli network tokens you selected to your account.
 
 Request at least two tokens and send them to the Gnosis Safe address.
 
