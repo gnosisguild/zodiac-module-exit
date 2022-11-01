@@ -16,7 +16,7 @@ Then:
   - Open your Safe app locally (by default via https://localhost:3000/) and accept the SSL error.
 - Go to Safe Multisig web interface
   - [Mainnet](https://app.gnosis-safe.io)
-  - [Rinkeby](https://rinkeby.gnosis-safe.io/app)
+  - [Goerli](https://goerli.gnosis-safe.io/app)
 - Create your test safe
 - Go to Apps -> Manage Apps -> Add Custom App
 - Paste your localhost URL, default is https://localhost:3000/

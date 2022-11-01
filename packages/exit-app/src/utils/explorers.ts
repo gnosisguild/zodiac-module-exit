@@ -22,13 +22,13 @@ export const EXPLORERS_CONFIG: Record<NETWORK, ExplorerData> = {
     verifyContractUrl: 'https://etherscan.io/verifyContract',
     explorerApiKey: REACT_APP_ETHERSCAN_KEY,
   },
-  [NETWORK.RINKEBY]: {
+  [NETWORK.GOERLI]: {
     networkExplorerName: 'Etherscan',
-    networkExplorerUrl: 'https://rinkeby.etherscan.io',
-    networkExplorerApiUrl: 'https://api-rinkeby.etherscan.io/api',
-    safeTransactionApi: 'https://safe-transaction.rinkeby.gnosis.io/',
-    safeUrl: 'https://gnosis-safe.io/app/rin:',
-    verifyContractUrl: 'https://rinkeby.etherscan.io/verifyContract',
+    networkExplorerUrl: 'https://goerli.etherscan.io',
+    networkExplorerApiUrl: 'https://api-goerli.etherscan.io/api',
+    safeTransactionApi: 'https://safe-transaction.goerli.gnosis.io/',
+    safeUrl: 'https://gnosis-safe.io/app/gor:',
+    verifyContractUrl: 'https://goerli.etherscan.io/verifyContract',
     explorerApiKey: REACT_APP_ETHERSCAN_KEY,
   },
   [NETWORK.XDAI]: {
