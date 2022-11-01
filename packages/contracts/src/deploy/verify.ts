@@ -4,7 +4,7 @@ import { TASK_ETHERSCAN_VERIFY } from "hardhat-deploy";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { run } = hre;
-  if (!["rinkeby", "mainnet", "ropsten"].includes(hre.network.name)) {
+  if (!["goerli", "mainnet", "ropsten"].includes(hre.network.name)) {
     return;
   }
 
