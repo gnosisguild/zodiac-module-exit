@@ -90,7 +90,7 @@ export const AttachAccount = () => {
       <Paper classes={{ root: classes.card }}>
         <Typography className={classes.spacing} variant="h4">
           Attach a Safe to Exit{' '}
-          <Link href="https://gnosis.github.io/zodiac/docs/tutorial-module-exit-app/get-started" target="_blank">
+          <Link href="https://zodiac.wiki/index.php/Exit_App:_Member_Tutorial" target="_blank">
             <InfoOutlinedIcon style={{ color: 'rgba(217, 212, 173, 0.7)' }} />
           </Link>
         </Typography>
