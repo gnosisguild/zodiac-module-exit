@@ -88,7 +88,7 @@ describe("ExitERC20", async () => {
   });
 
   describe("setUp() ", () => {
-    it("throws if module has already been initialized", async () => {
+    it("reverts if module has already been initialized", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("ExitERC20");
       const module = await Module.deploy(
@@ -103,7 +103,7 @@ describe("ExitERC20", async () => {
       );
     });
 
-    it("throws if avatar is zero address", async () => {
+    it("reverts if avatar is zero address", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("ExitERC20");
       await expect(
@@ -117,7 +117,7 @@ describe("ExitERC20", async () => {
       ).to.be.revertedWith("Avatar can not be zero address");
     });
 
-    it("throws if target is zero address", async () => {
+    it("reverts if target is zero address", async () => {
       const { designatedToken, circulatingSupply } = await baseSetup();
       const Module = await hre.ethers.getContractFactory("ExitERC20");
       await expect(
@@ -160,14 +160,14 @@ describe("ExitERC20", async () => {
       const moduleIsAdded = await module.deniedTokens(tokenOne.address);
       expect(moduleIsAdded).to.be.true;
     });
-    it("throws if not authorized", async () => {
+    it("reverts if not authorized", async () => {
       const { module, tokenTwo } = await setupTestWithTestAvatar();
       await expect(module.addToDenyList([tokenTwo.address])).to.be.revertedWith(
         `Ownable: caller is not the owner`
       );
     });
 
-    it("throws if token is already in list", async () => {
+    it("reverts if token is already in list", async () => {
       const { module, avatar, tokenTwo } = await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenyList", [
         [tokenTwo.address],
@@ -200,7 +200,7 @@ describe("ExitERC20", async () => {
       expect(moduleIsNotAdded).to.be.false;
     });
 
-    it("throws if token is not added in list", async () => {
+    it("reverts if token is not added in list", async () => {
       const { module, avatar, tokenTwo } = await setupTestWithTestAvatar();
       const removeTokenData = module.interface.encodeFunctionData(
         "removeFromDenyList",
@@ -211,7 +211,7 @@ describe("ExitERC20", async () => {
       ).to.be.revertedWith(`Token not denied`);
     });
 
-    it("throws if not authorized", async () => {
+    it("reverts if not authorized", async () => {
       const { module, tokenOne } = await setupTestWithTestAvatar();
       await expect(
         module.removeFromDenyList([tokenOne.address])
@@ -220,7 +220,7 @@ describe("ExitERC20", async () => {
   });
 
   describe("exit()", () => {
-    it("throws if token is added in denied tokens list", async () => {
+    it("reverts if token is added in denied tokens list", async () => {
       const { avatar, module, tokenOne, tokenTwo, designatedToken } =
         await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenyList", [
@@ -239,7 +239,7 @@ describe("ExitERC20", async () => {
       ).to.be.revertedWith(`Denied token`);
     });
 
-    it("throws if designated token is in list", async () => {
+    it("reverts if designated token is in list", async () => {
       const { avatar, module, tokenOne, designatedToken } =
         await setupTestWithTestAvatar();
       const data = module.interface.encodeFunctionData("addToDenyList", [
@@ -255,7 +255,7 @@ describe("ExitERC20", async () => {
       ).to.be.revertedWith("Designated token can't be redeemed");
     });
 
-    it("throws because user is trying to redeem more tokens than he owns", async () => {
+    it("reverts because user is trying to redeem more tokens than he owns", async () => {
       const { avatar, module, tokensOrdered } = await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
       await expect(
@@ -426,7 +426,7 @@ describe("ExitERC20", async () => {
       );
     });
 
-    it("throws because user haven't approve designated tokens", async () => {
+    it("reverts if user hasn't approved designated tokens", async () => {
       const { avatar, module, tokenOne, tokenTwo } =
         await setupTestWithTestAvatar();
       await avatar.setModule(module.address);
@@ -436,7 +436,7 @@ describe("ExitERC20", async () => {
           tokenOne.address,
           tokenTwo.address,
         ])
-      ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+      ).to.be.revertedWith("SafeERC20: ERC20 operation did not succeed");
     });
   });
 
@@ -459,7 +459,7 @@ describe("ExitERC20", async () => {
       expect(newTokenAddress).to.be.equal(tokenOne.address);
     });
 
-    it("throws if avatar is msg.sender is not the avatar", async () => {
+    it("reverts if avatar is msg.sender is not the avatar", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.setDesignatedToken(AddressZero)).to.be.revertedWith(
         "Ownable: caller is not the owner"
@@ -468,7 +468,7 @@ describe("ExitERC20", async () => {
   });
 
   describe("setCirculatingSupply()", () => {
-    it("throws if avatar is msg.sender is not the owner", async () => {
+    it("reverts if avatar is msg.sender is not the owner", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.setCirculatingSupply(AddressZero)).to.be.revertedWith(
         "Ownable: caller is not the owner"
@@ -501,7 +501,7 @@ describe("ExitERC20", async () => {
       expect(newOwner).to.be.equal(AddressZero);
     });
 
-    it("throws because its not being called by owner", async () => {
+    it("reverts because its not being called by owner", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.renounceOwnership()).to.be.revertedWith(
         "Ownable: caller is not the owner"
@@ -524,7 +524,7 @@ describe("ExitERC20", async () => {
       const newAvatar = await module.avatar();
       expect(newAvatar).to.be.equal(user.address);
     });
-    it("throws because its not being called by owner", async () => {
+    it("reverts because its not being called by owner", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.setAvatar(user.address)).to.be.revertedWith(
         "Ownable: caller is not the owner"
@@ -548,7 +548,7 @@ describe("ExitERC20", async () => {
       expect(newOwner).to.be.equal(user.address);
     });
 
-    it("throws because its not being called by owner", async () => {
+    it("reverts because its not being called by owner", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.transferOwnership(user.address)).to.be.revertedWith(
         "Ownable: caller is not the owner"

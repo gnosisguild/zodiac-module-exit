@@ -2,12 +2,15 @@
 pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./ExitBase.sol";
 import "../CirculatingSupply/CirculatingSupplyERC20.sol";
 
 contract ExitERC20 is ExitBase, ReentrancyGuard {
+    using SafeERC20 for ERC20;
+
     ERC20 public designatedToken;
     CirculatingSupplyERC20 public circulatingSupply;
 
@@ -43,9 +46,9 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
             address _designatedToken,
             address _circulatingSupply
         ) = abi.decode(
-            initParams,
-            (address, address, address, address, address)
-        );
+                initParams,
+                (address, address, address, address, address)
+            );
         __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         require(_target != address(0), "Target can not be zero address");
@@ -86,7 +89,7 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
             getCirculatingSupply()
         );
 
-        designatedToken.transferFrom(msg.sender, avatar, amountToRedeem);
+        designatedToken.safeTransferFrom(msg.sender, avatar, amountToRedeem);
 
         _exit(tokens, params);
     }
