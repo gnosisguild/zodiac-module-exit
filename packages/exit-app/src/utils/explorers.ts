@@ -1,6 +1,9 @@
 import { NETWORK } from './networks'
 
 const REACT_APP_ETHERSCAN_KEY = process.env.REACT_APP_ETHERSCAN_KEY
+const REACT_APP_OPTIMISTIC_ETHERSCAN_KEY = process.env.REACT_APP_OPTIMISTIC_ETHERSCAN_KEY
+const REACT_APP_ARBISCAN_KEY = process.env.REACT_APP_ARBISCAN_KEY
+const REACT_APP_SNOWTRACE_KEY = process.env.REACT_APP_SNOWTRACE_KEY
 
 interface ExplorerData {
   networkExplorerName: string
@@ -56,6 +59,33 @@ export const EXPLORERS_CONFIG: Record<NETWORK, ExplorerData> = {
     safeTransactionApi: 'https://safe-transaction.bsc.gnosis.io/',
     verifyContractUrl: 'https://bscscan.com/verifyContract',
     explorerApiKey: REACT_APP_ETHERSCAN_KEY,
+  },
+  [NETWORK.OPTIMISM]: {
+    networkExplorerName: 'Etherscan',
+    networkExplorerUrl: 'https://optimistic.etherscan.io/',
+    networkExplorerApiUrl: 'https://api-optimistic.etherscan.io/api',
+    safeTransactionApi: 'https://safe-transaction-optimism.safe.global/',
+    safeUrl: 'https://app.safe.global/home?safe=oeth:',
+    verifyContractUrl: 'https://optimistic.etherscan.io/verifyContract',
+    explorerApiKey: REACT_APP_OPTIMISTIC_ETHERSCAN_KEY,
+  },
+  [NETWORK.ARBITRUMONE]: {
+    networkExplorerName: 'Arbiscan',
+    networkExplorerUrl: 'https://arbiscan.io/',
+    networkExplorerApiUrl: 'https://api.arbiscan.io/api',
+    safeTransactionApi: 'https://safe-transaction-arbitrum.safe.global/',
+    safeUrl: 'https://app.safe.global/home?safe=arb1:',
+    verifyContractUrl: 'https://arbiscan.io/verifyContract',
+    explorerApiKey: REACT_APP_ARBISCAN_KEY,
+  },
+  [NETWORK.AVALANCHE]: {
+    networkExplorerName: 'Snowtrace',
+    networkExplorerUrl: 'https://snowtrace.io/',
+    networkExplorerApiUrl: 'https://api.snowtrace.io/api',
+    safeTransactionApi: 'https://safe-transaction-arbitrum.safe.global/',
+    safeUrl: 'https://app.safe.global/home?safe=avax:',
+    verifyContractUrl: 'https://snowtrace.io/verifyContract',
+    explorerApiKey: REACT_APP_SNOWTRACE_KEY,
   },
 }
 
