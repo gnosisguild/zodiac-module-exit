@@ -50,7 +50,6 @@ export const NETWORK_DEFAULT_RPC: Record<NETWORK, string> = {
   [NETWORK.BSC]: 'https://bsc-dataseed.binance.org',
   [NETWORK.XDAI]: 'https://rpc.gnosischain.com',
   [NETWORK.POLYGON]: 'https://polygon-rpc.com',
-  [NETWORK.XDAI]: 'https://rpc.gnosischain.com',
   [NETWORK.OPTIMISM]: 'https://mainnet.optimism.io',
   [NETWORK.ARBITRUMONE]: 'https://arb1.arbitrum.io/rpc',
   [NETWORK.AVALANCHE]: 'https://avalanche-c-chain.publicnode.com',
