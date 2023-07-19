@@ -65,7 +65,7 @@ abstract contract ExitBase is Module, IExitBase, IERC165 {
     // @param amount to transfer
     function transferNativeAsset(address to, uint256 amount) private {
         require(
-            exec(to, amount, new bytes(0), Enum.Operation.Call),
+            exec(to, amount, "", Enum.Operation.Call),
             "Error on native asset transfer"
         );
     }
