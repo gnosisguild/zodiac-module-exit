@@ -10,11 +10,10 @@ abstract contract ExitBase is Module, IExitBase, IERC165 {
     // @notice Mapping of denied tokens defined by the avatar
     mapping(address => bool) public deniedTokens;
 
-    function getExitAmount(uint256 supply, bytes memory params)
-        internal
-        view
-        virtual
-        returns (uint256);
+    function getExitAmount(
+        uint256 supply,
+        bytes memory params
+    ) internal view virtual returns (uint256);
 
     // @dev Execute the share of assets and the transfer of designated tokens
     // @param tokens Array of tokens to claim, ordered lowest to highest
@@ -52,11 +51,7 @@ abstract contract ExitBase is Module, IExitBase, IERC165 {
     // @param token address of token to transfer
     // @param to address that will receive the transfer
     // @param amount to transfer
-    function transferToken(
-        address token,
-        address to,
-        uint256 amount
-    ) private {
+    function transferToken(address token, address to, uint256 amount) private {
         // 0xa9059cbb - bytes4(keccak256("transfer(address,uint256)"))
         bytes memory data = abi.encodeWithSelector(0xa9059cbb, to, amount);
         require(
@@ -70,7 +65,7 @@ abstract contract ExitBase is Module, IExitBase, IERC165 {
     // @param amount to transfer
     function transferNativeAsset(address to, uint256 amount) private {
         require(
-            exec(to, amount, bytes("0x"), Enum.Operation.Call),
+            exec(to, amount, "", Enum.Operation.Call),
             "Error on native asset transfer"
         );
     }
@@ -97,12 +92,9 @@ abstract contract ExitBase is Module, IExitBase, IERC165 {
         }
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        external
-        pure
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceID
+    ) external pure override returns (bool) {
         return interfaceID == 0x01ffc9a7 || interfaceID == 0xaf20af8a;
     }
 }
