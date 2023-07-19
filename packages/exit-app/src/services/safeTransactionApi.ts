@@ -2,7 +2,7 @@ import axios from 'axios'
 import { SafeAssets, TokenAsset } from '../store/main/models'
 
 export class SafeTransactionApi {
-  private baseUrl = 'https://safe-client.gnosis.io'
+  private baseUrl = 'https://safe-client.safe.global'
   private chainId: number
   private safe: string
 
