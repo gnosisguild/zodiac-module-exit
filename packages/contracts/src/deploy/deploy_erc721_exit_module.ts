@@ -1,4 +1,4 @@
-import { deployMastercopy } from "@gnosis.pm/zodiac";
+import { computeTargetAddress, deployMastercopy } from "@gnosis.pm/zodiac";
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
@@ -15,14 +15,27 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const ExitERC721 = await hre.ethers.getContractFactory("ExitERC721");
 
-  const address = await deployMastercopy(
+  const args = [
+    FirstAddress,
+    FirstAddress,
+    FirstAddress,
+    FirstAddress,
+    FirstAddress,
+  ];
+
+  const { address, isDeployed } = await computeTargetAddress(
     deployer,
     ExitERC721,
-    [FirstAddress, FirstAddress, FirstAddress, FirstAddress, FirstAddress],
+    args,
     SaltZero
   );
 
-  console.log("ExitERC721 deployed to:", address);
+  if (isDeployed) {
+    console.log("ExitERC721 already deployed to:", address);
+  } else {
+    await deployMastercopy(deployer, ExitERC721, args, SaltZero);
+    console.log("ExitERC721 was deployed to:", address);
+  }
 
   hre.deployments.save("ExitERC721", {
     abi: CONTRACT_ARTIFACT.abi,

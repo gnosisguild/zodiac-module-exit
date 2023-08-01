@@ -1,4 +1,4 @@
-import { deployMastercopy } from "@gnosis.pm/zodiac";
+import { deployMastercopy, computeTargetAddress } from "@gnosis.pm/zodiac";
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
@@ -17,14 +17,21 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     "CirculatingSupplyERC20"
   );
 
-  const address = await deployMastercopy(
+  const args = [FirstAddress, FirstAddress, []];
+
+  const { address, isDeployed } = await computeTargetAddress(
     deployer,
     CirculatingSupplyERC20,
-    [FirstAddress, FirstAddress, []],
+    args,
     SaltZero
   );
 
-  console.log("CirculatingSupplyERC20 deployed to:", address);
+  if (isDeployed) {
+    console.log("CirculatingSupplyERC20 already deployed to:", address);
+  } else {
+    await deployMastercopy(deployer, CirculatingSupplyERC20, args, SaltZero);
+    console.log("CirculatingSupplyERC20 was deployed to:", address);
+  }
 
   hre.deployments.save("CirculatingSupplyERC20", {
     abi: CONTRACT_ARTIFACT.abi,
