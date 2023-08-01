@@ -38,7 +38,7 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
         setUp(initParams);
     }
 
-    function setUp(bytes memory initParams) public override {
+    function setUp(bytes memory initParams) public override initializer {
         (
             address _owner,
             address _avatar,
@@ -67,11 +67,10 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
     // @param tokens Array of tokens to claim, ordered lowest to highest
     // @notice Will revert if tokens[] is not ordered highest to lowest, contains duplicates,
     //         includes the designated token or includes denied tokens
-    function exit(uint256 amountToRedeem, address[] calldata tokens)
-        external
-        override
-        nonReentrant
-    {
+    function exit(
+        uint256 amountToRedeem,
+        address[] calldata tokens
+    ) external override nonReentrant {
         require(
             designatedToken.balanceOf(msg.sender) >= amountToRedeem,
             "Amount to redeem is greater than balance"
@@ -94,12 +93,10 @@ contract ExitERC20 is ExitBase, ReentrancyGuard {
         _exit(tokens, params);
     }
 
-    function getExitAmount(uint256 amount, bytes memory params)
-        internal
-        pure
-        override
-        returns (uint256)
-    {
+    function getExitAmount(
+        uint256 amount,
+        bytes memory params
+    ) internal pure override returns (uint256) {
         (uint256 amountToRedeem, uint256 _circulatingSupply) = abi.decode(
             params,
             (uint256, uint256)
