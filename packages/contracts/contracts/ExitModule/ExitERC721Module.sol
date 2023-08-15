@@ -34,7 +34,7 @@ contract ExitERC721 is ExitBase, ReentrancyGuard {
         setUp(initParams);
     }
 
-    function setUp(bytes memory initParams) public override {
+    function setUp(bytes memory initParams) public override initializer {
         (
             address _owner,
             address _avatar,
@@ -42,9 +42,9 @@ contract ExitERC721 is ExitBase, ReentrancyGuard {
             address _collection,
             address _circulatingSupply
         ) = abi.decode(
-            initParams,
-            (address, address, address, address, address)
-        );
+                initParams,
+                (address, address, address, address, address)
+            );
         __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         require(_target != address(0), "Target can not be zero address");
@@ -62,11 +62,10 @@ contract ExitERC721 is ExitBase, ReentrancyGuard {
     // @param tokenId of token to be used to exit
     // @param tokens Array of tokens to claim, ordered lowest to highest
     // @notice Will revert if tokens[] is not ordered highest to lowest, contains duplicates, or includes denied tokens
-    function exit(uint256 tokenId, address[] calldata tokens)
-        external
-        override
-        nonReentrant
-    {
+    function exit(
+        uint256 tokenId,
+        address[] calldata tokens
+    ) external override nonReentrant {
         require(
             collection.ownerOf(tokenId) == msg.sender,
             "Only token owner can exit"
@@ -87,12 +86,10 @@ contract ExitERC721 is ExitBase, ReentrancyGuard {
         collection = ERC721Enumerable(_collection);
     }
 
-    function getExitAmount(uint256 supply, bytes memory params)
-        internal
-        pure
-        override
-        returns (uint256)
-    {
+    function getExitAmount(
+        uint256 supply,
+        bytes memory params
+    ) internal pure override returns (uint256) {
         uint256 _circulatingSupply = abi.decode(params, (uint256));
         return supply / _circulatingSupply;
     }

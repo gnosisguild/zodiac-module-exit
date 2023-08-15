@@ -10,7 +10,7 @@ abstract contract CirculatingSupplyBase is OwnableUpgradeable, ExclusionList {
 
     address public token;
 
-    function setUp(bytes memory initializeParams) public {
+    function setUp(bytes memory initializeParams) public initializer {
         (address _owner, address _token, address[] memory _exclusions) = abi
             .decode(initializeParams, (address, address, address[]));
         __Ownable_init();
@@ -34,10 +34,10 @@ abstract contract CirculatingSupplyBase is OwnableUpgradeable, ExclusionList {
     /// @param prevExclusion Exclusion that pointed to the exclusion to be removed in the linked list
     /// @param exclusion Exclusion to be removed
     /// @notice This can only be called by the owner
-    function removeExclusion(address prevExclusion, address exclusion)
-        public
-        onlyOwner
-    {
+    function removeExclusion(
+        address prevExclusion,
+        address exclusion
+    ) public onlyOwner {
         _removeExclusion(prevExclusion, exclusion);
     }
 
