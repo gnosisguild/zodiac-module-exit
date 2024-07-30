@@ -1,8 +1,4 @@
-import "hardhat-deploy";
-import "@nomiclabs/hardhat-ethers";
-import { deployAndSetUpModule } from "@gnosis.pm/zodiac";
-import { BigNumber } from "ethers";
-import { task, types } from "hardhat/config";
+ import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 interface FactoryTaskArgs {

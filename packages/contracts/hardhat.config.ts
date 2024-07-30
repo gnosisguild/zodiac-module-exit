@@ -1,5 +1,6 @@
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
+import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "hardhat-deploy";
 import dotenv from "dotenv";

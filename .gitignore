@@ -8,5 +8,6 @@ packages/exit-app/src/contracts/types
 packages/exit-app/.env
 
 node_modules
+typechain-types
 
 .DS_Store
