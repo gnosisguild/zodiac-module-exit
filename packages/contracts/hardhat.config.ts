@@ -11,6 +11,9 @@ dotenv.config();
 const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
 
 import "./src/tasks/setup";
+import "./tasks/mastercopy-deploy";
+import "./tasks/mastercopy-store";
+import "./tasks/mastercopy-verify";
 
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
@@ -43,13 +46,17 @@ export default {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
     },
-    xdai: {
+    gnosis: {
       ...sharedNetworkConfig,
-      url: "https://xdai.poanetwork.dev",
+      url: "https://rpc.gnosischain.com",
     },
     matic: {
       ...sharedNetworkConfig,
       url: "https://rpc-mainnet.maticvigil.com",
+    },
+    sepolia: {
+      ...sharedNetworkConfig,
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
     },
   },
   namedAccounts: {

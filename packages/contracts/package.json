@@ -5,7 +5,9 @@
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat deploy --network",
+    "store-mastercopy": "yarn run build && yarn hardhat mastercopy:store",
+    "deploy-mastercopies": "yarn hardhat mastercopies:deploy --network",
+    "verify-mastercopies": "yarn hardhat mastercopies:verify --network",
     "coverage": "hardhat coverage",
     "lint": "yarn lint:sol && yarn lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
