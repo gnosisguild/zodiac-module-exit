@@ -7,7 +7,7 @@ import packageJson from "../package.json";
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
 task(
-  "extract-current",
+  "mastercopy:extract",
   "Extracts and persists current mastercopy build artifacts"
 ).setAction(async (_, hre) => {
   storeMastercopyArtifact({
