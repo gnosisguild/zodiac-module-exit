@@ -5,7 +5,7 @@
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
-    "store-mastercopy": "yarn run build && yarn hardhat mastercopy:store",
+    "extract-mastercopy": "yarn run build && yarn hardhat mastercopy:extract",
     "deploy-mastercopies": "yarn hardhat mastercopies:deploy --network",
     "verify-mastercopies": "yarn hardhat mastercopies:verify --network",
     "coverage": "hardhat coverage",
