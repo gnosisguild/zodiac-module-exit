@@ -12,7 +12,7 @@ task(
   }
 
   await verifyMastercopiesFromArtifact({
-    apiUrl: String((await hre.ethers.provider.getNetwork()).chainId),
+    apiUrlOrChainId: String((await hre.ethers.provider.getNetwork()).chainId),
     apiKey: ETHERSCAN_API_KEY,
   });
 });

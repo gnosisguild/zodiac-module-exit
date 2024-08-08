@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-import { storeMastercopyArtifact } from "zodiac-core";
+import { writeMastercopyArtifact } from "zodiac-core";
 
 import packageJson from "../package.json";
 
@@ -10,7 +10,7 @@ task(
   "mastercopy:extract",
   "Extracts and persists current mastercopy build artifacts"
 ).setAction(async (_, hre) => {
-  storeMastercopyArtifact({
+  writeMastercopyArtifact({
     contractVersion: packageJson.version,
     contractName: "ExitERC20",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
@@ -23,7 +23,7 @@ task(
     salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
   });
 
-  storeMastercopyArtifact({
+  writeMastercopyArtifact({
     contractVersion: packageJson.version,
     contractName: "ExitERC721",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
