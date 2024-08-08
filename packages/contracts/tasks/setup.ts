@@ -1,5 +1,10 @@
- import { task, types } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import {
+  predictProxyAddress,
+  readMastercopyArtifact,
+  encodeDeployProxy,
+} from "zodiac-core";
 
 interface FactoryTaskArgs {
   proxied: boolean;
@@ -28,52 +33,60 @@ const deployCirculatingSupply = async (
   taskArgs: CirculatingSupplyTaskArgs,
   hardhatRuntime: HardhatRuntimeEnvironment
 ) => {
-  const [caller] = await hardhatRuntime.ethers.getSigners();
-  console.log("Using the account:", caller.address);
+  const [deployer] = await hardhatRuntime.ethers.getSigners();
+  console.log("Using the account:", deployer.address);
   const exclusions = taskArgs.exclusions ? taskArgs.exclusions.split(",") : [];
-
-  if (taskArgs.proxied) {
-    const chainId = await hardhatRuntime.getChainId();
-    const { transaction } = deployAndSetUpModule(
-      "circulatingSupply",
-      {
-        types: ["address", "address", "address[]"],
-        values: [taskArgs.owner, taskArgs.token, exclusions],
-      },
-      hardhatRuntime.ethers.provider,
-      Number(chainId),
-      Date.now().toString()
-    );
-    const deploymentTransaction = await caller.sendTransaction(transaction);
-    const receipt = await deploymentTransaction.wait();
-
-    console.log(
-      "Circulating supply contract deployed to",
-      receipt.logs[1].address
-    );
-    return;
-  }
 
   const contract =
     taskArgs.type === "ERC721"
       ? "CirculatingSupplyERC721"
       : "CirculatingSupply";
 
-  const Supply = await hardhatRuntime.ethers.getContractFactory(contract);
-  const supply = await Supply.deploy(
-    taskArgs.owner,
-    taskArgs.token,
-    exclusions
-  );
-  console.log("Circulating supply contract deployed to", supply.address);
+  if (taskArgs.proxied) {
+    const mastercopyArtifact = readMastercopyArtifact({
+      contractName: contract,
+    });
 
-  console.log("Wait 10s to verify contract...");
-  wait(10);
+    const nonce = await deployer.getNonce();
 
-  await hardhatRuntime.run("verify:verify", {
-    address: supply.address,
-    constructorArguments: [taskArgs.owner, taskArgs.token, exclusions],
-  });
+    const mastercopy = mastercopyArtifact.address;
+    const setupArgs = {
+      types: ["address", "address", "address[]"],
+      values: [taskArgs.owner, taskArgs.token, exclusions],
+    };
+
+    const transaction = encodeDeployProxy({
+      mastercopy,
+      setupArgs,
+      saltNonce: nonce,
+    });
+    const deploymentTransaction = await deployer.sendTransaction(transaction);
+    await deploymentTransaction.wait();
+
+    console.log(
+      "Circulating supply contract deployed to",
+      predictProxyAddress({ mastercopy, setupArgs, saltNonce: nonce })
+    );
+  } else {
+    const Supply = await hardhatRuntime.ethers.getContractFactory(contract);
+    const supply = await Supply.deploy(
+      taskArgs.owner,
+      taskArgs.token,
+      exclusions
+    );
+    console.log(
+      "Circulating supply contract deployed to",
+      await supply.getAddress()
+    );
+
+    console.log("Wait 10s to verify contract...");
+    wait(10);
+
+    await hardhatRuntime.run("verify:verify", {
+      address: supply.getAddress(),
+      constructorArguments: [taskArgs.owner, taskArgs.token, exclusions],
+    });
+  }
 };
 
 task("deployCirculatingSupply", "Deploy circulating supply contract")
@@ -105,60 +118,68 @@ const setupModule = async (
   taskArgs: ExitSetupArgs,
   hardhatRuntime: HardhatRuntimeEnvironment
 ) => {
-  const [caller] = await hardhatRuntime.ethers.getSigners();
-  console.log("Using the account:", caller.address);
-
-  if (taskArgs.proxied) {
-    const chainId = await hardhatRuntime.getChainId();
-    const { transaction } = deployAndSetUpModule(
-      "exit",
-      {
-        types: ["address", "address", "address", "address", "address"],
-        values: [
-          taskArgs.owner,
-          taskArgs.avatar,
-          taskArgs.target,
-          taskArgs.token,
-          taskArgs.supply,
-        ],
-      },
-      hardhatRuntime.ethers.provider,
-      Number(chainId),
-      Date.now().toString()
-    );
-
-    const deploymentTransaction = await caller.sendTransaction(transaction);
-    const receipt = await deploymentTransaction.wait();
-
-    console.log("Module deployed to:", receipt.logs[1].address);
-    return;
-  }
+  const [deployer] = await hardhatRuntime.ethers.getSigners();
+  console.log("Using the account:", deployer.address);
 
   const contract = taskArgs.type === "ERC721" ? "ExitERC721" : "ExitERC20";
-  const Module = await hardhatRuntime.ethers.getContractFactory(contract);
 
-  const module = await Module.deploy(
-    taskArgs.owner,
-    taskArgs.avatar,
-    taskArgs.target,
-    taskArgs.token,
-    taskArgs.supply
-  );
-  console.log("Module deployed to:", module.address);
+  if (taskArgs.proxied) {
+    const mastercopyArtifact = readMastercopyArtifact({
+      contractName: contract,
+    });
 
-  console.log("Wait 10s to verify contract...");
-  wait(10);
+    const nonce = await deployer.getNonce();
 
-  await hardhatRuntime.run("verify:verify", {
-    address: module.address,
-    constructorArguments: [
+    const mastercopy = mastercopyArtifact.address;
+    const setupArgs = {
+      types: ["address", "address", "address", "address", "address"],
+      values: [
+        taskArgs.owner,
+        taskArgs.avatar,
+        taskArgs.target,
+        taskArgs.token,
+        taskArgs.supply,
+      ],
+    };
+
+    const transaction = encodeDeployProxy({
+      mastercopy,
+      setupArgs,
+      saltNonce: nonce,
+    });
+    const deploymentTransaction = await deployer.sendTransaction(transaction);
+    await deploymentTransaction.wait();
+
+    console.log(
+      "Module deployed to: ",
+      predictProxyAddress({ mastercopy, setupArgs, saltNonce: nonce })
+    );
+  } else {
+    const Module = await hardhatRuntime.ethers.getContractFactory(contract);
+
+    const module = await Module.deploy(
       taskArgs.owner,
       taskArgs.avatar,
       taskArgs.target,
       taskArgs.token,
-      taskArgs.supply,
-    ],
-  });
+      taskArgs.supply
+    );
+    console.log("Module deployed to: ", await module.getAddress());
+
+    console.log("Wait 10s to verify contract...");
+    wait(10);
+
+    await hardhatRuntime.run("verify:verify", {
+      address: await module.getAddress(),
+      constructorArguments: [
+        taskArgs.owner,
+        taskArgs.avatar,
+        taskArgs.target,
+        taskArgs.token,
+        taskArgs.supply,
+      ],
+    });
+  }
 };
 
 task("setup", "deploy a Exit Module")
@@ -226,18 +247,18 @@ const deployDesignatedToken = async (
   const Token = await hardhatRuntime.ethers.getContractFactory("TestToken");
   const token = await Token.deploy(18);
 
-  await token.deployTransaction.wait(3);
-  console.log("Token deployed to:", token.address);
+  await token.deploymentTransaction()?.wait(3);
+  console.log("Token deployed to:", token.getAddress());
 
   const receiver = taskArgs.user || caller.address;
-  await token.mint(receiver, BigNumber.from(10).pow(18));
+  await token.mint(receiver, BigInt(10) ** BigInt(18));
 
   console.log("Token minted to:", receiver);
 
   console.log("Wait 10s to verify contract...");
   wait(10);
   await hardhatRuntime.run("verify:verify", {
-    address: token.address,
+    address: await token.getAddress(),
     constructorArguments: [18],
   });
 };
@@ -258,23 +279,22 @@ const deployTestTokenERC721 = async (
   const [caller] = await hardhatRuntime.ethers.getSigners();
   console.log("Using the account:", caller.address);
 
-  const Token = await hardhatRuntime.ethers.getContractFactory(
-    "TestTokenERC721"
-  );
+  const Token =
+    await hardhatRuntime.ethers.getContractFactory("TestTokenERC721");
   const token = await Token.deploy();
 
-  await token.deployTransaction.wait(3);
-  console.log("Token deployed to:", token.address);
+  await token.deploymentTransaction()?.wait(3);
+  console.log("Token deployed to:", token.getAddress());
 
-  const receiver = taskArgs.user || caller.address;
-  await token.mint(receiver);
+  const receiver = taskArgs.user || (await caller.getAddress());
+  await token.mint(receiver as string);
 
   console.log("Token minted to:", receiver);
 
   console.log("Wait 10s to verify contract...");
   wait(10);
   await hardhatRuntime.run("verify:verify", {
-    address: token.address,
+    address: await token.getAddress(),
     constructorArguments: [],
   });
 };

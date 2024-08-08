@@ -10,7 +10,7 @@ import type { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config();
 const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
 
-import "./src/tasks/setup";
+import "./tasks/setup";
 import "./tasks/mastercopy-deploy";
 import "./tasks/mastercopy-extract";
 import "./tasks/mastercopy-verify";
