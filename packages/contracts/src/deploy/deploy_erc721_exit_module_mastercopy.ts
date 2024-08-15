@@ -1,6 +1,6 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { deployMastercopy } from "zodiac-core";
+import { deployMastercopy } from "@gnosis-guild/zodiac-core";
 
 import CONTRACT_ARTIFACT from "../../build/artifacts/contracts/ExitModule/ExitERC721Module.sol/ExitERC721.json";
 import createAdapter from "./createEIP1193";

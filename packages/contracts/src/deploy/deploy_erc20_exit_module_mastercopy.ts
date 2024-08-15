@@ -1,6 +1,6 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { deployMastercopy } from "zodiac-core";
+import { deployMastercopy } from "@gnosis-guild/zodiac-core";
 
 import CONTRACT_ARTIFACT from "../../build/artifacts/contracts/ExitModule/ExitERC20Module.sol/ExitERC20.json";
 

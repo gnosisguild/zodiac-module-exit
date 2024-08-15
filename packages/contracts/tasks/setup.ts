@@ -2,9 +2,9 @@ import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import {
   predictProxyAddress,
-  readMastercopyArtifact,
+  readMastercopy,
   encodeDeployProxy,
-} from "zodiac-core";
+} from "@gnosis-guild/zodiac-core";
 
 interface FactoryTaskArgs {
   proxied: boolean;
@@ -43,7 +43,7 @@ const deployCirculatingSupply = async (
       : "CirculatingSupply";
 
   if (taskArgs.proxied) {
-    const mastercopyArtifact = readMastercopyArtifact({
+    const mastercopyArtifact = readMastercopy({
       contractName: contract,
     });
 
@@ -124,7 +124,7 @@ const setupModule = async (
   const contract = taskArgs.type === "ERC721" ? "ExitERC721" : "ExitERC20";
 
   if (taskArgs.proxied) {
-    const mastercopyArtifact = readMastercopyArtifact({
+    const mastercopyArtifact = readMastercopy({
       contractName: contract,
     });
 

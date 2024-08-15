@@ -1,4 +1,4 @@
-import { deployMastercopy } from "zodiac-core";
+import { deployMastercopy } from "@gnosis-guild/zodiac-core";
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 

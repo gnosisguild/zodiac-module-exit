@@ -1,6 +1,7 @@
 import { Signer } from "ethers";
-import { EIP1193Provider } from "zodiac-core";
 import { EthereumProvider } from "hardhat/types";
+
+import { EIP1193Provider } from "@gnosis-guild/zodiac-core";
 
 export default function createAdapter({
   provider,
