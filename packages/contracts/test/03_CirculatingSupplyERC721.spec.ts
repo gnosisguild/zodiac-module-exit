@@ -2,7 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { AbiCoder } from "ethers";
 import hre from "hardhat";
-import { deployFactories, deployProxy } from "zodiac-core";
+import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
 
 import createAdapter from "./createEIP1193";
 

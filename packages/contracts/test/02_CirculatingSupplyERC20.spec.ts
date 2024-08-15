@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { AbiCoder, ZeroAddress } from "ethers";
 import hre from "hardhat";
 
-import { deployFactories, deployProxy } from "zodiac-core";
+import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
 import createAdapter from "./createEIP1193";
 
 describe("CirculatingSupply", async () => {
