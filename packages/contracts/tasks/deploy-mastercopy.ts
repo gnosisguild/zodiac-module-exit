@@ -1,78 +1,73 @@
-import { Signer } from "ethers";
+/** @format */
+
 import { task, types } from "hardhat/config";
-import { EthereumProvider } from "hardhat/types";
 
 import {
   EIP1193Provider,
   deployMastercopy,
-  deployAllMastercopies,
   readMastercopy,
 } from "@gnosis-guild/zodiac-core";
+import { createEIP1193 } from "./create-EIP1193";
 
 task(
   "deploy:mastercopy",
   "For every version entry on the artifacts file, deploys a mastercopy into the current network"
 )
   .addOptionalParam(
-    "contractName",
-    "The name of the contractName to deploy",
+    "contractVersion",
+    "The specific version of the contract to deploy",
+    "latest", // Default value
     types.string
   )
-  .addFlag(
-    "current",
-    "Deploy the latest version from disk instead of using mastercopies.json" //TODO: Improve the docs
-  )
-  .setAction(async ({ current, contractName }, hre) => {
-    console.log("contractName", contractName);
+  .setAction(async ({ contractVersion }, hre) => {
     const [signer] = await hre.ethers.getSigners();
     const provider = createEIP1193(hre.network.provider, signer);
-    if (current) {
-      // Logic to deploy the latest version from disk
-      await deployLatestMastercopyFromDisk(provider, contractName);
-    } else {
-      // using mastercopies.json
-      await deployAllMastercopies({
-        provider,
-      });
-    }
+
+    // Deploy the contracts based on the provided version
+    await deployLatestMastercopyFromDisk(provider, contractVersion);
   });
-
-function createEIP1193(
-  provider: EthereumProvider,
-  signer: Signer
-): EIP1193Provider {
-  return {
-    request: async ({ method, params }) => {
-      if (method == "eth_sendTransaction") {
-        const { hash } = await signer.sendTransaction((params as any[])[0]);
-        return hash;
-      }
-
-      return provider.request({ method, params });
-    },
-  };
-}
 
 async function deployLatestMastercopyFromDisk(
   provider: EIP1193Provider,
-  contract: string
+  version?: string
 ) {
-  const latestArtifact = readMastercopy({
-    contractName: contract,
-  });
+  const CONTRACTS = [
+    "Exit",
+    "ExitERC20",
+    "ExitERC721",
+    "CirculatingSupply",
+    "CirculatingSupplyERC20",
+    "CirculatingSupplyERC721",
+  ];
 
-  const { address, noop } = await deployMastercopy({
-    ...latestArtifact,
-    provider,
-  });
-  const { contractName, contractVersion } = latestArtifact;
-  if (noop) {
-    console.log(
-      `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
-    );
-  } else {
-    console.log(
-      `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`
-    );
+  for (const contract of CONTRACTS) {
+    try {
+      // Read the artifact for the specific contract and version
+      const artifact = readMastercopy({
+        contractName: contract,
+        contractVersion: version === "latest" ? undefined : version,
+      });
+
+      const { address, noop } = await deployMastercopy({
+        ...artifact,
+        provider,
+      });
+
+      if (noop) {
+        console.log(
+          `🔄 ${artifact.contractName}@${artifact.contractVersion}: Already deployed at ${address}`
+        );
+      } else {
+        console.log(
+          `🚀 ${artifact.contractName}@${artifact.contractVersion}: Successfully deployed at ${address}`
+        );
+      }
+    } catch (error) {
+      console.error(
+        `⏭️ Skipping deployment of ${contract}@${version}: Version not found.`
+      );
+      // Skip the current contract if there's an error and continue with the next one
+      continue;
+    }
   }
 }

@@ -9,9 +9,10 @@ import type { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config();
 const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
 
-import "./tasks/setup";
+import "./tasks/deploy-mastercopies";
 import "./tasks/deploy-mastercopy";
 import "./tasks/extract-mastercopy";
+import "./tasks/verify-mastercopies";
 import "./tasks/verify-mastercopy";
 
 const DEFAULT_MNEMONIC =
