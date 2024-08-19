@@ -10,9 +10,9 @@ dotenv.config();
 const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
 
 import "./tasks/setup";
-import "./tasks/mastercopy-deploy";
-import "./tasks/mastercopy-extract";
-import "./tasks/mastercopy-verify";
+import "./tasks/deploy-mastercopy";
+import "./tasks/extract-mastercopy";
+import "./tasks/verify-mastercopy";
 
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
