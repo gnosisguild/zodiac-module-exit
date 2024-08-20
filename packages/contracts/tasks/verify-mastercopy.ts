@@ -5,19 +5,9 @@ import {
 } from "@gnosis-guild/zodiac-core";
 import path from "path";
 import fs from "fs";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { cwd } from "process";
 
 const { ETHERSCAN_API_KEY } = process.env;
-
-/**
- * Simulates the SDK's `defaultBuildDir` functionality, pointing to the contract artifacts directory.
- *
- * @returns {string} The absolute path to the contract artifacts directory.
- */
-function getBuildDir(): string {
-  return path.join(cwd(), "build", "artifacts", "contracts");
-}
 
 /**
  * Simulates the SDK's `defaultMastercopyArtifactsFile`, pointing to the mastercopies.json file.
@@ -44,18 +34,16 @@ task(
     }
 
     const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
-    await verifyLatestMastercopyFromDisk(hre, chainId, contractVersion);
+    await verifyLatestMastercopyFromDisk(chainId, contractVersion);
   });
 
 /**
  * Verifies the latest mastercopy from disk, handling multiple contracts and versions.
  *
- * @param {HardhatRuntimeEnvironment} hre - The Hardhat runtime environment.
  * @param {string} chainId - The chain ID of the network.
  * @param {string} [version] - The specific version of the contract to verify.
  */
 async function verifyLatestMastercopyFromDisk(
-  hre: HardhatRuntimeEnvironment,
   chainId: string,
   version?: string
 ) {
