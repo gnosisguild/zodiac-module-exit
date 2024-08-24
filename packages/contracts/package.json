@@ -14,7 +14,9 @@
     "lint": "yarn lint:sol && yarn lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint --max-warnings 0 .",
+    "fmt": "yarn fmt:sol && yarn fmt:ts",
     "fmt:sol": "prettier 'contracts/**/*.sol' -w",
+    "fmt:ts": "prettier 'tasks/**/*.ts' 'test/**/*.ts' -w",
     "prepack": "yarn build"
   },
   "repository": {
