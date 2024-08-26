@@ -9,8 +9,7 @@ task(
 ).setAction(async (_, hre) => {
   const [signer] = await hre.ethers.getSigners();
   const provider = createEIP1193(hre.network.provider, signer);
-
-  for (const mastercopy of await readMastercopies()) {
+  for (const mastercopy of readMastercopies()) {
     const {
       contractName,
       contractVersion,

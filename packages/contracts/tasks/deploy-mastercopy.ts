@@ -17,7 +17,7 @@ task(
     const [signer] = await hre.ethers.getSigners();
     const provider = createEIP1193(hre.network.provider, signer);
 
-    for (const mastercopy of await readMastercopies({ contractVersion })) {
+    for (const mastercopy of readMastercopies({ contractVersion })) {
       const {
         contractName,
         contractVersion,
@@ -26,7 +26,6 @@ task(
         constructorArgs,
         salt,
       } = mastercopy;
-
       const { address, noop } = await deployMastercopy({
         factory,
         bytecode,
@@ -44,9 +43,6 @@ task(
           `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
         );
       } else {
-        console.log(
-          `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`
-        );
       }
     }
   });
