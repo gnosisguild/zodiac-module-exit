@@ -1,9 +1,6 @@
-
 import { task } from "hardhat/config";
 
-import {
-  deployAllMastercopies,
-} from "@gnosis-guild/zodiac-core";
+import { readMastercopies, deployMastercopy } from "@gnosis-guild/zodiac-core";
 import { createEIP1193 } from "./create-EIP1193";
 
 task(
@@ -13,9 +10,36 @@ task(
   const [signer] = await hre.ethers.getSigners();
   const provider = createEIP1193(hre.network.provider, signer);
 
-  await deployAllMastercopies({
-    provider,
-  });
+  for (const mastercopy of await readMastercopies()) {
+    const {
+      contractName,
+      contractVersion,
+      factory,
+      bytecode,
+      constructorArgs,
+      salt,
+    } = mastercopy;
+
+    const { address, noop } = await deployMastercopy({
+      factory,
+      bytecode,
+      constructorArgs,
+      salt,
+      provider,
+      onStart: () => {
+        console.log(
+          `⏳ ${contractName}@${contractVersion}: Deployment starting...`
+        );
+      },
+    });
+    if (noop) {
+      console.log(
+        `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
+      );
+    } else {
+      console.log(
+        `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`
+      );
+    }
+  }
 });
-
-

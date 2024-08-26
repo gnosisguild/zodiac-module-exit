@@ -25,7 +25,7 @@
   "author": "",
   "license": "LGPL-3.0+",
   "devDependencies": {
-    "@gnosis-guild/zodiac-core": "1.1.0",
+    "@gnosis-guild/zodiac-core": "file:../../../zodiac-core",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-ignition": "^0.15.5",
@@ -53,7 +53,7 @@
     "path": "^0.12.7",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.0",
-    "solhint": "5.0.2",
+    "solhint": "5.0.3",
     "solhint-plugin-prettier": "0.1.0",
     "solidity-coverage": "^0.8.12",
     "ts-node": "^10.9.2",

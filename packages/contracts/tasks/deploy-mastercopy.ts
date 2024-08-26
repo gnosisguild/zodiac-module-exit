@@ -1,15 +1,11 @@
 import { task, types } from "hardhat/config";
 
-import {
-  EIP1193Provider,
-  deployMastercopy,
-  readMastercopy,
-} from "@gnosis-guild/zodiac-core";
+import { deployMastercopy, readMastercopies } from "@gnosis-guild/zodiac-core";
 import { createEIP1193 } from "./create-EIP1193";
 
 task(
   "deploy:mastercopy",
-  "For every version entry on the artifacts file, deploys a mastercopy into the current network"
+  "For every entry on the artifacts file, that corresponds to the provided entry, deploy the mastercopy into the current network"
 )
   .addOptionalParam(
     "contractVersion",
@@ -21,51 +17,36 @@ task(
     const [signer] = await hre.ethers.getSigners();
     const provider = createEIP1193(hre.network.provider, signer);
 
-    // Deploy the contracts based on the provided version
-    await deployLatestMastercopyFromDisk(provider, contractVersion);
-  });
-
-async function deployLatestMastercopyFromDisk(
-  provider: EIP1193Provider,
-  version?: string
-) {
-  const CONTRACTS = [
-    "Exit",
-    "ExitERC20",
-    "ExitERC721",
-    "CirculatingSupply",
-    "CirculatingSupplyERC20",
-    "CirculatingSupplyERC721",
-  ];
-
-  for (const contract of CONTRACTS) {
-    try {
-      // Read the artifact for the specific contract and version
-      const artifact = readMastercopy({
-        contractName: contract,
-        contractVersion: version === "latest" ? undefined : version,
-      });
+    for (const mastercopy of await readMastercopies({ contractVersion })) {
+      const {
+        contractName,
+        contractVersion,
+        factory,
+        bytecode,
+        constructorArgs,
+        salt,
+      } = mastercopy;
 
       const { address, noop } = await deployMastercopy({
-        ...artifact,
+        factory,
+        bytecode,
+        constructorArgs,
+        salt,
         provider,
+        onStart: () => {
+          console.log(
+            `⏳ ${contractName}@${contractVersion}: Deployment starting...`
+          );
+        },
       });
-
       if (noop) {
         console.log(
-          `🔄 ${artifact.contractName}@${artifact.contractVersion}: Already deployed at ${address}`
+          `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
         );
       } else {
         console.log(
-          `🚀 ${artifact.contractName}@${artifact.contractVersion}: Successfully deployed at ${address}`
+          `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`
         );
       }
-    } catch (error) {
-      console.error(
-        `⏭️ Skipping deployment of ${contract}@${version}: Version not found.`
-      );
-      // Skip the current contract if there's an error and continue with the next one
-      continue;
     }
-  }
-}
+  });
