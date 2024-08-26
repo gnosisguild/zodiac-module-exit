@@ -5,13 +5,13 @@ import { createEIP1193 } from "./create-EIP1193";
 
 task(
   "deploy:mastercopy",
-  "For every entry on the artifacts file, that corresponds to the provided entry, deploy the mastercopy into the current network"
+  "For every entry on the artifacts file, that corresponds to the provided entry, deploy the mastercopy into the current network",
 )
   .addOptionalParam(
     "contractVersion",
     "The specific version of the contract to deploy",
     "latest", // Default value
-    types.string
+    types.string,
   )
   .setAction(async ({ contractVersion }, hre) => {
     const [signer] = await hre.ethers.getSigners();
@@ -34,13 +34,13 @@ task(
         provider,
         onStart: () => {
           console.log(
-            `⏳ ${contractName}@${contractVersion}: Deployment starting...`
+            `⏳ ${contractName}@${contractVersion}: Deployment starting...`,
           );
         },
       });
       if (noop) {
         console.log(
-          `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
+          `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`,
         );
       } else {
       }

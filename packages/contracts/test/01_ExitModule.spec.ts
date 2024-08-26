@@ -53,7 +53,7 @@ describe("ExitERC20", async () => {
     const avatar = await Avatar.deploy();
     designatedToken.mint(
       anotherUser.address,
-      DesignatedTokenBalance * BigInt(4)
+      DesignatedTokenBalance * BigInt(4),
     );
 
     const avatarAddress = await avatar.getAddress();
@@ -62,12 +62,12 @@ describe("ExitERC20", async () => {
     await tokenTwo.mint(avatarAddress, TokenTwoBalance);
     const CirculatingSupply = await hre.ethers.getContractFactory(
       "CirculatingSupplyERC20",
-      deployer
+      deployer,
     );
     const circulatingSupply = await CirculatingSupply.deploy(
       user.address,
       await designatedToken.getAddress(),
-      [avatarAddress]
+      [avatarAddress],
     );
     initializeParams = new AbiCoder().encode(
       ["address", "address", "address", "address", "address"],
@@ -77,7 +77,7 @@ describe("ExitERC20", async () => {
         avatarAddress,
         await designatedToken.getAddress(),
         await circulatingSupply.getAddress(),
-      ]
+      ],
     );
 
     return {
@@ -100,7 +100,7 @@ describe("ExitERC20", async () => {
       await base.avatar.getAddress(),
       await base.avatar.getAddress(),
       await base.designatedToken.getAddress(),
-      await base.circulatingSupply.getAddress()
+      await base.circulatingSupply.getAddress(),
     );
 
     return { ...base, Module, module };
@@ -116,10 +116,10 @@ describe("ExitERC20", async () => {
         user.address,
         user.address,
         await designatedToken.getAddress(),
-        await circulatingSupply.getAddress()
+        await circulatingSupply.getAddress(),
       );
       await expect(module.setUp(initializeParams)).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
@@ -133,8 +133,8 @@ describe("ExitERC20", async () => {
           AddressZero,
           user.address,
           await designatedToken.getAddress(),
-          await circulatingSupply.getAddress()
-        )
+          await circulatingSupply.getAddress(),
+        ),
       ).to.be.revertedWith("Avatar can not be zero address");
     });
 
@@ -148,8 +148,8 @@ describe("ExitERC20", async () => {
           user.address,
           AddressZero,
           await designatedToken.getAddress(),
-          circulatingSupply.getAddress()
-        )
+          circulatingSupply.getAddress(),
+        ),
       ).to.be.revertedWith("Target can not be zero address");
     });
 
@@ -162,7 +162,7 @@ describe("ExitERC20", async () => {
         await avatar.getAddress(),
         await avatar.getAddress(),
         await designatedToken.getAddress(),
-        await circulatingSupply.getAddress()
+        await circulatingSupply.getAddress(),
       );
 
       await expect(module.deploymentTransaction())
@@ -174,7 +174,7 @@ describe("ExitERC20", async () => {
   describe("addToDenyList()", () => {
     it("should add address to denied list", async () => {
       const { module, avatar, tokenOne } = await loadFixture(
-        setupTestWithTestAvatar
+        setupTestWithTestAvatar,
       );
       const data = module.interface.encodeFunctionData("addToDenyList", [
         [await tokenOne.getAddress()],
@@ -186,13 +186,13 @@ describe("ExitERC20", async () => {
     it("reverts if not authorized", async () => {
       const { module, tokenTwo } = await loadFixture(setupTestWithTestAvatar);
       await expect(
-        module.addToDenyList([await tokenTwo.getAddress()])
+        module.addToDenyList([await tokenTwo.getAddress()]),
       ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
 
     it("reverts if token is already in list", async () => {
       const { module, avatar, tokenTwo } = await loadFixture(
-        setupTestWithTestAvatar
+        setupTestWithTestAvatar,
       );
       const data = module.interface.encodeFunctionData("addToDenyList", [
         [await tokenTwo.getAddress()],
@@ -200,7 +200,7 @@ describe("ExitERC20", async () => {
       await avatar.exec(await module.getAddress(), 0, data);
 
       await expect(
-        avatar.exec(await module.getAddress(), 0, data)
+        avatar.exec(await module.getAddress(), 0, data),
       ).to.be.revertedWith(`Token already denied`);
     });
   });
@@ -208,46 +208,46 @@ describe("ExitERC20", async () => {
   describe("removeFromDenyList()", () => {
     it("should remove address from denied list", async () => {
       const { module, avatar, tokenOne } = await loadFixture(
-        setupTestWithTestAvatar
+        setupTestWithTestAvatar,
       );
       const addTokenData = module.interface.encodeFunctionData(
         "addToDenyList",
-        [[await tokenOne.getAddress()]]
+        [[await tokenOne.getAddress()]],
       );
       await avatar.exec(await module.getAddress(), 0, addTokenData);
       const moduleIsAdded = await module.deniedTokens(
-        await tokenOne.getAddress()
+        await tokenOne.getAddress(),
       );
       expect(moduleIsAdded).to.be.true;
       const removeTokenData = module.interface.encodeFunctionData(
         "removeFromDenyList",
-        [[await tokenOne.getAddress()]]
+        [[await tokenOne.getAddress()]],
       );
 
       await avatar.exec(await module.getAddress(), 0, removeTokenData);
       const moduleIsNotAdded = await module.deniedTokens(
-        await tokenOne.getAddress()
+        await tokenOne.getAddress(),
       );
       expect(moduleIsNotAdded).to.be.false;
     });
 
     it("reverts if token is not added in list", async () => {
       const { module, avatar, tokenTwo } = await loadFixture(
-        setupTestWithTestAvatar
+        setupTestWithTestAvatar,
       );
       const removeTokenData = module.interface.encodeFunctionData(
         "removeFromDenyList",
-        [[await tokenTwo.getAddress()]]
+        [[await tokenTwo.getAddress()]],
       );
       await expect(
-        avatar.exec(await module.getAddress(), 0, removeTokenData)
+        avatar.exec(await module.getAddress(), 0, removeTokenData),
       ).to.be.revertedWith(`Token not denied`);
     });
 
     it("reverts if not authorized", async () => {
       const { module, tokenOne } = await loadFixture(setupTestWithTestAvatar);
       await expect(
-        module.removeFromDenyList([await tokenOne.getAddress()])
+        module.removeFromDenyList([await tokenOne.getAddress()]),
       ).to.be.revertedWith(`Ownable: caller is not the owner`);
     });
   });
@@ -264,20 +264,20 @@ describe("ExitERC20", async () => {
       await avatar.setModule(await module.getAddress());
       await designatedToken.approve(
         await module.getAddress(),
-        DesignatedTokenBalance
+        DesignatedTokenBalance,
       );
 
       await expect(
         module.exit(DesignatedTokenBalance, [
           await tokenOne.getAddress(),
           await tokenTwo.getAddress(),
-        ])
+        ]),
       ).to.be.revertedWith(`Denied token`);
     });
 
     it("reverts if designated token is in list", async () => {
       const { avatar, module, tokenOne, designatedToken } = await loadFixture(
-        setupTestWithTestAvatar
+        setupTestWithTestAvatar,
       );
       const data = module.interface.encodeFunctionData("addToDenyList", [
         [await tokenOne.getAddress()],
@@ -287,23 +287,23 @@ describe("ExitERC20", async () => {
       await avatar.setModule(await module.getAddress());
       await designatedToken.approve(
         await module.getAddress(),
-        DesignatedTokenBalance
+        DesignatedTokenBalance,
       );
 
       await expect(
         module.exit(DesignatedTokenBalance, [
           await designatedToken.getAddress(),
-        ])
+        ]),
       ).to.be.revertedWith("Designated token can't be redeemed");
     });
 
     it("reverts because user is trying to redeem more tokens than he owns", async () => {
       const { avatar, module, tokensOrdered } = await loadFixture(
-        setupTestWithTestAvatar
+        setupTestWithTestAvatar,
       );
       await avatar.setModule(await module.getAddress());
       await expect(
-        module.exit(DesignatedTokenBalance * 2n, tokensOrdered)
+        module.exit(DesignatedTokenBalance * 2n, tokensOrdered),
       ).to.be.revertedWith("Amount to redeem is greater than balance");
     });
 
@@ -313,27 +313,27 @@ describe("ExitERC20", async () => {
       await avatar.setModule(await module.getAddress());
       await designatedToken.approve(
         await module.getAddress(),
-        DesignatedTokenBalance
+        DesignatedTokenBalance,
       );
       await expect(
-        module.exit(DesignatedTokenBalance, [...tokensOrdered].reverse())
+        module.exit(DesignatedTokenBalance, [...tokensOrdered].reverse()),
       ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
     });
 
     it("reverts if tokens[] contains duplicates", async () => {
       const { avatar, module, designatedToken, tokenOne } = await loadFixture(
-        setupTestWithTestAvatar
+        setupTestWithTestAvatar,
       );
       await avatar.setModule(await module.getAddress());
       await designatedToken.approve(
         await module.getAddress(),
-        DesignatedTokenBalance
+        DesignatedTokenBalance,
       );
       await expect(
         module.exit(DesignatedTokenBalance, [
           await tokenOne.getAddress(),
           await tokenOne.getAddress(),
-        ])
+        ]),
       ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
     });
 
@@ -351,31 +351,31 @@ describe("ExitERC20", async () => {
 
       await designatedToken.approve(
         await module.getAddress(),
-        DesignatedTokenBalance
+        DesignatedTokenBalance,
       );
 
       const previousAvatarETHBalance = await hre.ethers.provider.getBalance(
-        await avatar.getAddress()
+        await avatar.getAddress(),
       );
 
       const previousAvatarTokenOneBalance = await tokenOne.balanceOf(
-        await avatar.getAddress()
+        await avatar.getAddress(),
       );
 
       const previousAvatarTokenTwoBalance = await tokenTwo.balanceOf(
-        await avatar.getAddress()
+        await avatar.getAddress(),
       );
 
       const previousUserETHBalance = await hre.ethers.provider.getBalance(
-        user.address
+        user.address,
       );
 
       const previousUserTokenOneBalance = await tokenOne.balanceOf(
-        user.address
+        user.address,
       );
 
       const previousUserTokenTwoBalance = await tokenTwo.balanceOf(
-        user.address
+        user.address,
       );
 
       await expect(await module.exit(DesignatedTokenBalance, tokensOrdered))
@@ -383,25 +383,25 @@ describe("ExitERC20", async () => {
         .withArgs(user.address);
 
       expect(
-        await hre.ethers.provider.getBalance(await avatar.getAddress())
+        await hre.ethers.provider.getBalance(await avatar.getAddress()),
       ).to.be.equal((previousAvatarETHBalance * 80n) / 100n);
 
       expect(await tokenOne.balanceOf(await avatar.getAddress())).to.be.equal(
-        (previousAvatarTokenOneBalance * 80n) / 100n
+        (previousAvatarTokenOneBalance * 80n) / 100n,
       );
 
       expect(await tokenTwo.balanceOf(await avatar.getAddress())).to.be.equal(
-        (previousAvatarTokenTwoBalance * 80n) / 100n
+        (previousAvatarTokenTwoBalance * 80n) / 100n,
       );
 
       expect(await tokenOne.balanceOf(user.address)).to.equal(
         previousUserTokenOneBalance +
-          (previousAvatarTokenOneBalance * 20n) / 100n
+          (previousAvatarTokenOneBalance * 20n) / 100n,
       );
 
       expect(await tokenTwo.balanceOf(user.address)).to.be.equal(
         previousUserTokenTwoBalance +
-          (previousAvatarTokenTwoBalance * 20n) / 100n
+          (previousAvatarTokenTwoBalance * 20n) / 100n,
       );
     });
 
@@ -419,59 +419,59 @@ describe("ExitERC20", async () => {
 
       await designatedToken.approve(
         await module.getAddress(),
-        DesignatedTokenBalance
+        DesignatedTokenBalance,
       );
 
       const previousAvatarETHBalance = await hre.ethers.provider.getBalance(
-        await avatar.getAddress()
+        await avatar.getAddress(),
       );
 
       const previousAvatarTokenOneBalance = await tokenOne.balanceOf(
-        await avatar.getAddress()
+        await avatar.getAddress(),
       );
 
       const previousAvatarTokenTwoBalance = await tokenTwo.balanceOf(
-        await avatar.getAddress()
+        await avatar.getAddress(),
       );
 
       const previousUserETHBalance = await hre.ethers.provider.getBalance(
-        user.address
+        user.address,
       );
 
       const previousUserTokenOneBalance = await tokenOne.balanceOf(
-        user.address
+        user.address,
       );
 
       const previousUserTokenTwoBalance = await tokenTwo.balanceOf(
-        user.address
+        user.address,
       );
 
       await expect(
-        await module.exit(DesignatedTokenBalance / 2n, tokensOrdered)
+        await module.exit(DesignatedTokenBalance / 2n, tokensOrdered),
       )
         .to.emit(module, "ExitSuccessful")
         .withArgs(user.address);
 
       expect(
-        await hre.ethers.provider.getBalance(await avatar.getAddress())
+        await hre.ethers.provider.getBalance(await avatar.getAddress()),
       ).to.be.equal((previousAvatarETHBalance * 90n) / 100n);
 
       expect(await tokenOne.balanceOf(await avatar.getAddress())).to.be.equal(
-        (previousAvatarTokenOneBalance * 90n) / 100n
+        (previousAvatarTokenOneBalance * 90n) / 100n,
       );
 
       expect(await tokenTwo.balanceOf(await avatar.getAddress())).to.be.equal(
-        (previousAvatarTokenTwoBalance * 90n) / 100n
+        (previousAvatarTokenTwoBalance * 90n) / 100n,
       );
 
       expect(await tokenOne.balanceOf(user.address)).to.be.equal(
         previousUserTokenOneBalance +
-          (previousAvatarTokenOneBalance * 10n) / 100n
+          (previousAvatarTokenOneBalance * 10n) / 100n,
       );
 
       expect(await tokenTwo.balanceOf(user.address)).to.be.equal(
         previousUserTokenTwoBalance +
-          (previousAvatarTokenTwoBalance * 10n) / 100n
+          (previousAvatarTokenTwoBalance * 10n) / 100n,
       );
     });
 
@@ -484,7 +484,7 @@ describe("ExitERC20", async () => {
         module.exit(DesignatedTokenBalance, [
           await tokenOne.getAddress(),
           await tokenTwo.getAddress(),
-        ])
+        ]),
       ).to.be.revertedWith("SafeERC20: ERC20 operation did not succeed");
     });
   });
@@ -511,7 +511,7 @@ describe("ExitERC20", async () => {
     it("reverts if avatar is msg.sender is not the avatar", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.setDesignatedToken(AddressZero)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
     });
   });
@@ -520,7 +520,7 @@ describe("ExitERC20", async () => {
     it("reverts if avatar is msg.sender is not the owner", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.setCirculatingSupply(AddressZero)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
     });
 
@@ -556,7 +556,7 @@ describe("ExitERC20", async () => {
     it("reverts because its not being called by owner", async () => {
       const { user, module } = await setupTestWithTestAvatar();
       await expect(
-        module.setAvatar(await user.getAddress())
+        module.setAvatar(await user.getAddress()),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
@@ -580,7 +580,7 @@ describe("ExitERC20", async () => {
     it("reverts because its not being called by owner", async () => {
       const { user, module } = await setupTestWithTestAvatar();
       await expect(
-        module.transferOwnership(await user.getAddress())
+        module.transferOwnership(await user.getAddress()),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });

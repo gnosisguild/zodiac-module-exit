@@ -52,6 +52,7 @@
     "hardhat-gas-reporter": "^2.2.0",
     "path": "^0.12.7",
     "prettier": "^3.3.3",
+    "prettier-plugin-solidity": "^1.4.1",
     "rimraf": "^6.0.0",
     "solhint": "5.0.3",
     "solhint-plugin-prettier": "0.1.0",

@@ -22,9 +22,10 @@ contract ExclusionList {
     /// @param prevExclusion Exclusion that pointed to the exclusion to be removed in the linked list
     /// @param exclusion Exclusion to be removed
     /// @notice This can only be called by the owner
-    function _removeExclusion(address prevExclusion, address exclusion)
-        internal
-    {
+    function _removeExclusion(
+        address prevExclusion,
+        address exclusion
+    ) internal {
         require(
             exclusion != address(0) && exclusion != SENTINEL_EXCLUSIONS,
             "Invalid exclusion"
@@ -65,11 +66,10 @@ contract ExclusionList {
     /// @param pageSize Maximum number of exclusions that should be returned.
     /// @return array Array of exclusions.
     /// @return next Start of the next page.
-    function getExclusionsPaginated(address start, uint256 pageSize)
-        public
-        view
-        returns (address[] memory array, address next)
-    {
+    function getExclusionsPaginated(
+        address start,
+        uint256 pageSize
+    ) public view returns (address[] memory array, address next) {
         // Init array with max page size
         array = new address[](pageSize);
 

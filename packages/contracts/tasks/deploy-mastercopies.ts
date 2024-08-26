@@ -5,7 +5,7 @@ import { createEIP1193 } from "./create-EIP1193";
 
 task(
   "deploy:mastercopies",
-  "For every version entry on the artifacts file, deploys a mastercopy into the current network"
+  "For every version entry on the artifacts file, deploys a mastercopy into the current network",
 ).setAction(async (_, hre) => {
   const [signer] = await hre.ethers.getSigners();
   const provider = createEIP1193(hre.network.provider, signer);
@@ -27,17 +27,17 @@ task(
       provider,
       onStart: () => {
         console.log(
-          `⏳ ${contractName}@${contractVersion}: Deployment starting...`
+          `⏳ ${contractName}@${contractVersion}: Deployment starting...`,
         );
       },
     });
     if (noop) {
       console.log(
-        `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
+        `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`,
       );
     } else {
       console.log(
-        `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`
+        `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`,
       );
     }
   }

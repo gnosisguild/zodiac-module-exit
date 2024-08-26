@@ -4,7 +4,7 @@ import { EthereumProvider } from "hardhat/types";
 
 export function createEIP1193(
   provider: EthereumProvider,
-  signer: Signer
+  signer: Signer,
 ): EIP1193Provider {
   return {
     request: async ({ method, params }) => {

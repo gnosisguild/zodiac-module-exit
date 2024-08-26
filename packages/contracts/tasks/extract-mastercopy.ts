@@ -8,7 +8,7 @@ const AddressOne = "0x0000000000000000000000000000000000000001";
 
 task(
   "extract:mastercopy",
-  "Extracts and persists current mastercopy build artifacts"
+  "Extracts and persists current mastercopy build artifacts",
 ).setAction(async (_, hre) => {
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,

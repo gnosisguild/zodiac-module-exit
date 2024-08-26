@@ -5,11 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "./CirculatingSupplyBase.sol";
 
 contract CirculatingSupplyERC721 is CirculatingSupplyBase {
-    constructor(
-        address _owner,
-        address _token,
-        address[] memory _exclusions
-    ) {
+    constructor(address _owner, address _token, address[] memory _exclusions) {
         bytes memory initParams = abi.encode(_owner, _token, _exclusions);
         setUp(initParams);
     }

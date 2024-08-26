@@ -24,15 +24,15 @@ describe("CirculatingSupply", async () => {
     const tokenOne = await Token.deploy(6);
     const tokenTwo = await Token.deploy(12);
     const CirculatingSupply = await hre.ethers.getContractFactory(
-      "CirculatingSupplyERC20"
+      "CirculatingSupplyERC20",
     );
     const circulatingSupply = await CirculatingSupply.deploy(
       user1.address,
       await designatedToken.getAddress(),
-      [await avatar.getAddress()]
+      [await avatar.getAddress()],
     );
     expect(
-      user1.sendTransaction({ to: await avatar.getAddress(), value: 100 })
+      user1.sendTransaction({ to: await avatar.getAddress(), value: 100 }),
     );
     expect(designatedToken.mint(await avatar.getAddress(), 100));
     expect(designatedToken.mint(user1.address, 100));
@@ -44,12 +44,12 @@ describe("CirculatingSupply", async () => {
         user1.address,
         await designatedToken.getAddress(),
         [user1.address, await avatar.getAddress()],
-      ]
+      ],
     );
 
     const setupEncodeParams = circulatingSupply.interface.encodeFunctionData(
       "setUp",
-      [initializeParams]
+      [initializeParams],
     );
 
     await deployFactories({ provider: eip1193Provider });
@@ -73,7 +73,7 @@ describe("CirculatingSupply", async () => {
       const circulatingSupply = await CirculatingSupply.deploy(
         user1.address,
         await designatedToken.getAddress(),
-        [await avatar.getAddress()]
+        [await avatar.getAddress()],
       );
       expect(await circulatingSupply.owner()).to.be.equals(user1.address);
     });
@@ -84,10 +84,10 @@ describe("CirculatingSupply", async () => {
       const circulatingSupply = await CirculatingSupply.deploy(
         user1.address,
         await designatedToken.getAddress(),
-        [await avatar.getAddress()]
+        [await avatar.getAddress()],
       );
       expect(await circulatingSupply.token()).to.be.equals(
-        await designatedToken.getAddress()
+        await designatedToken.getAddress(),
       );
     });
 
@@ -97,13 +97,13 @@ describe("CirculatingSupply", async () => {
       const circulatingSupply = await CirculatingSupply.deploy(
         user1.address,
         await designatedToken.getAddress(),
-        [await avatar.getAddress()]
+        [await avatar.getAddress()],
       );
       const exclusions = [await avatar.getAddress(), SENTINEL_EXCLUSIONS];
       expect(
         (
           await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
-        ).toString()
+        ).toString(),
       ).to.be.equals(exclusions.toString());
     });
 
@@ -113,7 +113,7 @@ describe("CirculatingSupply", async () => {
       const circulatingSupply = await CirculatingSupply.deploy(
         user1.address,
         await designatedToken.getAddress(),
-        [await avatar.getAddress(), user1.address]
+        [await avatar.getAddress(), user1.address],
       );
       const exclusions = [
         user1.address,
@@ -123,7 +123,7 @@ describe("CirculatingSupply", async () => {
       expect(
         (
           await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
-        ).toString()
+        ).toString(),
       ).to.be.equals(exclusions.toString());
     });
   });
@@ -134,7 +134,7 @@ describe("CirculatingSupply", async () => {
         await loadFixture(setupTests);
 
       expect(circulatingSupply.setUp(initializeParams)).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
@@ -157,7 +157,7 @@ describe("CirculatingSupply", async () => {
 
       const newProxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC20",
-        address
+        address,
       );
       expect(await newProxy.owner()).to.be.eq(user1.address);
     });
@@ -181,11 +181,11 @@ describe("CirculatingSupply", async () => {
 
       const newProxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC20",
-        address
+        address,
       );
 
       expect(await newProxy.token()).to.be.eq(
-        await designatedToken.getAddress()
+        await designatedToken.getAddress(),
       );
     });
 
@@ -208,7 +208,7 @@ describe("CirculatingSupply", async () => {
 
       const newProxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC20",
-        address
+        address,
       );
 
       const exclusions = [
@@ -220,7 +220,7 @@ describe("CirculatingSupply", async () => {
       expect(
         (
           await newProxy.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3)
-        ).toString()
+        ).toString(),
       ).to.be.equals(exclusions.toString());
     });
   });
@@ -244,7 +244,7 @@ describe("CirculatingSupply", async () => {
     it("reverts if caller is not the owner", async () => {
       const { circulatingSupply, tokenTwo } = await loadFixture(setupTests);
       expect(
-        circulatingSupply.connect(user2).setToken(await tokenTwo.getAddress())
+        circulatingSupply.connect(user2).setToken(await tokenTwo.getAddress()),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -265,21 +265,21 @@ describe("CirculatingSupply", async () => {
     it("reverts if caller is not the owner", async () => {
       const { circulatingSupply } = await loadFixture(setupTests);
       await expect(
-        circulatingSupply.connect(user2).exclude(user2.address)
+        circulatingSupply.connect(user2).exclude(user2.address),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it("reverts if exclusion is zero address", async () => {
       const { circulatingSupply } = await loadFixture(setupTests);
       await expect(circulatingSupply.exclude(ZeroAddress)).to.be.revertedWith(
-        "Invalid exclusion"
+        "Invalid exclusion",
       );
     });
 
     it("reverts if exclusion is SENTINEL_EXCLUSIONS", async () => {
       const { circulatingSupply } = await loadFixture(setupTests);
       await expect(
-        circulatingSupply.exclude(SENTINEL_EXCLUSIONS)
+        circulatingSupply.exclude(SENTINEL_EXCLUSIONS),
       ).to.be.revertedWith("Invalid exclusion");
     });
 
@@ -289,7 +289,7 @@ describe("CirculatingSupply", async () => {
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
       await expect(circulatingSupply.exclude(user1.address)).to.be.revertedWith(
-        "Exclusion already enabled"
+        "Exclusion already enabled",
       );
     });
 
@@ -307,14 +307,14 @@ describe("CirculatingSupply", async () => {
       await expect(
         circulatingSupply
           .connect(user2)
-          .removeExclusion(SENTINEL_EXCLUSIONS, user2.address)
+          .removeExclusion(SENTINEL_EXCLUSIONS, user2.address),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it("reverts if exclusion is zero address", async () => {
       const { circulatingSupply } = await loadFixture(setupTests);
       await expect(
-        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, ZeroAddress)
+        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, ZeroAddress),
       ).to.be.revertedWith("Invalid exclusion");
     });
 
@@ -323,8 +323,8 @@ describe("CirculatingSupply", async () => {
       await expect(
         circulatingSupply.removeExclusion(
           SENTINEL_EXCLUSIONS,
-          SENTINEL_EXCLUSIONS
-        )
+          SENTINEL_EXCLUSIONS,
+        ),
       ).to.be.revertedWith("Invalid exclusion");
     });
 
@@ -334,12 +334,12 @@ describe("CirculatingSupply", async () => {
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
       await expect(
-        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
+        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address),
       )
         .to.emit(circulatingSupply, "ExclusionRemoved")
         .withArgs(user1.address);
       await expect(
-        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
+        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address),
       ).to.be.revertedWith("Exclusion already disabled");
     });
 
@@ -349,7 +349,7 @@ describe("CirculatingSupply", async () => {
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user1.address);
       await expect(
-        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
+        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address),
       )
         .to.emit(circulatingSupply, "ExclusionRemoved")
         .withArgs(user1.address);
@@ -360,21 +360,21 @@ describe("CirculatingSupply", async () => {
     it("returns false if SENTINEL_EXCLUSIONS is provided", async () => {
       const { circulatingSupply } = await loadFixture(setupTests);
       expect(
-        await circulatingSupply.isExcluded(SENTINEL_EXCLUSIONS)
+        await circulatingSupply.isExcluded(SENTINEL_EXCLUSIONS),
       ).to.be.equals(false);
     });
 
     it("returns false if AddressZero is provided", async () => {
       const { circulatingSupply } = await loadFixture(setupTests);
       expect(await circulatingSupply.isExcluded(ZeroAddress)).to.be.equals(
-        false
+        false,
       );
     });
 
     it("returns false if exclusion is not enabled", async () => {
       const { circulatingSupply } = await loadFixture(setupTests);
       expect(await circulatingSupply.isExcluded(user1.address)).to.be.equals(
-        false
+        false,
       );
     });
 
@@ -389,7 +389,7 @@ describe("CirculatingSupply", async () => {
         .to.emit(circulatingSupply, "ExclusionAdded")
         .withArgs(user2.address);
       expect(await circulatingSupply.isExcluded(user2.address)).to.be.equals(
-        true
+        true,
       );
     });
   });
@@ -401,11 +401,11 @@ describe("CirculatingSupply", async () => {
       const circulatingSupply = await CirculatingSupply.deploy(
         user1.address,
         await designatedToken.getAddress(),
-        []
+        [],
       );
       let tx = await circulatingSupply.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        3
+        3,
       );
       tx = tx.toString();
       expect(tx).to.be.equals([[], SENTINEL_EXCLUSIONS].toString());
@@ -415,7 +415,7 @@ describe("CirculatingSupply", async () => {
       const { avatar, circulatingSupply } = await loadFixture(setupTests);
       let tx = await circulatingSupply.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        3
+        3,
       );
       // tx = tx.toString();
       // expect(tx).to.be.equals(
@@ -430,7 +430,7 @@ describe("CirculatingSupply", async () => {
         .withArgs(user1.address);
       let tx = await circulatingSupply.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        3
+        3,
       );
       // tx = tx.toString();
       // expect(tx).to.be.equals(

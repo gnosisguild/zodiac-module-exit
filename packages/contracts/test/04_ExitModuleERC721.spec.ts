@@ -60,13 +60,13 @@ describe("ExitERC721", async () => {
     await tokenTwo.mint(await avatar.getAddress(), TokenTwoBalance);
 
     const CirculatingSupply = await hre.ethers.getContractFactory(
-      "CirculatingSupplyERC721"
+      "CirculatingSupplyERC721",
     );
 
     const circulatingSupply = await CirculatingSupply.deploy(
       await avatar.getAddress(),
       await collection.getAddress(),
-      await [await avatar.getAddress()]
+      await [await avatar.getAddress()],
     );
 
     const initializeParams = AbiCoder.defaultAbiCoder().encode(
@@ -77,7 +77,7 @@ describe("ExitERC721", async () => {
         await avatar.getAddress(),
         await collection.getAddress(),
         await circulatingSupply.getAddress(),
-      ]
+      ],
     );
 
     return {
@@ -103,7 +103,7 @@ describe("ExitERC721", async () => {
         await base.avatar.getAddress(),
         await base.avatar.getAddress(),
         await base.collection.getAddress(),
-        await base.circulatingSupply.getAddress()
+        await base.circulatingSupply.getAddress(),
       )
     ).connect(user);
 
@@ -136,10 +136,10 @@ describe("ExitERC721", async () => {
         user.address,
         user.address,
         await collection.getAddress(),
-        await circulatingSupply.getAddress()
+        await circulatingSupply.getAddress(),
       );
       await expect(module.setUp(initializeParams)).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
@@ -153,8 +153,8 @@ describe("ExitERC721", async () => {
           ZeroAddress,
           await avatar.getAddress(),
           await collection.getAddress(),
-          await circulatingSupply.getAddress()
-        )
+          await circulatingSupply.getAddress(),
+        ),
       ).to.be.revertedWith("Avatar can not be zero address");
     });
 
@@ -168,8 +168,8 @@ describe("ExitERC721", async () => {
           await avatar.getAddress(),
           ZeroAddress,
           await collection.getAddress(),
-          await circulatingSupply.getAddress()
-        )
+          await circulatingSupply.getAddress(),
+        ),
       ).to.be.revertedWith("Target can not be zero address");
     });
 
@@ -182,7 +182,7 @@ describe("ExitERC721", async () => {
         await avatar.getAddress(),
         await avatar.getAddress(),
         await collection.getAddress(),
-        await circulatingSupply.getAddress()
+        await circulatingSupply.getAddress(),
       );
 
       await expect(module.deploymentTransaction())
@@ -228,7 +228,7 @@ describe("ExitERC721", async () => {
         module.exit(tokenId, [
           await tokenOne.getAddress(),
           await tokenTwo.getAddress(),
-        ])
+        ]),
       ).to.be.revertedWith(`Denied token`);
     });
 
@@ -239,7 +239,7 @@ describe("ExitERC721", async () => {
       await collection.approve(await module.getAddress(), tokenId);
       await avatar.setModule(await module.getAddress());
       await expect(
-        module.exit(tokenId, [...tokensOrdered].reverse())
+        module.exit(tokenId, [...tokensOrdered].reverse()),
       ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
     });
 
@@ -253,7 +253,7 @@ describe("ExitERC721", async () => {
         module.exit(tokenId, [
           await tokenOne.getAddress(),
           await tokenOne.getAddress(),
-        ])
+        ]),
       ).to.be.revertedWith("tokens[] is out of order or contains a duplicate");
     });
 
@@ -278,13 +278,13 @@ describe("ExitERC721", async () => {
 
       // Check Avatar Balances (-20%)
       expect(afterBalances.avatar.eth).to.be.equal(
-        (previousBalances.avatar.eth * 80n) / 100n
+        (previousBalances.avatar.eth * 80n) / 100n,
       );
       expect(afterBalances.avatar.token1).to.be.equal(
-        (previousBalances.avatar.token1 * 80n) / 100n
+        (previousBalances.avatar.token1 * 80n) / 100n,
       );
       expect(afterBalances.avatar.token2).to.be.equal(
-        (previousBalances.avatar.token2 * 80n) / 100n
+        (previousBalances.avatar.token2 * 80n) / 100n,
       );
 
       // Check User Balances
@@ -295,12 +295,12 @@ describe("ExitERC721", async () => {
 
       expect(afterBalances.user.token1).to.be.equal(
         previousBalances.user.token1 +
-          (previousBalances.avatar.token1 * 20n) / 100n
+          (previousBalances.avatar.token1 * 20n) / 100n,
       );
 
       expect(afterBalances.user.token2).to.be.equal(
         previousBalances.user.token2 +
-          (previousBalances.avatar.token2 * 20n) / 100n
+          (previousBalances.avatar.token2 * 20n) / 100n,
       );
     });
 
@@ -335,13 +335,13 @@ describe("ExitERC721", async () => {
 
       // Check Avatar Balances (-20%)
       expect(afterBalances.avatar.eth).to.be.equal(
-        (previousBalances.avatar.eth * 90n) / 100n
+        (previousBalances.avatar.eth * 90n) / 100n,
       );
       expect(afterBalances.avatar.token1).to.be.equal(
-        (previousBalances.avatar.token1 * 90n) / 100n
+        (previousBalances.avatar.token1 * 90n) / 100n,
       );
       expect(afterBalances.avatar.token2).to.be.equal(
-        (previousBalances.avatar.token2 * 90n) / 100n
+        (previousBalances.avatar.token2 * 90n) / 100n,
       );
 
       // Check User Balances
@@ -350,12 +350,12 @@ describe("ExitERC721", async () => {
 
       expect(afterBalances.user.token1).to.be.equal(
         previousBalances.user.token1 +
-          (previousBalances.avatar.token1 * 10n) / 100n
+          (previousBalances.avatar.token1 * 10n) / 100n,
       );
 
       expect(afterBalances.user.token2).to.be.equal(
         previousBalances.user.token2 +
-          (previousBalances.avatar.token2 * 10n) / 100n
+          (previousBalances.avatar.token2 * 10n) / 100n,
       );
     });
 
@@ -434,7 +434,7 @@ describe("ExitERC721", async () => {
     it("throws if avatar is msg.sender is not the owner", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.setCirculatingSupply(ZeroAddress)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
     });
 
@@ -445,15 +445,15 @@ describe("ExitERC721", async () => {
       const circulatingSupply2 = await CirculatingSupply.deploy(
         user.address,
         await collection.getAddress(),
-        []
+        [],
       );
 
       await avatarExit.setCirculatingSupply(
-        await circulatingSupply2.getAddress()
+        await circulatingSupply2.getAddress(),
       );
       const circulatingSuppyAddress = await module.circulatingSupply();
       expect(circulatingSuppyAddress).to.be.equal(
-        await circulatingSupply2.getAddress()
+        await circulatingSupply2.getAddress(),
       );
     });
   });
@@ -466,14 +466,14 @@ describe("ExitERC721", async () => {
       await avatarExit.setCollection(await newCollection.getAddress());
       const newCollectionAddress = await module.collection();
       expect(newCollectionAddress).to.be.equal(
-        await newCollection.getAddress()
+        await newCollection.getAddress(),
       );
     });
 
     it("throws if avatar is msg.sender is not the avatar", async () => {
       const { module } = await setupTestWithTestAvatar();
       await expect(module.setCollection(ZeroAddress)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
     });
   });

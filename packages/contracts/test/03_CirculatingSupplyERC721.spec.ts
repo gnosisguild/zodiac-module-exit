@@ -25,13 +25,13 @@ describe("CirculatingSupplyERC721", async () => {
     const collection = await Collection.deploy();
     const collection2 = await Collection.deploy();
     const CirculatingSupplyERC721 = await hre.ethers.getContractFactory(
-      "CirculatingSupplyERC721"
+      "CirculatingSupplyERC721",
     );
 
     const circulatingSupply = await CirculatingSupplyERC721.deploy(
       AddressTwo,
       AddressTwo,
-      [AddressTwo]
+      [AddressTwo],
     );
 
     // Mint 5 tokens
@@ -75,7 +75,7 @@ describe("CirculatingSupplyERC721", async () => {
   const initParams = (params: any) => {
     return AbiCoder.defaultAbiCoder().encode(
       ["address", "address", "uint256[]"],
-      params
+      params,
     );
   };
 
@@ -86,7 +86,7 @@ describe("CirculatingSupplyERC721", async () => {
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
         await collection.getAddress(),
-        [user1.address]
+        [user1.address],
       );
       expect(await circulatingSupply.owner()).to.be.equals(user1.address);
     });
@@ -97,10 +97,10 @@ describe("CirculatingSupplyERC721", async () => {
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
         await collection.getAddress(),
-        [user1.address]
+        [user1.address],
       );
       expect(await circulatingSupply.token()).to.be.equals(
-        await collection.getAddress()
+        await collection.getAddress(),
       );
     });
 
@@ -110,11 +110,11 @@ describe("CirculatingSupplyERC721", async () => {
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
         await collection.getAddress(),
-        [user1.address]
+        [user1.address],
       );
       const [exclusions, next] = await circulatingSupply.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        10
+        10,
       );
       expect(exclusions).to.be.eql([user1.address]);
       expect(next).to.be.equals(SENTINEL_EXCLUSIONS);
@@ -126,14 +126,14 @@ describe("CirculatingSupplyERC721", async () => {
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
         await collection.getAddress(),
-        []
+        [],
       );
       await circulatingSupply.exclude(user1.address);
       await circulatingSupply.exclude(user2.address);
 
       const [exclusions, next] = await circulatingSupply.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        10
+        10,
       );
 
       expect(exclusions).to.be.eql([user2.address, user1.address]);
@@ -153,11 +153,11 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(proxy.setUp(initParams(params))).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
@@ -173,7 +173,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       expect(await proxy.owner()).to.be.eq(user1.address);
     });
@@ -190,7 +190,7 @@ describe("CirculatingSupplyERC721", async () => {
 
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       expect(await proxy.token()).to.be.eq(await collection.getAddress());
     });
@@ -207,11 +207,11 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       const [exclusions] = await proxy.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        5
+        5,
       );
       expect(exclusions).to.deep.equal([user2.address, user1.address]);
     });
@@ -226,7 +226,7 @@ describe("CirculatingSupplyERC721", async () => {
 
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       expect(await proxy.get()).to.be.equals(5);
@@ -242,7 +242,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       // Note: there are 5 tokens in the collection, minus 2 excluded (tokenIds 0 and 1)
       //       Adds to a circulating supply of 3.
@@ -263,11 +263,11 @@ describe("CirculatingSupplyERC721", async () => {
 
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(
-        proxy.connect(user2).setToken(await collection2.getAddress())
+        proxy.connect(user2).setToken(await collection2.getAddress()),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -282,7 +282,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       expect(await proxy.setToken(await collection2.getAddress()));
     });
@@ -298,7 +298,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(proxy.setToken(await collection2.getAddress()))
@@ -318,10 +318,10 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       await expect(
-        proxy.connect(user2).exclude(user2.address)
+        proxy.connect(user2).exclude(user2.address),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -335,10 +335,10 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       await expect(proxy.exclude(SENTINEL_EXCLUSIONS)).to.be.revertedWith(
-        "Invalid exclusion"
+        "Invalid exclusion",
       );
     });
 
@@ -348,13 +348,13 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       await expect(proxy.exclude(user1.address))
         .to.emit(proxy, "ExclusionAdded")
         .withArgs(user1.address);
       await expect(proxy.exclude(user1.address)).to.be.revertedWith(
-        "Exclusion already enabled"
+        "Exclusion already enabled",
       );
     });
 
@@ -366,7 +366,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(proxy.exclude(user1.address))
@@ -387,11 +387,13 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(
-        proxy.connect(user2).removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
+        proxy
+          .connect(user2)
+          .removeExclusion(SENTINEL_EXCLUSIONS, user1.address),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -405,10 +407,10 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
       await expect(
-        proxy.removeExclusion(SENTINEL_EXCLUSIONS, SENTINEL_EXCLUSIONS)
+        proxy.removeExclusion(SENTINEL_EXCLUSIONS, SENTINEL_EXCLUSIONS),
       ).to.be.revertedWith("Invalid exclusion");
     });
 
@@ -419,7 +421,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(proxy.exclude(user1.address))
@@ -430,7 +432,7 @@ describe("CirculatingSupplyERC721", async () => {
         .to.emit(proxy, "ExclusionRemoved")
         .withArgs(user1.address);
       await expect(
-        proxy.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
+        proxy.removeExclusion(SENTINEL_EXCLUSIONS, user1.address),
       ).to.be.revertedWith("Exclusion already disabled");
     });
 
@@ -444,7 +446,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(proxy.exclude(user2.address))
@@ -467,7 +469,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       expect(await proxy.isExcluded(SENTINEL_EXCLUSIONS)).to.be.equals(false);
@@ -484,7 +486,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       expect(await proxy.isExcluded(user2.address)).to.be.equals(false);
@@ -501,7 +503,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(proxy.exclude(user2.address))
@@ -518,11 +520,11 @@ describe("CirculatingSupplyERC721", async () => {
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
         await collection.getAddress(),
-        []
+        [],
       );
       let tx = await circulatingSupply.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        3
+        3,
       );
 
       expect(tx).to.deep.equal([[], SENTINEL_EXCLUSIONS]);
@@ -539,7 +541,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       let tx = await proxy.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3);
@@ -557,7 +559,7 @@ describe("CirculatingSupplyERC721", async () => {
       const { address } = await deployProxy(params as any);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        address
+        address,
       );
 
       await expect(proxy.exclude(user2.address))
