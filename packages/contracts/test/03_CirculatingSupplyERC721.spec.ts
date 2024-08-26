@@ -1,22 +1,37 @@
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import "@nomiclabs/hardhat-ethers";
-import { BigNumber, ContractFactory, ethers } from "ethers";
-import hre, { deployments, waffle } from "hardhat";
+import { AbiCoder } from "ethers";
+import hre from "hardhat";
+import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
+
+import createAdapter from "./createEIP1193";
+
+const AddressTwo = "0x0000000000000000000000000000000000000002";
 
 describe("CirculatingSupplyERC721", async () => {
-  const [user1, user2, user3] = waffle.provider.getWallets();
+  const [user1, user2, user3, , , , , , deployer] =
+    await hre.ethers.getSigners();
+  const eip1193Provider = createAdapter({
+    provider: hre.network.provider,
+    signer: deployer,
+  });
   const SENTINEL_EXCLUSIONS = "0x0000000000000000000000000000000000000001";
   const saltNonce = "0xfa";
 
-  const setupTests = deployments.createFixture(async ({ deployments }) => {
-    await deployments.fixture();
+  async function setupTests() {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const Collection = await hre.ethers.getContractFactory("TestCollection");
     const avatar = await Avatar.deploy();
     const collection = await Collection.deploy();
     const collection2 = await Collection.deploy();
     const CirculatingSupplyERC721 = await hre.ethers.getContractFactory(
-      "CirculatingSupplyERC721"
+      "CirculatingSupplyERC721",
+    );
+
+    const circulatingSupply = await CirculatingSupplyERC721.deploy(
+      AddressTwo,
+      AddressTwo,
+      [AddressTwo],
     );
 
     // Mint 5 tokens
@@ -35,503 +50,527 @@ describe("CirculatingSupplyERC721", async () => {
       collection2.mint(user3.address, 2),
     ]);
 
-    expect(user1.sendTransaction({ to: avatar.address, value: 100 }));
-
-    const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
-    const factory = await Factory.deploy();
+    await deployFactories({ provider: eip1193Provider });
 
     return {
       avatar,
       collection,
       collection2,
       CirculatingSupplyERC721,
-      factory,
-    };
-  });
-
-  const setupProxyTest = async (
-    { CirculatingSupplyERC721 }: { CirculatingSupplyERC721: ContractFactory },
-    params: any
-  ) => {
-    const circulatingSupply = await CirculatingSupplyERC721.deploy(...params);
-
-    const initializeParams = ethers.utils.defaultAbiCoder.encode(
-      ["address", "address", "uint256[]"],
-      params
-    );
-
-    const setupEncodeParams = circulatingSupply.interface.encodeFunctionData(
-      "setUp",
-      [initializeParams]
-    );
-
-    return {
       circulatingSupply,
-      initializeParams,
-      setupEncodeParams,
+      deployProxy: async (params: [string, string, string[]]) => {
+        return deployProxy({
+          mastercopy: await circulatingSupply.getAddress(),
+          setupArgs: {
+            types: ["address", "address", "address[]"],
+            values: params,
+          },
+          saltNonce,
+          provider: eip1193Provider,
+        });
+      },
     };
-  };
+  }
 
-  const formatNumberArray = (numbers: BigNumber[]) => {
-    return numbers.map((number) => number.toString());
-  };
-  const getProxyModuleCreationEvent = ({ event }: any) => {
-    return event === "ModuleProxyCreation";
+  const initParams = (params: any) => {
+    return AbiCoder.defaultAbiCoder().encode(
+      ["address", "address", "uint256[]"],
+      params,
+    );
   };
 
   describe("constructor", async () => {
     it("sets owner", async () => {
-      const { collection, CirculatingSupplyERC721 } = await setupTests();
+      const { collection, CirculatingSupplyERC721 } =
+        await loadFixture(setupTests);
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
-        collection.address,
-        [user1.address]
+        await collection.getAddress(),
+        [user1.address],
       );
       expect(await circulatingSupply.owner()).to.be.equals(user1.address);
     });
 
     it("sets token to collection", async () => {
-      const { collection, CirculatingSupplyERC721 } = await setupTests();
+      const { collection, CirculatingSupplyERC721 } =
+        await loadFixture(setupTests);
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
-        collection.address,
-        [user1.address]
+        await collection.getAddress(),
+        [user1.address],
       );
-      expect(await circulatingSupply.token()).to.be.equals(collection.address);
+      expect(await circulatingSupply.token()).to.be.equals(
+        await collection.getAddress(),
+      );
     });
 
     it("adds one exclusion", async () => {
-      const { collection, CirculatingSupplyERC721 } = await setupTests();
+      const { collection, CirculatingSupplyERC721 } =
+        await loadFixture(setupTests);
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
-        collection.address,
-        [user1.address]
+        await collection.getAddress(),
+        [user1.address],
       );
-      const [exclusions, next]: [BigNumber[], BigNumber] =
-        await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 10);
-      expect(formatNumberArray(exclusions)).to.be.eql([user1.address]);
+      const [exclusions, next] = await circulatingSupply.getExclusionsPaginated(
+        SENTINEL_EXCLUSIONS,
+        10,
+      );
+      expect(exclusions).to.be.eql([user1.address]);
       expect(next).to.be.equals(SENTINEL_EXCLUSIONS);
     });
 
     it("adds multiple exclusions", async () => {
-      const { collection, CirculatingSupplyERC721 } = await setupTests();
+      const { collection, CirculatingSupplyERC721 } =
+        await loadFixture(setupTests);
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
-        collection.address,
-        []
+        await collection.getAddress(),
+        [],
       );
       await circulatingSupply.exclude(user1.address);
       await circulatingSupply.exclude(user2.address);
 
-      const [exclusions, next]: [BigNumber[], BigNumber] =
-        await circulatingSupply.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 10);
+      const [exclusions, next] = await circulatingSupply.getExclusionsPaginated(
+        SENTINEL_EXCLUSIONS,
+        10,
+      );
 
-      expect(formatNumberArray(exclusions)).to.be.eql([
-        user2.address,
-        user1.address,
-      ]);
+      expect(exclusions).to.be.eql([user2.address, user1.address]);
       expect(next).to.be.equals(SENTINEL_EXCLUSIONS);
     });
   });
 
   describe("setup()", async () => {
     it("throws if the circulating supply contract is already initialized", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
+      const { deployProxy, collection } = await loadFixture(setupTests);
 
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply, initializeParams } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
 
-      await expect(
-        circulatingSupply.setUp(initializeParams)
-      ).to.be.revertedWith("Initializable: contract is already initialized");
+      await expect(proxy.setUp(initParams(params))).to.be.revertedWith(
+        "Initializable: contract is already initialized",
+      );
     });
 
     it("sets owner", async () => {
-      const { factory, collection, CirculatingSupplyERC721 } =
-        await setupTests();
+      const { collection, deployProxy } = await loadFixture(setupTests);
 
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply, setupEncodeParams } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
-      );
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ] as [string, string, string[]];
 
-      const tx = await factory.deployModule(
-        circulatingSupply.address,
-        setupEncodeParams,
-        saltNonce
-      );
-      const receipt = await tx.wait();
-
-      // retrieve new address from event
-      const event = receipt.events.find(getProxyModuleCreationEvent);
-      const [proxyAddress] = event.args;
-
+      const { address } = await deployProxy(params);
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        proxyAddress
+        address,
       );
       expect(await proxy.owner()).to.be.eq(user1.address);
     });
 
     it("sets token to collection", async () => {
-      const { factory, collection, CirculatingSupplyERC721 } =
-        await setupTests();
-
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply, setupEncodeParams } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
-      );
-
-      const tx = await factory.deployModule(
-        circulatingSupply.address,
-        setupEncodeParams,
-        saltNonce
-      );
-      const receipt = await tx.wait();
-
-      // retrieve new address from event
-      const [proxyAddress] = receipt.events.find(
-        getProxyModuleCreationEvent
-      ).args;
-
-      const proxy = await hre.ethers.getContractAt(
-        "CirculatingSupplyERC721",
-        proxyAddress
-      );
-      expect(await proxy.token()).to.be.eq(collection.address);
-    });
-
-    it("adds multiple exclusions", async () => {
-      const { factory, collection, CirculatingSupplyERC721 } =
-        await setupTests();
+      const { collection, deployProxy } = await loadFixture(setupTests);
 
       const params = [
         user1.address,
-        collection.address,
-        [user1.address, user2.address],
+        await collection.getAddress(),
+        [user1.address],
       ];
-      const { circulatingSupply, setupEncodeParams } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
-      );
-
-      const tx = await factory.deployModule(
-        circulatingSupply.address,
-        setupEncodeParams,
-        saltNonce
-      );
-      const receipt = await tx.wait();
-
-      // retrieve new address from event
-      const [proxyAddress] = receipt.events.find(
-        getProxyModuleCreationEvent
-      ).args;
+      const { address } = await deployProxy(params as any);
 
       const proxy = await hre.ethers.getContractAt(
         "CirculatingSupplyERC721",
-        proxyAddress
+        address,
+      );
+      expect(await proxy.token()).to.be.eq(await collection.getAddress());
+    });
+
+    it("adds multiple exclusions", async () => {
+      const { collection, deployProxy } = await loadFixture(setupTests);
+
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address, user2.address],
+      ];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
       const [exclusions] = await proxy.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        5
+        5,
       );
-      expect(formatNumberArray(exclusions)).to.be.eql([
-        user2.address,
-        user1.address,
-      ]);
+      expect(exclusions).to.deep.equal([user2.address, user1.address]);
     });
   });
 
   describe("get()", async () => {
     it("returns circulating supply", async () => {
-      const { collection, CirculatingSupplyERC721 } = await setupTests();
-      const params = [user1.address, collection.address, []];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { collection, deployProxy } = await loadFixture(setupTests);
+      const params = [user1.address, await collection.getAddress(), []];
+
+      const { address } = await deployProxy(params as any);
+
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      expect(await circulatingSupply.get()).to.be.equals(5);
+
+      expect(await proxy.get()).to.be.equals(5);
     });
 
     it("returns circulating supply with multiple exclusions", async () => {
-      const { collection, CirculatingSupplyERC721 } = await setupTests();
+      const { deployProxy, collection } = await loadFixture(setupTests);
       const params = [
         user1.address,
-        collection.address,
+        await collection.getAddress(),
         [user1.address, user2.address],
       ];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
       // Note: there are 5 tokens in the collection, minus 2 excluded (tokenIds 0 and 1)
       //       Adds to a circulating supply of 3.
-      expect(await circulatingSupply.get()).to.be.equals(1);
+      expect(await proxy.get()).to.be.equals(1);
     });
   });
 
   describe("setToken()", async () => {
     it("reverts if caller is not the owner", async () => {
-      const { collection2, CirculatingSupplyERC721, collection } =
-        await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection2, collection } =
+        await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
 
       await expect(
-        circulatingSupply.connect(user2).setToken(collection2.address)
+        proxy.connect(user2).setToken(await collection2.getAddress()),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it("allows owner to set collection", async () => {
-      const { collection2, CirculatingSupplyERC721, collection } =
-        await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { collection2, collection, deployProxy } =
+        await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-
-      expect(await circulatingSupply.setToken(collection2.address));
+      expect(await proxy.setToken(await collection2.getAddress()));
     });
 
     it("emits new collection", async () => {
-      const { collection2, CirculatingSupplyERC721, collection } =
-        await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { collection2, collection, deployProxy } =
+        await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
 
-      await expect(circulatingSupply.setToken(collection2.address))
-        .to.emit(circulatingSupply, "TokenSet")
-        .withArgs(collection2.address);
+      await expect(proxy.setToken(await collection2.getAddress()))
+        .to.emit(proxy, "TokenSet")
+        .withArgs(await collection2.getAddress());
     });
   });
 
   describe("exclude", async () => {
     it("reverts if caller is not the owner", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
       await expect(
-        circulatingSupply.connect(user2).exclude(user2.address)
+        proxy.connect(user2).exclude(user2.address),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it("reverts if exclusion is SENTINEL_EXCLUSIONS", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      await expect(
-        circulatingSupply.exclude(SENTINEL_EXCLUSIONS)
-      ).to.be.revertedWith("Invalid exclusion");
+      await expect(proxy.exclude(SENTINEL_EXCLUSIONS)).to.be.revertedWith(
+        "Invalid exclusion",
+      );
     });
 
     it("reverts if exclusion is already enabled", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, []];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [user1.address, await collection.getAddress(), []];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      await expect(circulatingSupply.exclude(user1.address))
-        .to.emit(circulatingSupply, "ExclusionAdded")
+      await expect(proxy.exclude(user1.address))
+        .to.emit(proxy, "ExclusionAdded")
         .withArgs(user1.address);
-      await expect(circulatingSupply.exclude(user1.address)).to.be.revertedWith(
-        "Exclusion already enabled"
+      await expect(proxy.exclude(user1.address)).to.be.revertedWith(
+        "Exclusion already enabled",
       );
     });
 
     it("enables a exclusion", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, []];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+
+      const params = [user1.address, await collection.getAddress(), []];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      await expect(circulatingSupply.exclude(user1.address))
-        .to.emit(circulatingSupply, "ExclusionAdded")
+
+      await expect(proxy.exclude(user1.address))
+        .to.emit(proxy, "ExclusionAdded")
         .withArgs(user1.address);
     });
   });
 
   describe("removeExclusion", async () => {
     it("reverts if caller is not the owner", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
+
       await expect(
-        circulatingSupply
+        proxy
           .connect(user2)
-          .removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
+          .removeExclusion(SENTINEL_EXCLUSIONS, user1.address),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it("reverts if exclusion is SENTINEL_EXCLUSIONS", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
       await expect(
-        circulatingSupply.removeExclusion(
-          SENTINEL_EXCLUSIONS,
-          SENTINEL_EXCLUSIONS
-        )
+        proxy.removeExclusion(SENTINEL_EXCLUSIONS, SENTINEL_EXCLUSIONS),
       ).to.be.revertedWith("Invalid exclusion");
     });
 
     it("reverts if exclusion is already disabled", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, []];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [user1.address, await collection.getAddress(), []];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      await expect(circulatingSupply.exclude(user1.address))
-        .to.emit(circulatingSupply, "ExclusionAdded")
+
+      await expect(proxy.exclude(user1.address))
+        .to.emit(proxy, "ExclusionAdded")
         .withArgs(user1.address);
 
-      await expect(
-        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
-      )
-        .to.emit(circulatingSupply, "ExclusionRemoved")
+      await expect(proxy.removeExclusion(SENTINEL_EXCLUSIONS, user1.address))
+        .to.emit(proxy, "ExclusionRemoved")
         .withArgs(user1.address);
       await expect(
-        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user1.address)
+        proxy.removeExclusion(SENTINEL_EXCLUSIONS, user1.address),
       ).to.be.revertedWith("Exclusion already disabled");
     });
 
     it("disables a exclusion", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      await expect(circulatingSupply.exclude(user2.address))
-        .to.emit(circulatingSupply, "ExclusionAdded")
+
+      await expect(proxy.exclude(user2.address))
+        .to.emit(proxy, "ExclusionAdded")
         .withArgs(user2.address);
-      await expect(
-        circulatingSupply.removeExclusion(SENTINEL_EXCLUSIONS, user2.address)
-      )
-        .to.emit(circulatingSupply, "ExclusionRemoved")
+      await expect(proxy.removeExclusion(SENTINEL_EXCLUSIONS, user2.address))
+        .to.emit(proxy, "ExclusionRemoved")
         .withArgs(user2.address);
     });
   });
 
   describe("isExcluded", async () => {
     it("returns false if SENTINEL_EXCLUSIONS is provided", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      expect(
-        await circulatingSupply.isExcluded(SENTINEL_EXCLUSIONS)
-      ).to.be.equals(false);
+
+      expect(await proxy.isExcluded(SENTINEL_EXCLUSIONS)).to.be.equals(false);
     });
 
     it("returns false if exclusion is not enabled", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      expect(await circulatingSupply.isExcluded(user2.address)).to.be.equals(
-        false
-      );
+
+      expect(await proxy.isExcluded(user2.address)).to.be.equals(false);
     });
 
     it("returns true if exclusion is enabled", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
 
-      await expect(circulatingSupply.exclude(user2.address))
-        .to.emit(circulatingSupply, "ExclusionAdded")
+      await expect(proxy.exclude(user2.address))
+        .to.emit(proxy, "ExclusionAdded")
         .withArgs(user2.address);
-      expect(await circulatingSupply.isExcluded(user2.address)).to.be.equals(
-        true
-      );
+      expect(await proxy.isExcluded(user2.address)).to.be.equals(true);
     });
   });
 
   describe("getExclusionsPaginated", async () => {
     it("returns empty array if no exclusions are enabled.", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
+      const { CirculatingSupplyERC721, collection } =
+        await loadFixture(setupTests);
       const circulatingSupply = await CirculatingSupplyERC721.deploy(
         user1.address,
-        collection.address,
-        []
+        await collection.getAddress(),
+        [],
       );
       let tx = await circulatingSupply.getExclusionsPaginated(
         SENTINEL_EXCLUSIONS,
-        3
+        3,
       );
-      tx = tx.toString();
-      expect(tx).to.be.equals([[], SENTINEL_EXCLUSIONS].toString());
+
+      expect(tx).to.deep.equal([[], SENTINEL_EXCLUSIONS]);
     });
 
     it("returns one exclusion if one exclusion is enabled", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      let tx = await circulatingSupply.getExclusionsPaginated(
-        SENTINEL_EXCLUSIONS,
-        3
-      );
-      tx = tx.toString();
-      expect(tx).to.be.equals(
-        [[user1.address], SENTINEL_EXCLUSIONS].toString()
-      );
+
+      let tx = await proxy.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3);
+      expect(tx).to.be.deep.equals([[user1.address], SENTINEL_EXCLUSIONS]);
     });
 
     it("returns two exclusions if two exclusions are enabled", async () => {
-      const { CirculatingSupplyERC721, collection } = await setupTests();
-      const params = [user1.address, collection.address, [user1.address]];
-      const { circulatingSupply } = await setupProxyTest(
-        { CirculatingSupplyERC721 },
-        params
+      const { deployProxy, collection } = await loadFixture(setupTests);
+      const params = [
+        user1.address,
+        await collection.getAddress(),
+        [user1.address],
+      ];
+
+      const { address } = await deployProxy(params as any);
+      const proxy = await hre.ethers.getContractAt(
+        "CirculatingSupplyERC721",
+        address,
       );
-      await expect(circulatingSupply.exclude(user2.address))
-        .to.emit(circulatingSupply, "ExclusionAdded")
+
+      await expect(proxy.exclude(user2.address))
+        .to.emit(proxy, "ExclusionAdded")
         .withArgs(user2.address);
-      let tx = await circulatingSupply.getExclusionsPaginated(
+      let tx = await proxy.getExclusionsPaginated(SENTINEL_EXCLUSIONS, 3);
+
+      expect(tx).to.be.deep.equals([
+        [user2.address, user1.address],
         SENTINEL_EXCLUSIONS,
-        3
-      );
-      tx = tx.toString();
-      expect(tx).to.be.equals(
-        [[user2.address, user1.address], SENTINEL_EXCLUSIONS].toString()
-      );
+      ]);
     });
   });
 });

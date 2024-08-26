@@ -1,7 +1,7 @@
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
+import "hardhat-gas-reporter";
 import "solidity-coverage";
-import "hardhat-deploy";
 import dotenv from "dotenv";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 
@@ -9,7 +9,11 @@ import type { HttpNetworkUserConfig } from "hardhat/types";
 dotenv.config();
 const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
 
-import "./src/tasks/setup";
+import "./tasks/deploy-mastercopies";
+import "./tasks/deploy-mastercopy";
+import "./tasks/extract-mastercopy";
+import "./tasks/verify-mastercopies";
+import "./tasks/verify-mastercopy";
 
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
@@ -42,13 +46,17 @@ export default {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
     },
-    xdai: {
+    gnosis: {
       ...sharedNetworkConfig,
-      url: "https://xdai.poanetwork.dev",
+      url: "https://rpc.gnosischain.com",
     },
     matic: {
       ...sharedNetworkConfig,
       url: "https://rpc-mainnet.maticvigil.com",
+    },
+    sepolia: {
+      ...sharedNetworkConfig,
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
     },
   },
   namedAccounts: {
