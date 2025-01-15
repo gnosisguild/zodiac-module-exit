@@ -90,7 +90,7 @@ export const AttachAccount = () => {
       <Paper classes={{ root: classes.card }}>
         <Typography className={classes.spacing} variant="h4">
           Attach a Safe to Exit{' '}
-          <Link href="https://zodiac.wiki/index.php/Exit_App:_Member_Tutorial" target="_blank">
+          <Link href="https://www.zodiac.wiki/documentation/exit-pattern" target="_blank">
             <InfoOutlinedIcon style={{ color: 'rgba(217, 212, 173, 0.7)' }} />
           </Link>
         </Typography>
@@ -115,7 +115,7 @@ export const AttachAccount = () => {
           disabled={!address || loading}
           startIcon={loading ? <CircularProgress size={18} color="primary" /> : <ArrowUp />}
         >
-          {loading ? 'Attaching Gnosis Safe...' : 'Attach Account'}
+          {loading ? 'Attaching Safe...' : 'Attach Account'}
         </Button>
 
         {invalidSafe ? (
