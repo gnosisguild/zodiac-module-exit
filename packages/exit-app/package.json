@@ -4,8 +4,8 @@
   "private": true,
   "homepage": "./",
   "scripts": {
-    "start": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
-    "build": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/types ./src/contracts/abis/*.json",
