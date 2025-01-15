@@ -22,7 +22,7 @@ jobs:
           node-version: 16
       - run: npm install -g yarn
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install 
         working-directory: packages/exit-app
 
       - run: yarn build
