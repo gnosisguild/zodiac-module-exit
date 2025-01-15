@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/zodiac-module-exit",
-  "version": "1.0.0",
+  "version": "1.0.14",
   "description": "A module that allows users to redeem their designated tokens for a proportional share assets held in an account.",
   "scripts": {
     "build": "yarn contracts:build",
