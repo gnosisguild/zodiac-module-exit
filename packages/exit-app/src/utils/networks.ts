@@ -2,11 +2,11 @@ export enum NETWORK {
   MAINNET = 1,
   OPTIMISM = 10,
   BSC = 56,
-  GOERLI = 5,
   XDAI = 100,
   POLYGON = 137,
   ARBITRUMONE = 42161,
   AVALANCHE = 43114,
+  SEPOLIA = 11155111,
 }
 
 export interface Coin {
@@ -24,7 +24,7 @@ export const NATIVE_ASSET: Record<string, Coin> = {
 
 export const NETWORK_NATIVE_ASSET: Record<NETWORK, Coin> = {
   [NETWORK.MAINNET]: NATIVE_ASSET.ETH,
-  [NETWORK.GOERLI]: NATIVE_ASSET.ETH,
+  [NETWORK.SEPOLIA]: NATIVE_ASSET.ETH,
   [NETWORK.BSC]: NATIVE_ASSET.BNB,
   [NETWORK.XDAI]: NATIVE_ASSET.XDAI,
   [NETWORK.POLYGON]: NATIVE_ASSET.MATIC,
@@ -35,7 +35,7 @@ export const NETWORK_NATIVE_ASSET: Record<NETWORK, Coin> = {
 
 export const NETWORK_NAME: Record<NETWORK, string> = {
   [NETWORK.MAINNET]: 'Mainnet',
-  [NETWORK.GOERLI]: 'Goerli',
+  [NETWORK.SEPOLIA]: 'Sepolia',
   [NETWORK.BSC]: 'Binance Smart Chain',
   [NETWORK.XDAI]: 'Gnosis Chain',
   [NETWORK.POLYGON]: 'Polygon',
@@ -45,14 +45,14 @@ export const NETWORK_NAME: Record<NETWORK, string> = {
 }
 
 export const NETWORK_DEFAULT_RPC: Record<NETWORK, string> = {
-  [NETWORK.MAINNET]: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-  [NETWORK.GOERLI]: 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-  [NETWORK.BSC]: 'https://bsc-dataseed.binance.org',
-  [NETWORK.XDAI]: 'https://rpc.gnosischain.com',
+  [NETWORK.MAINNET]: 'https://eth.llamarpc.com',
+  [NETWORK.SEPOLIA]: 'https://ethereum-sepolia-rpc.publicnode.com',
+  [NETWORK.BSC]: 'https://bsc-rpc.publicnode.com', 
+  [NETWORK.XDAI]: 'https://gnosis.publicnode.com', 
   [NETWORK.POLYGON]: 'https://polygon-rpc.com',
   [NETWORK.OPTIMISM]: 'https://mainnet.optimism.io',
   [NETWORK.ARBITRUMONE]: 'https://arb1.arbitrum.io/rpc',
-  [NETWORK.AVALANCHE]: 'https://avalanche-c-chain.publicnode.com',
+  [NETWORK.AVALANCHE]: 'https://avalanche.publicnode.com',
 }
 
 export function getNetworkNativeAsset(network: NETWORK) {
