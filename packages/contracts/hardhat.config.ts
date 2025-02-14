@@ -42,10 +42,6 @@ export default {
       ...sharedNetworkConfig,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
-    goerli: {
-      ...sharedNetworkConfig,
-      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
-    },
     gnosis: {
       ...sharedNetworkConfig,
       url: "https://rpc.gnosischain.com",
@@ -58,6 +54,12 @@ export default {
       ...sharedNetworkConfig,
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
     },
+    "lisk-sepolia": {
+      ...sharedNetworkConfig,
+      chainId: 4202,
+      url: "https://rpc.sepolia-api.lisk.com",
+      gasPrice: 1000000000,
+    },
   },
   namedAccounts: {
     deployer: 0,
@@ -66,6 +68,24 @@ export default {
     timeout: 2000000,
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: ETHERSCAN_API_KEY,
+      sepolia: ETHERSCAN_API_KEY,
+      // Use "ETHERSCAN_API_KEY" as a placeholder, because Blockscout doesn't need a real API key, and Hardhat will complain if this property isn't set.
+      "lisk-sepolia": ETHERSCAN_API_KEY,
+    } as Record<string, string>,
+    customChains: [
+      {
+        network: "lisk-sepolia",
+        chainId: 4202,
+        urls: {
+          apiURL: "https://sepolia-blockscout.lisk.com/api",
+          browserURL: "https://sepolia-blockscout.lisk.com",
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: false,
   },
 };
