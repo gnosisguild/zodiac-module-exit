@@ -42,10 +42,6 @@ export default {
       ...sharedNetworkConfig,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
-    goerli: {
-      ...sharedNetworkConfig,
-      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
-    },
     gnosis: {
       ...sharedNetworkConfig,
       url: "https://rpc.gnosischain.com",
