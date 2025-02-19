@@ -25,7 +25,7 @@
   "author": "",
   "license": "LGPL-3.0+",
   "devDependencies": {
-    "@gnosis-guild/zodiac-core": "^2.0.0",
+    "@gnosis-guild/zodiac-core": "^2.0.5",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-ignition": "^0.15.5",

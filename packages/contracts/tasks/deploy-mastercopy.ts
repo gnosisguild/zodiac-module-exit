@@ -43,6 +43,9 @@ task(
           `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`,
         );
       } else {
+        console.log(
+          `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`,
+        );
       }
     }
   });

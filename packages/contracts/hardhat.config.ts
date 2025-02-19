@@ -60,6 +60,12 @@ export default {
       url: "https://rpc.sepolia-api.lisk.com",
       gasPrice: 1000000000,
     },
+    "bob-sepolia": {
+      ...sharedNetworkConfig,
+      chainId: 808813,
+      url: "https://bob-sepolia.rpc.gobob.xyz/",
+      gasPrice: 1000000000,
+    },
   },
   namedAccounts: {
     deployer: 0,
@@ -73,6 +79,7 @@ export default {
       sepolia: ETHERSCAN_API_KEY,
       // Use "ETHERSCAN_API_KEY" as a placeholder, because Blockscout doesn't need a real API key, and Hardhat will complain if this property isn't set.
       "lisk-sepolia": ETHERSCAN_API_KEY,
+      "bob-sepolia": ETHERSCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
       {
@@ -81,6 +88,14 @@ export default {
         urls: {
           apiURL: "https://sepolia-blockscout.lisk.com/api",
           browserURL: "https://sepolia-blockscout.lisk.com",
+        },
+      },
+      {
+        network: "bob-sepolia",
+        chainId: 808813,
+        urls: {
+          apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
+          browserURL: "https://bob-sepolia.explorer.gobob.xyz",
         },
       },
     ],
